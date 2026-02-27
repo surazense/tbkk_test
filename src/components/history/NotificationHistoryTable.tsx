@@ -236,12 +236,12 @@ export function NotificationHistoryTable({
     <Card className="border-[1.35px] border-[#374151] shadow-sm rounded-xl bg-[#0B1121] w-[98%] mx-auto pb-10">
       <CardContent className="p-0">
         {/* Header & Legend with Clear All button */}
-        <div className="flex px-8 pt-6 pb-2 items-center justify-between gap-4">
-          <div className="flex items-center gap-6">
-            <h2 className="text-2xl 2xl:text-4xl font-semibold text-white">
+        <div className="flex flex-wrap px-3 sm:px-8 pt-4 sm:pt-6 pb-2 items-start sm:items-center justify-between gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 w-full sm:w-auto">
+            <h2 className="text-lg sm:text-2xl 2xl:text-4xl font-semibold text-white">
               Notification History
             </h2>
-            <div className="flex flex-wrap gap-6 items-center">
+            <div className="flex flex-wrap gap-3 sm:gap-6 items-center">
               {Object.entries(statusStyles)
                 .filter(([key]) => key !== "Normal" && key !== "Standby")
                 .map(([key, val]) => {
@@ -270,15 +270,15 @@ export function NotificationHistoryTable({
         </div>
 
         {/* Search & Date Filter */}
-        <div className="flex flex-wrap gap-2 items-center px-8 pb-4">
+        <div className="flex flex-wrap gap-2 items-center px-3 sm:px-8 pb-4">
           <input
             type="text"
             placeholder="Search by serial number or machine name..."
-            className="border border-gray-600 rounded-md px-3 py-2 text-base 2xl:text-xl w-[700px] 2xl:w-[900px] bg-[#11171F] text-white placeholder:text-gray-400"
+            className="border border-gray-600 rounded-md px-3 py-2 text-sm sm:text-base 2xl:text-xl w-full sm:w-[400px] lg:w-[700px] 2xl:w-[900px] bg-[#11171F] text-white placeholder:text-gray-400"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <span className="ml-2 text-base 2xl:text-xl text-gray-300">
+          <span className="ml-0 sm:ml-2 text-sm sm:text-base 2xl:text-xl text-gray-300">
             Date:
           </span>
           {/* Start Date Custom Input */}
@@ -334,7 +334,7 @@ export function NotificationHistoryTable({
         <div className="overflow-x-auto">
           <table className="min-w-full text-base 2xl:text-xl">
             <thead>
-              <tr className="bg-[#0B1121] border-b-[1.35px] border-[#374151] text-center text-gray-200 text-lg 2xl:text-2xl">
+              <tr className="bg-[#0B1121] border-b-[1.35px] border-[#374151] text-center text-gray-200 text-sm sm:text-base lg:text-lg 2xl:text-2xl">
                 <th
                   className="py-3 px-4 font-medium cursor-pointer hover:text-white transition-colors"
                   onClick={() => requestSort("sensorName")}

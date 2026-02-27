@@ -30,7 +30,7 @@ export default function SensorGrid({ sensors, sensorGroups }: SensorGridProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 min-[1600px]:grid-cols-6 min-[1850px]:grid-cols-7 min-[2100px]:grid-cols-8 gap-4">
+    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 min-[1600px]:grid-cols-6 min-[1850px]:grid-cols-7 min-[2100px]:grid-cols-8 gap-2 sm:gap-4">
       {allSensors.map((sensor) => (
         <SensorCard
           key={sensor.id}

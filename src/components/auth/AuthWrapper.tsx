@@ -7,6 +7,8 @@ import ProtectedRoute from "./ProtectedRoute";
 import Header from "@/components/layout/Header";
 import FolderTree from "@/components/layout/FolderTree";
 import Sidebar from "@/components/layout/Sidebar";
+import BottomNav from "@/components/layout/BottomNav";
+import MobileDrawer from "@/components/layout/MobileDrawer";
 import {
   FolderTreeProvider,
   useFolderTree,
@@ -34,6 +36,7 @@ function AuthWrapperContent({ children }: AuthWrapperProps) {
   // State for selected ids and sensors (for filter)
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
   const [selectedSensors, setSelectedSensors] = React.useState<Sensor[]>([]);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
   const pathname = usePathname();
   const { loading } = useAuth();
   const { collapsed } = useFolderTree();
@@ -86,8 +89,8 @@ function AuthWrapperContent({ children }: AuthWrapperProps) {
             isRegisterPage ? "min-h-screen" : "h-screen overflow-hidden"
           }`}
         >
-          {/* Left Sidebar - Navigation Menu (not covered by header) */}
-          <div className="shrink-0">
+          {/* Left Sidebar - Desktop only */}
+          <div className="hidden md:block shrink-0">
             <Sidebar />
           </div>
 
@@ -98,7 +101,7 @@ function AuthWrapperContent({ children }: AuthWrapperProps) {
             }`}
           >
             {/* Header at the top */}
-            <Header />
+            <Header onMenuClick={() => setMobileDrawerOpen(true)} />
 
             {/* Content area below header */}
             <div
@@ -106,9 +109,9 @@ function AuthWrapperContent({ children }: AuthWrapperProps) {
                 isRegisterPage ? "" : "overflow-hidden"
               }`}
             >
-              {/* Left Panel - Organization Tree - Width adjusts based on collapsed state */}
+              {/* Left Panel - Organization Tree - Desktop only */}
               <div
-                className={`shrink-0 bg-[#0B1121] border-r-[1.35px] border-[#374151] flex flex-col transition-all duration-300 ${
+                className={`hidden md:flex shrink-0 bg-[#0B1121] border-r-[1.35px] border-[#374151] flex-col transition-all duration-300 ${
                   isRegisterPage
                     ? "sticky top-0 h-screen overflow-y-auto"
                     : "overflow-hidden"
@@ -121,13 +124,23 @@ function AuthWrapperContent({ children }: AuthWrapperProps) {
               <div
                 className={`flex-1 bg-[#0B1121] p-4 ${
                   isRegisterPage ? "" : "overflow-auto"
-                }`}
+                } pb-20 md:pb-4`}
               >
                 {children}
               </div>
             </div>
           </div>
         </div>
+
+        {/* Mobile Drawer (FolderTree) */}
+        <MobileDrawer
+          isOpen={mobileDrawerOpen}
+          onClose={() => setMobileDrawerOpen(false)}
+          onFilterChange={handleFilterChange}
+        />
+
+        {/* Bottom Navigation - Mobile only */}
+        <BottomNav />
       </ProtectedRoute>
     </FolderTreeFilterContext.Provider>
   );

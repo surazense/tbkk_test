@@ -374,25 +374,26 @@ export default function SensorDetailPage() {
   return (
     <div className="min-h-screen bg-[#0B1121] text-white">
       {/* Header */}
-      <div className="flex items-center justify-between p-4">
-        <div className="flex items-center">
+      <div className="flex items-center justify-between p-3 sm:p-4 gap-2">
+        <div className="flex items-center min-w-0">
           <Button
             variant="outline"
             size="sm"
-            className="mr-4 bg-transparent border-[1.35px] border-[#374151] hover:bg-[#374151]/50"
+            className="mr-2 sm:mr-4 bg-transparent border-[1.35px] border-[#374151] hover:bg-[#374151]/50 shrink-0"
             onClick={() => router.push("/")}
           >
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Sensor
+            <ArrowLeft className="h-4 w-4" />
+            <span className="hidden sm:inline ml-2">Back to Sensor</span>
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold">
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-2xl font-bold truncate">
               Sensor:{" "}
               {sensorLastData?.name ||
                 sensor.name ||
                 configData.serialNumber ||
                 "Unnamed Sensor"}
             </h1>
-            <p className="text-sm text-gray-500">
+            <p className="text-xs sm:text-sm text-gray-500 truncate">
               MAC:{" "}
               {sensorLastData?.mac_address || configData.mac_address || "-"}
             </p>
@@ -401,10 +402,10 @@ export default function SensorDetailPage() {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
-            className="bg-transparent border-[1.35px] border-[#374151] hover:bg-[#374151]/50"
+            className="bg-transparent border-[1.35px] border-[#374151] hover:bg-[#374151]/50 text-xs sm:text-sm px-2 sm:px-4"
             onClick={() => router.push(`/sensors/${sensor.id}/history`)}
           >
-            View History
+            <span className="hidden xs:inline">View </span>History
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

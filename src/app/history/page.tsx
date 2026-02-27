@@ -165,7 +165,7 @@ export default function NotificationHistoryPage() {
   }, [fetchInitialData]);
 
   return (
-    <div className="p-6 space-y-6 bg-[#0B1121] min-h-screen">
+    <div className="p-3 sm:p-6 space-y-4 sm:space-y-6 bg-[#0B1121] min-h-screen">
       <div className="flex items-center justify-between">
         <div></div>
       </div>

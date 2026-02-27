@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { Bell, LogOut, Settings, ChevronDown } from "lucide-react";
+import { Bell, LogOut, Settings, ChevronDown, Menu } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
 import { Badge } from "@/components/ui/badge";
@@ -54,7 +54,11 @@ interface NotificationItem {
   datetime: string;
 }
 
-export default function Header() {
+interface HeaderProps {
+  onMenuClick?: () => void;
+}
+
+export default function Header({ onMenuClick }: HeaderProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, logout } = useAuth();
@@ -362,16 +366,27 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-[#0B1121] border-b-[1.35px] border-[#374151] py-3 px-6 shrink-0">
-      <div className="flex items-center justify-between">
-        <div className="flex-1 flex items-center gap-3">
-          <span className="text-lg 2xl:text-2xl font-medium text-white">
+    <header className="bg-[#0B1121] border-b-[1.35px] border-[#374151] py-3 px-4 md:px-6 shrink-0">
+      <div className="flex items-center justify-between gap-2">
+        {/* Hamburger Button — mobile only */}
+        <button
+          onClick={onMenuClick}
+          className="md:hidden p-2 rounded-md text-white hover:bg-gray-700 transition-colors shrink-0"
+          aria-label="Open menu"
+        >
+          <Menu size={20} />
+        </button>
+
+        <div className="flex-1 flex items-center gap-2 min-w-0 overflow-hidden">
+          <span className="text-sm sm:text-lg 2xl:text-2xl font-medium text-white truncate">
             {organizationName}
           </span>
-          <span className="text-gray-400 2xl:text-xl">/</span>
-          <span className="text-gray-300 text-sm 2xl:text-lg">{pageTitle}</span>
+          <span className="text-gray-400 2xl:text-xl hidden sm:inline">/</span>
+          <span className="text-gray-300 text-sm 2xl:text-lg hidden sm:inline truncate">
+            {pageTitle}
+          </span>
           {user?.role && (
-            <Badge className="bg-[#4c1d95] hover:bg-[#4c1d95] text-[#ddd6fe] border-[#5b21b6] rounded-full px-3 py-0.5 text-xs 2xl:text-base font-semibold capitalize">
+            <Badge className="bg-[#4c1d95] hover:bg-[#4c1d95] text-[#ddd6fe] border-[#5b21b6] rounded-full px-2 sm:px-3 py-0.5 text-xs 2xl:text-base font-semibold capitalize shrink-0 hidden sm:inline-flex">
               {user.role}
             </Badge>
           )}
@@ -398,7 +413,7 @@ export default function Header() {
             </DropdownMenuTrigger>
             <DropdownMenuContent
               align="end"
-              className="bg-[#0B1121] text-white w-[380px] shadow-2xl border-[1.35px] border-[#374151] p-0 rounded-2xl overflow-hidden"
+              className="bg-[#0B1121] text-white w-[calc(100vw-2rem)] sm:w-[380px] shadow-2xl border-[1.35px] border-[#374151] p-0 rounded-2xl overflow-hidden"
             >
               <div className="flex items-center justify-between px-5 py-3 border-b border-[#374151]">
                 <div>
@@ -505,7 +520,7 @@ export default function Header() {
                       : "U"}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-sm font-medium">
+                <span className="text-sm font-medium hidden sm:inline">
                   {user ? user.name : "Guest"}
                 </span>
                 <ChevronDown className="h-4 w-4" />

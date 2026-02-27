@@ -209,13 +209,13 @@ export default function UserManagementPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B1121] text-white p-8 space-y-8">
+    <div className="min-h-screen bg-[#0B1121] text-white p-3 sm:p-8 space-y-4 sm:space-y-8">
       {/* Header */}
       <div>
-        <h1 className="text-4xl 2xl:text-6xl font-bold mb-2">
+        <h1 className="text-2xl sm:text-4xl 2xl:text-6xl font-bold mb-2">
           User Management
         </h1>
-        <p className="text-gray-400 text-lg 2xl:text-2xl">
+        <p className="text-gray-400 text-sm sm:text-lg 2xl:text-2xl">
           Total users: {filteredUsers.length} people
         </p>
         {currentUser && (

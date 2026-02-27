@@ -51,7 +51,7 @@ export default function RegisterSensorForm() {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
       <div className="flex flex-col min-h-screen">
-        <h1 className="mb-6 text-4xl font-extrabold text-white">
+        <h1 className="mb-3 sm:mb-6 text-2xl sm:text-4xl font-extrabold text-white">
           {editId || isEditMode
             ? `Edit Sensor: ${form.getValues("sensors.0.serialNumber")}`
             : "Register New Device"}
@@ -64,11 +64,11 @@ export default function RegisterSensorForm() {
 
           <CardContent className="pt-6">
             <div className="mb-6 space-y-1">
-              <h2 className="text-3xl font-semibold text-white">
+              <h2 className="text-xl sm:text-3xl font-semibold text-white">
                 {isEditMode || editId ? "Edit" : "Register New"}{" "}
                 {tabContent.find((t) => t.value === activeTab)?.label} Sensor
               </h2>
-              <p className="text-lg text-muted-foreground">
+              <p className="text-sm sm:text-lg text-muted-foreground">
                 {isEditMode || editId
                   ? "Update sensor configuration."
                   : "Add new sensors to the monitoring system."}
@@ -160,27 +160,27 @@ function FormActions({
           <Button
             type="button"
             onClick={onReset}
-            className="bg-[#E35D5D] text-white hover:bg-red-600 w-32 h-12 text-xl font-bold"
+            className="bg-[#E35D5D] text-white hover:bg-red-600 h-9 sm:h-12 px-3 sm:px-6 text-sm sm:text-xl font-bold"
           >
             Reset
           </Button>
         )}
       </div>
 
-      <div className="justify-self-center flex gap-4">
+      <div className="justify-self-center flex gap-1 sm:gap-4">
         <Button
           type="button"
           variant="outline"
           onClick={onBack}
           disabled={isSubmitting}
-          className="bg-[#FFFEFF] text-black hover:bg-gray-100 w-32 h-12 text-xl font-bold"
+          className="bg-[#FFFEFF] text-black hover:bg-gray-100 h-9 sm:h-12 px-3 sm:px-6 text-sm sm:text-xl font-bold"
         >
           {editId || activeTab === "master" ? "Cancel" : "Back"}
         </Button>
         <Button
           type="submit"
           disabled={isSubmitting}
-          className="bg-[#2186F3] text-white hover:bg-blue-600 w-32 h-12 text-xl font-bold"
+          className="bg-[#2186F3] text-white hover:bg-blue-600 h-9 sm:h-12 px-3 sm:px-6 text-sm sm:text-xl font-bold"
         >
           {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           {isEditMode ? "Update" : "Save"}
@@ -193,7 +193,7 @@ function FormActions({
             type="button"
             onClick={onNext}
             disabled={isSubmitting}
-            className="bg-[#2186F3] text-white hover:bg-blue-600 w-32 h-12 text-xl font-bold"
+            className="bg-[#2186F3] text-white hover:bg-blue-600 h-9 sm:h-12 px-3 sm:px-6 text-sm sm:text-xl font-bold"
           >
             Next
           </Button>
