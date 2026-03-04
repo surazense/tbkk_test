@@ -1,7 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import {
+  Search,
+  ChevronLeft,
+  ChevronRight,
+  Trash2,
+  TriangleAlert,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -20,6 +26,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 import { UserAdminResponse, User } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 import {
@@ -42,6 +58,9 @@ export default function UserManagementPage() {
   const [statusFilter, setStatusFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
+  const [deleteTarget, setDeleteTarget] = useState<UserAdminResponse | null>(
+    null
+  );
 
   const fetchUsers = async () => {
     try {
@@ -63,14 +82,19 @@ export default function UserManagementPage() {
     fetchUsers();
   }, []);
 
-  const handleDeleteUser = async (userId: string) => {
-    if (!confirm("Are you sure you want to delete this user?")) return;
+  const handleDeleteUser = (user: UserAdminResponse) => {
+    setDeleteTarget(user);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
     try {
-      await deleteUser(userId);
-      await fetchUsers(); // Refresh list after delete
+      await deleteUser(deleteTarget.id);
+      await fetchUsers();
     } catch (error) {
       console.error("Failed to delete user:", error);
-      alert("Failed to delete user");
+    } finally {
+      setDeleteTarget(null);
     }
   };
 
@@ -226,8 +250,9 @@ export default function UserManagementPage() {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-4 items-center">
-        <div className="flex items-center gap-2 bg-[#0B1121] rounded-md px-3 py-1 border-[1.35px] border-[#374151] w-full md:w-auto">
+      <div className="flex flex-col gap-3">
+        {/* Search — full width */}
+        <div className="flex items-center gap-2 bg-[#0B1121] rounded-md px-3 py-1 border-[1.35px] border-[#374151] w-full">
           <span className="text-gray-400 text-base whitespace-nowrap">
             Search :
           </span>
@@ -243,44 +268,146 @@ export default function UserManagementPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 bg-[#0B1121] rounded-md px-3 py-1 border-[1.35px] border-[#374151]">
-          <span className="text-gray-400 text-base whitespace-nowrap">
-            Role :
-          </span>
-          <Select value={roleFilter} onValueChange={setRoleFilter}>
-            <SelectTrigger className="w-32 bg-transparent border-none h-10 text-white focus:ring-0 text-base">
-              <SelectValue placeholder="All" />
-            </SelectTrigger>
-            <SelectContent className="bg-[#1e293b] border-gray-700 text-white">
-              <SelectItem value="All">All</SelectItem>
-              <SelectItem value="Admin">Admin</SelectItem>
-              <SelectItem value="Editor">Editor</SelectItem>
-              <SelectItem value="Viewer">Viewer</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Role + Status — same row */}
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 bg-[#0B1121] rounded-md px-3 py-1 border-[1.35px] border-[#374151] flex-1">
+            <span className="text-gray-400 text-base whitespace-nowrap">
+              Role :
+            </span>
+            <Select value={roleFilter} onValueChange={setRoleFilter}>
+              <SelectTrigger className="w-full bg-transparent border-none h-10 text-white focus:ring-0 text-base">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1e293b] border-gray-700 text-white">
+                <SelectItem value="All">All</SelectItem>
+                <SelectItem value="Admin">Admin</SelectItem>
+                <SelectItem value="Editor">Editor</SelectItem>
+                <SelectItem value="Viewer">Viewer</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
 
-        <div className="flex items-center gap-2 bg-[#0B1121] rounded-md px-3 py-1 border-[1.35px] border-[#374151]">
-          <span className="text-gray-400 text-base whitespace-nowrap">
-            Status :
-          </span>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-32 bg-transparent border-none h-10 text-white focus:ring-0 text-base">
-              <SelectValue placeholder="All" />
-            </SelectTrigger>
-            <SelectContent className="bg-[#1e293b] border-gray-700 text-white">
-              <SelectItem value="All">All</SelectItem>
-              <SelectItem value="ONLINE">ONLINE</SelectItem>
-              <SelectItem value="OFFLINE">OFFLINE</SelectItem>
-              <SelectItem value="PENDING">PENDING</SelectItem>
-              <SelectItem value="SUSPENDED">SUSPENDED</SelectItem>
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2 bg-[#0B1121] rounded-md px-3 py-1 border-[1.35px] border-[#374151] flex-1">
+            <span className="text-gray-400 text-base whitespace-nowrap">
+              Status :
+            </span>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-full bg-transparent border-none h-10 text-white focus:ring-0 text-base">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#1e293b] border-gray-700 text-white">
+                <SelectItem value="All">All</SelectItem>
+                <SelectItem value="ONLINE">ONLINE</SelectItem>
+                <SelectItem value="OFFLINE">OFFLINE</SelectItem>
+                <SelectItem value="PENDING">PENDING</SelectItem>
+                <SelectItem value="SUSPENDED">SUSPENDED</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-[#0B1121] rounded-lg border-[1.35px] border-[#374151] overflow-hidden overflow-x-auto">
+      {/* ============================================================
+          MOBILE layout (< md): Card list
+          ============================================================ */}
+      <div className="md:hidden space-y-3">
+        {loading ? (
+          <div className="text-center py-12 text-gray-400">
+            Loading users...
+          </div>
+        ) : currentUsers.length > 0 ? (
+          currentUsers.map((user) => (
+            <div
+              key={user.id}
+              className="bg-[#0B1121] border border-[#374151] rounded-xl p-4 space-y-3"
+            >
+              {/* Row 1: Name + Status badge */}
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-white font-semibold text-base truncate">
+                    {user.name}
+                    {currentUser?.id === user.id && (
+                      <span className="ml-2 text-sm text-blue-400">(You)</span>
+                    )}
+                  </p>
+                  <p className="text-gray-400 text-sm truncate">{user.email}</p>
+                  <p className="text-gray-500 text-sm mt-0.5">
+                    ORC: {user.org_code}
+                  </p>
+                </div>
+                <Badge
+                  className={`rounded-full px-2.5 py-0.5 flex items-center gap-1.5 text-sm shrink-0 ${getStatusBadgeStyles(user.status)}`}
+                >
+                  <span
+                    className={`block w-2 h-2 rounded-full shrink-0 ${getStatusDotColor(user.status)}`}
+                  />
+                  {user.status.toUpperCase()}
+                </Badge>
+              </div>
+
+              {/* Row 2: Role + Approve + Delete */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Role selector */}
+                <Select
+                  defaultValue={user.role?.toLowerCase()}
+                  disabled={currentUser?.id === user.id}
+                  onValueChange={(value) => handleRoleChange(user.id, value)}
+                >
+                  <SelectTrigger className="h-9 w-28 bg-[#0f172a] border-gray-600 text-white text-sm">
+                    <SelectValue placeholder={user.role} />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1e293b] border-gray-700 text-white">
+                    <SelectItem value="admin" disabled>
+                      Admin
+                    </SelectItem>
+                    <SelectItem value="editor">Editor</SelectItem>
+                    <SelectItem value="viewer">Viewer</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Approve */}
+                {user.status.toUpperCase() === "PENDING" ? (
+                  <Select
+                    onValueChange={(value) => {
+                      if (value === "ACTIVE") handleApproveUser(user.id);
+                    }}
+                  >
+                    <SelectTrigger className="h-9 w-28 bg-[#0f172a] border-blue-600 text-blue-400 text-sm">
+                      <SelectValue placeholder="Action" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1e293b] border-gray-700 text-white">
+                      <SelectItem value="ACTIVE">Approve</SelectItem>
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <span className="text-gray-500 text-sm">Approved</span>
+                )}
+
+                {/* Delete */}
+                {currentUser?.org_code === user.org_code &&
+                  currentUser?.id !== user.id && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 bg-[#450a0a] hover:bg-[#5f1212] text-[#fca5a5] border border-[#7f1d1d] rounded-full ml-auto shrink-0"
+                      onClick={() => handleDeleteUser(user)}
+                      title="Delete user"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="text-center py-12 text-gray-500">No users found</div>
+        )}
+      </div>
+
+      {/* ============================================================
+          DESKTOP layout (≥ md): Original Table
+          ============================================================ */}
+      <div className="hidden md:block bg-[#0B1121] rounded-lg border-[1.35px] border-[#374151] overflow-hidden overflow-x-auto">
         <Table className="min-w-[800px] 2xl:min-w-full">
           <TableHeader className="bg-[#0B1121]">
             <TableRow className="border-b-[1.35px] border-[#374151] hover:bg-[#0B1121]">
@@ -331,7 +458,6 @@ export default function UserManagementPage() {
                       <span className="text-gray-300 text-base 2xl:text-xl">
                         {user.email}
                       </span>
-                      {/* Phone removed per request */}
                     </div>
                   </TableCell>
                   <TableCell className="text-center">
@@ -428,15 +554,13 @@ export default function UserManagementPage() {
                       currentUser?.id !== user.id && (
                         <Button
                           variant="ghost"
-                          className="h-7 px-4 2xl:h-9 2xl:px-6 bg-[#450a0a] hover:bg-[#5f1212] text-[#fca5a5] border border-[#7f1d1d] rounded-full text-xs 2xl:text-base font-normal transition-colors"
-                          onClick={() => handleDeleteUser(user.id)}
+                          className="h-7 px-3 2xl:h-9 2xl:px-5 bg-[#450a0a] hover:bg-[#5f1212] text-[#fca5a5] border border-[#7f1d1d] rounded-full text-xs 2xl:text-sm font-normal transition-colors"
+                          onClick={() => handleDeleteUser(user)}
                         >
-                          <Trash2 className="mr-1.5 h-3.5 w-3.5 2xl:h-5 2xl:w-5" />
+                          <Trash2 className="mr-1.5 h-3.5 w-3.5 2xl:h-4 2xl:w-4" />
                           Delete
                         </Button>
                       )}
-                    {/* Show empty placeholder if delete is unavailable to keep layout similar? Or just empty. 
-                                            Keeping it conditional as per request (Org Check) */}
                   </TableCell>
                 </TableRow>
               ))
@@ -495,6 +619,44 @@ export default function UserManagementPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <AlertDialogContent className="bg-[#0B1121] border border-[#374151] text-white w-[calc(100vw-2rem)] max-w-sm rounded-2xl">
+          <AlertDialogHeader>
+            <div className="flex items-center gap-3 mb-1">
+              <div className="flex items-center justify-center w-10 h-10 rounded-full bg-[#450a0a] shrink-0">
+                <TriangleAlert className="h-5 w-5 text-[#fca5a5]" />
+              </div>
+              <AlertDialogTitle className="text-white text-lg font-semibold">
+                Delete User
+              </AlertDialogTitle>
+            </div>
+            <AlertDialogDescription className="text-gray-400 text-sm pl-13">
+              Are you sure you want to delete{" "}
+              <span className="text-white font-medium">
+                {deleteTarget?.name}
+              </span>
+              ? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 mt-2">
+            <AlertDialogCancel className="bg-transparent border border-[#374151] text-gray-300 hover:bg-[#374151] hover:text-white rounded-lg">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-[#7f1d1d] hover:bg-[#991b1b] text-[#fca5a5] border border-[#7f1d1d] rounded-lg font-medium"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
