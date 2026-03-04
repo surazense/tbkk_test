@@ -8,6 +8,16 @@ import axios from "axios";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -65,6 +75,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const pathname = usePathname();
   const pageTitle = getPageTitle(pathname);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
   const [organizationName, setOrganizationName] =
     useState<string>("VIBRATION-SZ");
   const autoRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -148,15 +159,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
           // Add to display list
           const datetime = sensor.last_data?.datetime
             ? new Date(sensor.last_data.datetime.replace("Z", ""))
-                .toLocaleString("en-GB", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                })
-                .replace(",", "")
+              .toLocaleString("en-GB", {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false,
+              })
+              .replace(",", "")
             : "-";
 
           let statusClass = "";
@@ -366,195 +377,223 @@ export default function Header({ onMenuClick }: HeaderProps) {
   };
 
   return (
-    <header className="bg-[#0B1121] border-b-[1.35px] border-[#374151] py-3 px-4 md:px-6 shrink-0">
-      <div className="flex items-center justify-between gap-2">
-        {/* Hamburger Button — mobile only */}
-        <button
-          onClick={onMenuClick}
-          className="md:hidden p-2 rounded-md text-white hover:bg-gray-700 transition-colors shrink-0"
-          aria-label="Open menu"
-        >
-          <Menu size={20} />
-        </button>
+    <>
+      <header className="bg-[#0B1121] border-b-[1.35px] border-[#374151] py-3 px-4 md:px-6 shrink-0">
+        <div className="flex items-center justify-between gap-2">
+          {/* Hamburger Button — mobile only */}
+          <button
+            onClick={onMenuClick}
+            className="md:hidden p-2 rounded-md text-white hover:bg-gray-700 transition-colors shrink-0"
+            aria-label="Open menu"
+          >
+            <Menu size={20} />
+          </button>
 
-        <div className="flex-1 flex items-center gap-2 min-w-0 overflow-hidden">
-          <span className="text-sm sm:text-lg 2xl:text-2xl font-medium text-white truncate">
-            {organizationName}
-          </span>
-          <span className="text-gray-400 2xl:text-xl hidden sm:inline">/</span>
-          <span className="text-gray-300 text-sm 2xl:text-lg hidden sm:inline truncate">
-            {pageTitle}
-          </span>
-          {user?.role && (
-            <Badge className="bg-[#4c1d95] hover:bg-[#4c1d95] text-[#ddd6fe] border-[#5b21b6] rounded-full px-2 sm:px-3 py-0.5 text-xs 2xl:text-base font-semibold capitalize shrink-0 hidden sm:inline-flex">
-              {user.role}
-            </Badge>
-          )}
-        </div>
+          <div className="flex-1 flex items-center gap-2 min-w-0 overflow-hidden">
+            <span className="text-sm sm:text-lg 2xl:text-2xl font-medium text-white truncate">
+              {organizationName}
+            </span>
+            <span className="text-gray-400 2xl:text-xl hidden sm:inline">/</span>
+            <span className="text-gray-300 text-sm 2xl:text-lg hidden sm:inline truncate">
+              {pageTitle}
+            </span>
+            {user?.role && (
+              <Badge className="bg-[#4c1d95] hover:bg-[#4c1d95] text-[#ddd6fe] border-[#5b21b6] rounded-full px-2 sm:px-3 py-0.5 text-xs 2xl:text-base font-semibold capitalize shrink-0 hidden sm:inline-flex">
+                {user.role}
+              </Badge>
+            )}
+          </div>
 
-        <div className="flex items-center space-x-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="relative text-white hover:bg-gray-700"
-              >
-                <Bell size={20} />
-                {notifications.length > 0 && (
-                  <Badge
-                    variant="destructive"
-                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0"
-                  >
-                    {notifications.length}
-                  </Badge>
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="bg-[#0B1121] text-white w-[calc(100vw-2rem)] sm:w-[380px] shadow-2xl border-[1.35px] border-[#374151] p-0 rounded-2xl overflow-hidden"
-            >
-              <div className="flex items-center justify-between px-5 py-3 border-b border-[#374151]">
-                <div>
-                  <p className="text-sm text-gray-400">Notifications</p>
-                  <p className="text-lg font-semibold text-white">
-                    {notifications.length} Notifications
-                  </p>
-                </div>
-                <button
-                  onClick={handleClearAll}
-                  className="text-xs font-semibold text-blue-400 hover:underline"
+          <div className="flex items-center space-x-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="relative text-white hover:bg-gray-700"
                 >
-                  Clear all
-                </button>
-              </div>
-              <div className="max-h-[320px] overflow-y-auto divide-y divide-gray-700">
-                {loading ? (
-                  <div className="px-5 py-8 text-center text-gray-500 text-sm">
-                    Loading notifications...
-                  </div>
-                ) : notifications.length === 0 ? (
-                  <div className="px-5 py-8 text-center text-gray-400 text-sm">
-                    No notifications
-                  </div>
-                ) : (
-                  notifications.map((item: NotificationItem) => (
-                    <div
-                      key={`${item.id}-${item.status}-${item.datetime}`}
-                      className="relative px-5 py-4 cursor-default hover:bg-[#374151] transition-colors"
+                  <Bell size={20} />
+                  {notifications.length > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0"
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="space-y-1">
-                          <p className="text-sm font-semibold text-white">
-                            Sensor: {item.sensorName}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            Area: {item.area} • Machine: {item.machine}
-                          </p>
-                        </div>
-                        <span
-                          className={`px-3 py-0.5 text-xs font-semibold rounded-full mr-8 ${item.statusClass}`}
-                        >
-                          {item.status}
-                        </span>
-                      </div>
-
-                      <div className="mt-3 grid grid-cols-2 gap-x-8 gap-y-1 text-sm text-gray-400">
-                        <span className="flex justify-between">
-                          RMS H (mm/s)
-                          <strong className="text-white">{item.rmsH}</strong>
-                        </span>
-                        <span className="flex justify-between">
-                          RMS V (mm/s)
-                          <strong className="text-white">{item.rmsV}</strong>
-                        </span>
-                        <span className="flex justify-between">
-                          RMS A (mm/s)
-                          <strong className="text-white">{item.rmsA}</strong>
-                        </span>
-                        <span className="flex justify-between">
-                          Temp (°C)
-                          <strong className="text-white">{item.temp}</strong>
-                        </span>
-                      </div>
-
-                      <div className="mt-3 flex items-center justify-between text-xs text-gray-400">
-                        <span>Date &amp; Time</span>
-                        <span className="font-semibold text-gray-300">
-                          {item.datetime}
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              <div className="px-5 py-3 text-sm font-medium text-gray-400 text-center border-t-[1.35px] border-[#374151] bg-[#0B1121]">
-                {notifications.length} Notifications
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                className="flex items-center gap-2 text-white hover:bg-gray-700 h-auto py-2 px-3"
-              >
-                <Avatar className="h-8 w-8 border border-gray-600">
-                  {avatarUrl && (
-                    <AvatarImage
-                      src={avatarUrl}
-                      alt={user?.name || "User"}
-                      className="object-cover"
-                    />
+                      {notifications.length}
+                    </Badge>
                   )}
-                  <AvatarFallback className="bg-gray-600 text-gray-300 text-xs font-medium">
-                    {user?.name
-                      ? user.name
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="bg-[#0B1121] text-white w-[calc(100vw-2rem)] sm:w-[380px] shadow-2xl border-[1.35px] border-[#374151] p-0 rounded-2xl overflow-hidden"
+              >
+                <div className="flex items-center justify-between px-5 py-3 border-b border-[#374151]">
+                  <div>
+                    <p className="text-sm text-gray-400">Notifications</p>
+                    <p className="text-lg font-semibold text-white">
+                      {notifications.length} Notifications
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleClearAll}
+                    className="text-xs font-semibold text-blue-400 hover:underline"
+                  >
+                    Clear all
+                  </button>
+                </div>
+                <div className="max-h-[320px] overflow-y-auto divide-y divide-gray-700">
+                  {loading ? (
+                    <div className="px-5 py-8 text-center text-gray-500 text-sm">
+                      Loading notifications...
+                    </div>
+                  ) : notifications.length === 0 ? (
+                    <div className="px-5 py-8 text-center text-gray-400 text-sm">
+                      No notifications
+                    </div>
+                  ) : (
+                    notifications.map((item: NotificationItem) => (
+                      <div
+                        key={`${item.id}-${item.status}-${item.datetime}`}
+                        className="relative px-5 py-4 cursor-default hover:bg-[#374151] transition-colors"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="space-y-1">
+                            <p className="text-sm font-semibold text-white">
+                              Sensor: {item.sensorName}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              Area: {item.area} • Machine: {item.machine}
+                            </p>
+                          </div>
+                          <span
+                            className={`px-3 py-0.5 text-xs font-semibold rounded-full mr-8 ${item.statusClass}`}
+                          >
+                            {item.status}
+                          </span>
+                        </div>
+
+                        <div className="mt-3 grid grid-cols-2 gap-x-8 gap-y-1 text-sm text-gray-400">
+                          <span className="flex justify-between">
+                            RMS H (mm/s)
+                            <strong className="text-white">{item.rmsH}</strong>
+                          </span>
+                          <span className="flex justify-between">
+                            RMS V (mm/s)
+                            <strong className="text-white">{item.rmsV}</strong>
+                          </span>
+                          <span className="flex justify-between">
+                            RMS A (mm/s)
+                            <strong className="text-white">{item.rmsA}</strong>
+                          </span>
+                          <span className="flex justify-between">
+                            Temp (°C)
+                            <strong className="text-white">{item.temp}</strong>
+                          </span>
+                        </div>
+
+                        <div className="mt-3 flex items-center justify-between text-xs text-gray-400">
+                          <span>Date &amp; Time</span>
+                          <span className="font-semibold text-gray-300">
+                            {item.datetime}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <div className="px-5 py-3 text-sm font-medium text-gray-400 text-center border-t-[1.35px] border-[#374151] bg-[#0B1121]">
+                  {notifications.length} Notifications
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="flex items-center gap-2 text-white hover:bg-gray-700 h-auto py-2 px-3"
+                >
+                  <Avatar className="h-8 w-8 border border-gray-600">
+                    {avatarUrl && (
+                      <AvatarImage
+                        src={avatarUrl}
+                        alt={user?.name || "User"}
+                        className="object-cover"
+                      />
+                    )}
+                    <AvatarFallback className="bg-gray-600 text-gray-300 text-xs font-medium">
+                      {user?.name
+                        ? user.name
                           .split(" ")
                           .map((n) => n[0])
                           .join("")
                           .toUpperCase()
                           .slice(0, 2)
-                      : "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="text-sm font-medium hidden sm:inline">
+                        : "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-sm font-medium hidden sm:inline">
+                    {user ? user.name : "Guest"}
+                  </span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="bg-[#0B1121] border-[1.35px] border-[#374151]"
+              >
+                <DropdownMenuLabel className="text-white">
                   {user ? user.name : "Guest"}
-                </span>
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="bg-[#0B1121] border-[1.35px] border-[#374151]"
-            >
-              <DropdownMenuLabel className="text-white">
-                {user ? user.name : "Guest"}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-gray-700" />
-              <DropdownMenuItem
-                asChild
-                className="text-gray-200 hover:bg-gray-700"
-              >
-                <Link href="/settings">
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-gray-700" />
-              <DropdownMenuItem
-                onClick={logout}
-                className="text-gray-200 hover:bg-gray-700 cursor-pointer"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator className="bg-gray-700" />
+                <DropdownMenuItem
+                  asChild
+                  className="text-gray-200 hover:bg-gray-700"
+                >
+                  <Link href="/settings">
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator className="bg-gray-700" />
+                <DropdownMenuItem
+                  onSelect={(e) => e.preventDefault()}
+                  onClick={() => setLogoutDialogOpen(true)}
+                  className="text-gray-200 hover:bg-gray-700 cursor-pointer"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      <AlertDialog open={logoutDialogOpen} onOpenChange={setLogoutDialogOpen}>
+        <AlertDialogContent className="bg-[#0B1121] border border-[#374151] text-white w-[calc(100vw-2rem)] sm:max-w-md rounded-2xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-white flex items-center gap-2">
+              <LogOut className="h-5 w-5 text-red-400" />
+              Confirm Logout
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-gray-400">
+              Are you sure you want to log out of your account?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="bg-[#374151] border-0 text-white hover:bg-[#4B5563]">
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={logout}
+              className="bg-red-600 hover:bg-red-700 text-white border-0"
+            >
+              Logout
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 }
