@@ -233,10 +233,10 @@ export function NotificationHistoryTable({
   };
 
   return (
-    <Card className="border-[1.35px] border-[#374151] shadow-sm rounded-xl bg-[#0B1121] w-[98%] mx-auto pb-10">
+    <Card className="border-0 md:border-[1.35px] border-[#374151] shadow-none md:shadow-sm rounded-none md:rounded-xl bg-[#0B1121] w-full md:w-[98%] md:mx-auto pb-10">
       <CardContent className="p-0">
-        {/* Header & Legend with Clear All button */}
-        <div className="flex flex-wrap px-3 sm:px-8 pt-4 sm:pt-6 pb-2 items-start sm:items-center justify-between gap-3">
+        {/* Header & Legend */}
+        <div className="flex flex-wrap px-3 sm:px-8 pt-2 sm:pt-6 pb-2 items-start sm:items-center justify-between gap-3">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 w-full sm:w-auto">
             <h2 className="text-lg sm:text-2xl 2xl:text-4xl font-semibold text-white">
               Notification History
@@ -252,14 +252,14 @@ export function NotificationHistoryTable({
                     <button
                       key={key}
                       onClick={() => toggleStatus(key as NotificationStatus)}
-                      className={`flex items-center gap-2 text-base 2xl:text-xl transition-all duration-200 ${
+                      className={`flex items-center gap-2 text-sm sm:text-base 2xl:text-xl transition-all duration-200 ${
                         selectedStatuses.length > 0 && !isSelected
                           ? "opacity-40 grayscale"
                           : "opacity-100"
                       }`}
                     >
                       <span
-                        className={`inline-block w-4 h-4 2xl:w-6 2xl:h-6 rounded-full border border-gray-300 ${val.dot}`}
+                        className={`inline-block w-3 h-3 sm:w-4 sm:h-4 2xl:w-6 2xl:h-6 rounded-full border border-gray-300 ${val.dot}`}
                       />
                       <span className={val.color}>{val.label}</span>
                     </button>
@@ -270,7 +270,8 @@ export function NotificationHistoryTable({
         </div>
 
         {/* Search & Date Filter */}
-        <div className="flex flex-wrap gap-2 items-center px-3 sm:px-8 pb-4">
+        <div className="flex flex-col gap-2 px-3 sm:px-8 pb-3">
+          {/* Search */}
           <input
             type="text"
             placeholder="Search by serial number or machine name..."
@@ -278,60 +279,166 @@ export function NotificationHistoryTable({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <span className="ml-0 sm:ml-2 text-sm sm:text-base 2xl:text-xl text-gray-300">
-            Date:
-          </span>
-          {/* Start Date Custom Input */}
-          <div
-            className="relative bg-[#11171F] border border-gray-600 rounded-md px-3 py-2 flex items-center gap-2 cursor-pointer hover:border-blue-500 transition-colors w-[200px] 2xl:w-[250px]"
-            onClick={(e) => {
-              const input = e.currentTarget.querySelector(
-                'input[type="date"]'
-              ) as HTMLInputElement;
-              if (input) input.showPicker();
-            }}
-          >
-            <span className="text-white text-base 2xl:text-xl flex-1">
-              {dateStart
-                ? dateStart.split("-").reverse().join("/")
-                : "dd/mm/yyyy"}
+          {/* Date row: label + both pickers on same row */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-300 whitespace-nowrap">
+              Date:
             </span>
-            <Calendar className="h-5 w-5 text-gray-400" />
-            <input
-              type="date"
-              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              value={dateStart}
-              onChange={(e) => setDateStart(e.target.value)}
-            />
-          </div>
+            {/* Start Date */}
+            <div
+              className="relative bg-[#11171F] border border-gray-600 rounded-md px-2 py-1.5 flex items-center gap-1 cursor-pointer hover:border-blue-500 transition-colors flex-1 min-w-0 2xl:max-w-[250px]"
+              onClick={(e) => {
+                const input = e.currentTarget.querySelector(
+                  'input[type="date"]'
+                ) as HTMLInputElement;
+                if (input) input.showPicker();
+              }}
+            >
+              <span className="text-white text-sm 2xl:text-xl flex-1 truncate">
+                {dateStart
+                  ? dateStart.split("-").reverse().join("/")
+                  : "dd/mm/yyyy"}
+              </span>
+              <Calendar className="h-4 w-4 text-gray-400 shrink-0" />
+              <input
+                type="date"
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                value={dateStart}
+                onChange={(e) => setDateStart(e.target.value)}
+              />
+            </div>
 
-          <span className="mx-1 text-lg 2xl:text-2xl text-gray-400">-</span>
+            <span className="text-gray-400">-</span>
 
-          {/* End Date Custom Input */}
-          <div
-            className="relative bg-[#11171F] border border-gray-600 rounded-md px-3 py-2 flex items-center gap-2 cursor-pointer hover:border-blue-500 transition-colors w-[200px] 2xl:w-[250px]"
-            onClick={(e) => {
-              const input = e.currentTarget.querySelector(
-                'input[type="date"]'
-              ) as HTMLInputElement;
-              if (input) input.showPicker();
-            }}
-          >
-            <span className="text-white text-base 2xl:text-xl flex-1">
-              {dateEnd ? dateEnd.split("-").reverse().join("/") : "dd/mm/yyyy"}
-            </span>
-            <Calendar className="h-5 w-5 text-gray-400" />
-            <input
-              type="date"
-              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-              value={dateEnd}
-              onChange={(e) => setDateEnd(e.target.value)}
-            />
+            {/* End Date */}
+            <div
+              className="relative bg-[#11171F] border border-gray-600 rounded-md px-2 py-1.5 flex items-center gap-1 cursor-pointer hover:border-blue-500 transition-colors flex-1 min-w-0 2xl:max-w-[250px]"
+              onClick={(e) => {
+                const input = e.currentTarget.querySelector(
+                  'input[type="date"]'
+                ) as HTMLInputElement;
+                if (input) input.showPicker();
+              }}
+            >
+              <span className="text-white text-sm 2xl:text-xl flex-1 truncate">
+                {dateEnd
+                  ? dateEnd.split("-").reverse().join("/")
+                  : "dd/mm/yyyy"}
+              </span>
+              <Calendar className="h-4 w-4 text-gray-400 shrink-0" />
+              <input
+                type="date"
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                value={dateEnd}
+                onChange={(e) => setDateEnd(e.target.value)}
+              />
+            </div>
           </div>
         </div>
 
-        {/* Table */}
-        <div className="overflow-x-auto">
+        {/* ============================================================
+            MOBILE layout (< md): Card list
+            ============================================================ */}
+        <div className="md:hidden space-y-2 px-3 pb-4">
+          {pagedRows.length === 0 ? (
+            <div className="py-12 text-center text-gray-500 text-sm">
+              No notifications yet.
+            </div>
+          ) : (
+            pagedRows.map((entry) => {
+              const statusStyle = statusStyles[entry.status];
+              return (
+                <div
+                  key={entry.id}
+                  className="bg-[#11171F] border border-[#374151] rounded-xl p-3 space-y-2"
+                >
+                  {/* Row 1: Sensor name + Status */}
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-white font-semibold text-sm truncate">
+                      {entry.sensorName}
+                    </p>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span
+                        className={`inline-block w-2 h-2 rounded-full ${statusStyle.dot}`}
+                      />
+                      <span
+                        className={`text-xs font-semibold ${statusStyle.color}`}
+                      >
+                        {statusStyle.label}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Row 2: Area · Machine · Datetime */}
+                  <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap">
+                    <span className="truncate">
+                      <span className="text-gray-600">Area </span>
+                      {entry.area ?? "-"}
+                    </span>
+                    <span className="text-gray-700">·</span>
+                    <span className="truncate">
+                      <span className="text-gray-600">Machine </span>
+                      {entry.machine ?? "-"}
+                    </span>
+                    <span className="text-gray-700">·</span>
+                    <span className="text-gray-500">{entry.datetime}</span>
+                  </div>
+
+                  {/* Row 3: Vrms H / V / A · Temp · Battery */}
+                  <div className="flex items-center gap-3 text-xs flex-wrap">
+                    {(
+                      [
+                        { label: "H", axis: "hVrms", colorField: "hColor" },
+                        { label: "V", axis: "vVrms", colorField: "vColor" },
+                        { label: "A", axis: "aVrms", colorField: "aColor" },
+                      ] as const
+                    ).map(({ label, axis, colorField }) => {
+                      const colorCode = entry[
+                        colorField as keyof NotificationEntry
+                      ] as number | undefined;
+                      return (
+                        <div key={label} className="flex items-center gap-1">
+                          <span
+                            className={`inline-block w-1.5 h-1.5 rounded-full ${
+                              colorCode !== undefined
+                                ? getAxisColorCode(colorCode)
+                                : "bg-gray-400"
+                            }`}
+                          />
+                          <span className="text-gray-500">{label}</span>
+                          <span className="text-gray-300 font-medium">
+                            {entry[axis] != null
+                              ? (entry[axis] as number).toFixed(2)
+                              : "-"}
+                          </span>
+                        </div>
+                      );
+                    })}
+                    {entry.temperature && (
+                      <>
+                        <span className="text-gray-700">·</span>
+                        <span className="text-gray-400">
+                          {entry.temperature}
+                        </span>
+                      </>
+                    )}
+                    {entry.battery && (
+                      <>
+                        <span className="text-gray-700">·</span>
+                        <span className="text-gray-400">{entry.battery}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* ============================================================
+            DESKTOP layout (≥ md): Original Table
+            ============================================================ */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full text-base 2xl:text-xl">
             <thead>
               <tr className="bg-[#0B1121] border-b-[1.35px] border-[#374151] text-center text-gray-200 text-sm sm:text-base lg:text-lg 2xl:text-2xl">
@@ -369,7 +476,7 @@ export function NotificationHistoryTable({
                 </th>
                 <th
                   className="py-3 px-4 font-medium cursor-pointer hover:text-white transition-colors"
-                  onClick={() => requestSort("datetime")} // Uses timestamp logic
+                  onClick={() => requestSort("datetime")}
                 >
                   <div className="flex items-center justify-center gap-1">
                     Date&Time {getSortIcon("datetime")}
@@ -451,7 +558,6 @@ export function NotificationHistoryTable({
                       const colorField = (axis.charAt(0) +
                         "Color") as keyof NotificationEntry;
                       const colorCode = entry[colorField] as number | undefined;
-
                       return (
                         <td key={axis} className="py-4 px-4">
                           <div className="flex items-center justify-center gap-2">
@@ -495,7 +601,7 @@ export function NotificationHistoryTable({
           </table>
         </div>
 
-        {/* Pagination (SensorPagination style) */}
+        {/* Pagination */}
         <SensorPagination
           currentPage={activePage}
           totalPages={totalPages}
