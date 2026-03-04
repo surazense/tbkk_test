@@ -62,7 +62,7 @@ export default function RegisterSensorForm() {
             <SensorFormTabs editId={editId} form={form} />
           </CardHeader>
 
-          <CardContent className="pt-6">
+          <CardContent className="pt-3 sm:pt-6 px-3 sm:px-6">
             <div className="mb-6 space-y-1">
               <h2 className="text-xl sm:text-3xl font-semibold text-white">
                 {isEditMode || editId ? "Edit" : "Register New"}{" "}

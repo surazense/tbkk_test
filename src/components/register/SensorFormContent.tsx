@@ -146,7 +146,7 @@ export function SensorFormContent({
   return (
     <div className="space-y-6 py-4">
       {/* All Fields - 2 Columns */}
-      <div className="grid grid-cols-2 gap-2 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <FormField
           control={form.control}
           name={`sensors.${index}.area`}
@@ -668,7 +668,7 @@ export function SensorFormContent({
 
       {watchedNamePlaceEnabled && (
         <div className="p-6 border-[1.35px] border-[#374151] rounded-xl bg-[#0B1121] space-y-6">
-          <div className="grid grid-cols-2 gap-2 sm:gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <FormField
               control={form.control}
               name={`sensors.${index}.namePlace`}
