@@ -847,28 +847,29 @@ export default function SensorHistoryPage() {
 
       <div className="p-6 space-y-6">
         <Card className="bg-[#0B1121] border-[1.35px] border-[#374151]">
-          <CardContent className="p-4 flex flex-wrap gap-6 items-center">
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-300">Axis:</span>
-              {(["h", "v", "a", "all"] as const).map((axis) => (
-                <button
-                  key={axis}
-                  onClick={() => setSelectedAxis(axis)}
-                  className={`px-4 py-1.5 rounded-full text-sm border transition-colors ${
-                    selectedAxis === axis
+          <CardContent className="p-4 flex flex-col md:flex-row flex-wrap gap-4 md:gap-6 items-start md:items-center">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-medium text-gray-300 w-12 md:w-auto">Axis:</span>
+              <div className="flex flex-wrap gap-2">
+                {(["h", "v", "a", "all"] as const).map((axis) => (
+                  <button
+                    key={axis}
+                    onClick={() => setSelectedAxis(axis)}
+                    className={`px-3 py-1.5 md:px-4 rounded-full text-xs md:text-sm border transition-colors ${selectedAxis === axis
                       ? "bg-blue-600 border-blue-500 text-white"
                       : "bg-[#0B1121] border-[1.35px] border-[#374151] text-gray-300 hover:bg-[#374151]/50"
-                  }`}
-                >
-                  {axis === "all" ? "All" : `${axis.toUpperCase()}-axis`}
-                </button>
-              ))}
+                      }`}
+                  >
+                    {axis === "all" ? "All" : `${axis.toUpperCase()}-axis`}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-300">Unit:</span>
+            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
+              <span className="text-sm font-medium text-gray-300 w-12 md:w-auto">Unit:</span>
               <select
-                className="bg-[#0B1121] border-[1.35px] border-[#374151] text-white text-sm rounded px-3 py-1.5 focus:outline-none"
+                className="bg-[#0B1121] border-[1.35px] border-[#374151] text-white text-sm rounded px-3 py-1.5 focus:outline-none flex-1 md:flex-none"
                 value={selectedUnit}
                 onChange={(e) => setSelectedUnit(e.target.value)}
               >
@@ -878,61 +879,65 @@ export default function SensorHistoryPage() {
               </select>
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium text-gray-300">Date:</span>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full md:w-auto">
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <span className="text-sm font-medium text-gray-300 w-12 md:w-auto">Date:</span>
 
-              {/* Start Date Custom Input */}
-              <div
-                className="relative bg-[#0B1121] border-[1.35px] border-[#374151] rounded px-3 py-1.5 flex items-center gap-2 w-[150px] cursor-pointer hover:border-blue-500"
-                onClick={(e) => {
-                  const input = e.currentTarget.querySelector(
-                    'input[type="date"]'
-                  ) as HTMLInputElement;
-                  if (input) input.showPicker();
-                }}
-              >
-                <span className="text-white text-sm flex-1">
-                  {dateStart
-                    ? dateStart.split("-").reverse().join("/")
-                    : "dd/mm/yyyy"}
-                </span>
-                <Calendar className="h-4 w-4 text-white" />
-                <input
-                  type="date"
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  value={dateStart}
-                  onChange={(e) => setDateStart(e.target.value)}
-                />
+                {/* Start Date Custom Input */}
+                <div
+                  className="relative bg-[#0B1121] border-[1.35px] border-[#374151] rounded px-3 py-1.5 flex items-center gap-2 w-full sm:w-[150px] cursor-pointer hover:border-blue-500"
+                  onClick={(e) => {
+                    const input = e.currentTarget.querySelector(
+                      'input[type="date"]'
+                    ) as HTMLInputElement;
+                    if (input) input.showPicker();
+                  }}
+                >
+                  <span className="text-white text-sm flex-1">
+                    {dateStart
+                      ? dateStart.split("-").reverse().join("/")
+                      : "dd/mm/yyyy"}
+                  </span>
+                  <Calendar className="h-4 w-4 text-white shrink-0" />
+                  <input
+                    type="date"
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    value={dateStart}
+                    onChange={(e) => setDateStart(e.target.value)}
+                  />
+                </div>
               </div>
 
-              <span className="text-gray-400">-</span>
+              <span className="text-gray-400 hidden sm:block">-</span>
 
               {/* End Date Custom Input */}
-              <div
-                className="relative bg-[#0B1121] border-[1.35px] border-[#374151] rounded px-3 py-1.5 flex items-center gap-2 w-[150px] cursor-pointer hover:border-blue-500"
-                onClick={(e) => {
-                  const input = e.currentTarget.querySelector(
-                    'input[type="date"]'
-                  ) as HTMLInputElement;
-                  if (input) input.showPicker();
-                }}
-              >
-                <span className="text-white text-sm flex-1">
-                  {dateEnd
-                    ? dateEnd.split("-").reverse().join("/")
-                    : "dd/mm/yyyy"}
-                </span>
-                <Calendar className="h-4 w-4 text-white" />
-                <input
-                  type="date"
-                  className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
-                  value={dateEnd}
-                  onChange={(e) => setDateEnd(e.target.value)}
-                />
+              <div className="flex items-center gap-2 w-full sm:w-auto pl-14 sm:pl-0">
+                <div
+                  className="relative bg-[#0B1121] border-[1.35px] border-[#374151] rounded px-3 py-1.5 flex items-center gap-2 w-full sm:w-[150px] cursor-pointer hover:border-blue-500"
+                  onClick={(e) => {
+                    const input = e.currentTarget.querySelector(
+                      'input[type="date"]'
+                    ) as HTMLInputElement;
+                    if (input) input.showPicker();
+                  }}
+                >
+                  <span className="text-white text-sm flex-1">
+                    {dateEnd
+                      ? dateEnd.split("-").reverse().join("/")
+                      : "dd/mm/yyyy"}
+                  </span>
+                  <Calendar className="h-4 w-4 text-white shrink-0" />
+                  <input
+                    type="date"
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    value={dateEnd}
+                    onChange={(e) => setDateEnd(e.target.value)}
+                  />
+                </div>
               </div>
             </div>
 
-            <div className="flex gap-2 ml-auto">
+            <div className="flex gap-2 w-full md:w-auto md:ml-auto justify-end mt-2 md:mt-0">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -980,43 +985,45 @@ export default function SensorHistoryPage() {
             {!loading && history.length > 0 && chartOption && (
               <div className="space-y-8">
                 {/* Single Combined Multi-Grid Graph */}
-                <div className="pt-4">
-                  <ReactECharts
-                    option={chartOption}
-                    style={{ height: "950px", width: "100%" }}
-                    theme="dark"
-                    onChartReady={(instance) => {
-                      chartRef.current = instance;
-                      setIsChartReady(true);
-                    }}
-                    onEvents={{
-                      click: (params: any) => {
-                        if (params.dataIndex !== undefined) {
-                          setSelectedDataIndex(params.dataIndex);
-                        }
-                      },
-                    }}
-                  />
+                <div className="pt-4 overflow-x-auto custom-scrollbar">
+                  <div className="min-w-[700px] w-full">
+                    <ReactECharts
+                      option={chartOption}
+                      style={{ height: "950px", width: "100%" }}
+                      theme="dark"
+                      onChartReady={(instance) => {
+                        chartRef.current = instance;
+                        setIsChartReady(true);
+                      }}
+                      onEvents={{
+                        click: (params: any) => {
+                          if (params.dataIndex !== undefined) {
+                            setSelectedDataIndex(params.dataIndex);
+                          }
+                        },
+                      }}
+                    />
 
-                  {/* Custom Legend UI for RMS Vibration */}
-                  <div className="flex justify-center gap-12 mt-4 pb-8">
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="w-24 h-1 bg-[#00E5FF] rounded-full"></div>
-                      <span className="text-sm font-bold text-white uppercase tracking-wider">
-                        H-axis
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="w-24 h-1 bg-[#4C6FFF] rounded-full"></div>
-                      <span className="text-sm font-bold text-white uppercase tracking-wider">
-                        V-axis
-                      </span>
-                    </div>
-                    <div className="flex flex-col items-center gap-1">
-                      <div className="w-24 h-1 bg-[#C77DFF] rounded-full"></div>
-                      <span className="text-sm font-bold text-white uppercase tracking-wider">
-                        A-axis
-                      </span>
+                    {/* Custom Legend UI for RMS Vibration */}
+                    <div className="flex justify-center gap-12 mt-4 pb-8">
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="w-24 h-1 bg-[#00E5FF] rounded-full"></div>
+                        <span className="text-sm font-bold text-white uppercase tracking-wider">
+                          H-axis
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="w-24 h-1 bg-[#4C6FFF] rounded-full"></div>
+                        <span className="text-sm font-bold text-white uppercase tracking-wider">
+                          V-axis
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="w-24 h-1 bg-[#C77DFF] rounded-full"></div>
+                        <span className="text-sm font-bold text-white uppercase tracking-wider">
+                          A-axis
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1178,6 +1185,6 @@ export default function SensorHistoryPage() {
           </CardContent>
         </Card>
       </div>
-    </div>
+    </div >
   );
 }

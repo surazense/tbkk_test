@@ -168,19 +168,19 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
               </h2>
               {(user?.role?.toLowerCase() === "admin" ||
                 user?.role?.toLowerCase() === "editor") && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="bg-transparent border-[1.35px] border-[#374151] hover:bg-[#374151]/50 text-white w-fit 2xl:text-base 2xl:px-3 2xl:py-1"
-                  onClick={() => router.push(`/register?id=${params.id}`)}
-                >
-                  <Settings className="mr-2 h-4 w-4 2xl:h-5 2xl:w-5" />
-                  Edit
-                </Button>
-              )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-transparent border-[1.35px] border-[#374151] hover:bg-[#374151]/50 text-white w-fit 2xl:text-base 2xl:px-3 2xl:py-1"
+                    onClick={() => router.push(`/register?id=${params.id}`)}
+                  >
+                    <Settings className="mr-2 h-4 w-4 2xl:h-5 2xl:w-5" />
+                    Edit
+                  </Button>
+                )}
             </div>
 
-            <div className="grid grid-cols-[140px_1fr] 2xl:grid-cols-[160px_1fr] gap-x-2 gap-y-1 text-base 2xl:text-lg">
+            <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] 2xl:grid-cols-[160px_1fr] gap-x-2 gap-y-2 text-sm sm:text-base 2xl:text-lg">
               <span className="text-gray-400">Area Operation</span>
               <span className="text-lg 2xl:text-xl text-white">
                 {sensorLastData?.area ||
@@ -364,7 +364,7 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                 })()}
               </div>
             </div>
-            <div className="grid grid-cols-[135px_1fr] 2xl:grid-cols-[150px_1fr] gap-x-2 gap-y-1 text-base 2xl:text-lg">
+            <div className="grid grid-cols-1 md:grid-cols-[135px_1fr] 2xl:grid-cols-[150px_1fr] gap-x-2 gap-y-2 text-sm sm:text-base 2xl:text-lg">
               <span className="text-gray-400">Signal Strength</span>
               <span className="flex items-center gap-2 text-white">
                 {(() => {
