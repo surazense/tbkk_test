@@ -72,7 +72,7 @@ export function SensorFormContent({
   const sensorTypes = ["Master", "Satellite"];
 
   // Frequency Max options
-  const frequencyMaxOptions = ["1000", "2500", "5000", "10000"];
+  const frequencyMaxOptions = ["1250", "2500", "5000", "10000"];
 
   // LOR options
   const lorOptions = ["200", "400", "800", "1600", "3200", "6400"];
@@ -853,11 +853,10 @@ export function SensorFormContent({
       {/* Additional Settings */}
       {/* Row 1: Columns depend on Name Place being enabled */}
       <div
-        className={`grid grid-cols-1 gap-4 ${
-          watchedNamePlaceEnabled
+        className={`grid grid-cols-1 gap-4 ${watchedNamePlaceEnabled
             ? "md:grid-cols-2 2xl:grid-cols-2"
             : "md:grid-cols-3 2xl:grid-cols-3"
-        }`}
+          }`}
       >
         <FormField
           control={form.control}
