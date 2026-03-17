@@ -144,7 +144,7 @@ export function useRegisterSensorForm() {
             : new Date(),
           machine: data.machine || data.machine_no || "",
           machineNo: data.machine_no || "",
-          installationPoint: data.installation_point || "",
+          installationPoint: data.installed_point || data.installation_point || "",
           machineClassEnabled: true,
           namePlaceEnabled: false,
           machineClass: data.machine_class || "mediumFlexible",

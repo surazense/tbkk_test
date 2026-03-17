@@ -9,9 +9,7 @@ interface SensorFormTabsProps {
 }
 
 export function SensorFormTabs({ editId, form }: SensorFormTabsProps) {
-  const isMaster = form.watch("sensors.0.sensorType") === "Master";
-
-  if (editId && !isMaster) return null;
+  if (editId) return null;
 
   return (
     <TabsList className="flex w-full justify-start bg-transparent p-0">
