@@ -90,10 +90,11 @@ export function SensorFormContent({
     "Integrated driver Motor pump Flexible Installed",
   ];
 
-  // Time Interval options (5 to 60, step 5)
-  const timeIntervalOptions = Array.from({ length: 12 }, (_, i) =>
-    ((i + 1) * 5).toString()
-  );
+  // Time Interval options (2, 5 to 60, step 5)
+  const timeIntervalOptions = [
+    "2",
+    ...Array.from({ length: 12 }, (_, i) => ((i + 1) * 5).toString()),
+  ];
 
   // Watch machine class to auto-update thresholds
   const watchedMachineClass = form.watch(`sensors.${index}.machineClass`);
