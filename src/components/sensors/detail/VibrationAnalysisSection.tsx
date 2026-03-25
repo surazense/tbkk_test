@@ -265,6 +265,7 @@ export const VibrationAnalysisSection: React.FC<
                   <div className="h-80 w-full">
                     {hasData && vibrationData.timeData ? (
                       <ReactECharts
+                        notMerge={true}
                         option={{
                           backgroundColor: "transparent",
                           grid: { left: 60, right: 30, top: 30, bottom: 60 },
@@ -473,6 +474,7 @@ export const VibrationAnalysisSection: React.FC<
                             {axisHasData &&
                               axisData.freqData?.labels?.length > 0 ? (
                               <ReactECharts
+                                notMerge={true}
                                 onChartReady={(instance) => {
                                   axis.ref.current = instance;
                                 }}

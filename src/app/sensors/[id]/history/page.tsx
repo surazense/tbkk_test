@@ -988,6 +988,7 @@ export default function SensorHistoryPage() {
                 <div className="pt-4 overflow-x-auto custom-scrollbar">
                   <div className="min-w-[700px] w-full">
                     <ReactECharts
+                      notMerge={true}
                       option={chartOption}
                       style={{ height: "950px", width: "100%" }}
                       theme="dark"
