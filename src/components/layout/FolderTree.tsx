@@ -142,20 +142,27 @@ const FolderTree: React.FC<{
   );
 
   // --- Data Fetching ---
-  useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchRealSensors(true);
-        setSensors(data);
-      } catch (e) {
-        console.error("Fetch error:", e);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAll();
+  const fetchAll = useCallback(async () => {
+    try {
+      setLoading(true);
+      const data = await fetchRealSensors(true);
+      setSensors(data);
+    } catch (e) {
+      console.error("Fetch error:", e);
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchAll();
+  }, [fetchAll]);
+
+  useEffect(() => {
+    const handleRefresh = () => fetchAll();
+    window.addEventListener("REFRESH_SENSORS", handleRefresh);
+    return () => window.removeEventListener("REFRESH_SENSORS", handleRefresh);
+  }, [fetchAll]);
 
   const treeData = useMemo(
     () => (sensors.length ? buildTreeFromSensors(sensors) : []),

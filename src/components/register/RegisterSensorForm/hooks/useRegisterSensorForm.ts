@@ -356,6 +356,7 @@ export function useRegisterSensorForm() {
             title: "Update Successful",
             description: `All ${results.length} sensors updated successfully.`,
           });
+          window.dispatchEvent(new Event("REFRESH_SENSORS"));
           router.push(`/sensors/${editId}`);
         }
       } catch (error) {
@@ -475,6 +476,7 @@ export function useRegisterSensorForm() {
         title: "Registration Complete",
         description: `Successfully registered ${validSensors.length} sensors.`,
       });
+      window.dispatchEvent(new Event("REFRESH_SENSORS"));
       router.push("/");
     } catch (error) {
       toast({
