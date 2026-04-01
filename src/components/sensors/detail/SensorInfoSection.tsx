@@ -7,6 +7,7 @@ import {
   WifiHigh,
   WifiLow,
   WifiZero,
+  Calendar,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -110,7 +111,29 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
   selectedUnit,
 }) => {
   const [visibleCount, setVisibleCount] = React.useState(20);
-  const visibleDatetimes = sortedDatetimes.slice(0, visibleCount);
+  const [selectedCalendarDate, setSelectedCalendarDate] = React.useState<string>("");
+
+  // Safely filter datetimes based on calendar selection
+  const filteredDatetimes = React.useMemo(() => {
+    if (!selectedCalendarDate) return sortedDatetimes;
+    return sortedDatetimes.filter((dt) => {
+      let dtObj;
+      if (dt.includes("T")) dtObj = new Date(dt.split("T")[0]);
+      else if (dt.includes(",")) dtObj = parseCustomDate(dt);
+      else dtObj = new Date(dt.split(" ")[0]);
+
+      if (isNaN(dtObj.getTime())) return true;
+
+      const y = dtObj.getFullYear();
+      const m = String(dtObj.getMonth() + 1).padStart(2, "0");
+      const d = String(dtObj.getDate()).padStart(2, "0");
+      const dtStr = `${y}-${m}-${d}`;
+
+      return dtStr === selectedCalendarDate;
+    });
+  }, [sortedDatetimes, selectedCalendarDate]);
+
+  const visibleDatetimes = filteredDatetimes.slice(0, visibleCount);
 
   // Map dates to RMS values for quick lookup
   const rmsLookup = React.useMemo(() => {
@@ -455,9 +478,53 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
           {/* Column 4: Select Date */}
           <div className="flex-[2] py-3 2xl:py-4 pl-0">
             <div className="flex justify-between items-end mb-4 pr-1">
-              <h2 className="text-xl 2xl:text-2xl font-semibold text-white pl-0">
-                Select Date
-              </h2>
+              <div className="flex flex-wrap items-center gap-3">
+                <h2 className="text-xl 2xl:text-2xl font-semibold text-white pl-0">
+                  Select Date
+                </h2>
+                <div className="flex items-center gap-2">
+                  <div
+                    className="relative bg-[#0B1121] border-[1.35px] border-[#374151] rounded px-3 py-1 flex items-center gap-2 min-w-[130px] cursor-pointer hover:border-blue-500"
+                    onClick={(e) => {
+                      const input = e.currentTarget.querySelector(
+                        'input[type="date"]'
+                      ) as HTMLInputElement;
+                      if (input && typeof input.showPicker === 'function') {
+                        input.showPicker();
+                      }
+                    }}
+                  >
+                    <span className="text-white text-sm flex-1">
+                      {selectedCalendarDate
+                        ? selectedCalendarDate.split("-").reverse().join("/")
+                        : "dd/mm/yyyy"}
+                    </span>
+                    <Calendar className="h-4 w-4 text-white shrink-0" />
+                    <input
+                      type="date"
+                      className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                      value={selectedCalendarDate}
+                      onChange={(e) => {
+                        setSelectedCalendarDate(e.target.value);
+                        setVisibleCount(20);
+                      }}
+                    />
+                  </div>
+                  {selectedCalendarDate && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs text-gray-400 hover:text-white px-2 py-1 h-auto"
+                      onClick={() => {
+                        setSelectedCalendarDate("");
+                        setVisibleCount(20);
+                      }}
+                    >
+                      Clear
+                    </Button>
+                  )}
+                </div>
+              </div>
               <span className="text-sm 2xl:text-lg font-semibold text-white">
                 RMS Overall
               </span>
@@ -471,7 +538,7 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                 if (scrollHeight - scrollTop <= clientHeight + 10) {
                   // Load next 20 items
                   setVisibleCount((prev) =>
-                    Math.min(prev + 20, sortedDatetimes.length)
+                    Math.min(prev + 20, filteredDatetimes.length)
                   );
                 }
               }}
@@ -512,7 +579,7 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                       </button>
                     </li>
                   ))}
-                  {visibleCount < sortedDatetimes.length && (
+                  {visibleCount < filteredDatetimes.length && (
                     <li className="text-center py-2 text-gray-500 text-sm">
                       Loading more...
                     </li>
