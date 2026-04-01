@@ -66,12 +66,12 @@ export const VibrationAnalysisSection: React.FC<
         <CardContent className="p-0">
           <div className="flex flex-col gap-6">
             {/* Axis and Unit Selection within Time Domain Section */}
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-2">
-              <h2 className="text-lg md:text-xl lg:text-2xl font-extrabold text-white">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2 md:gap-4 mb-2">
+              <h2 className="text-base sm:text-lg md:text-xl lg:text-2xl font-extrabold text-white">
                 Vibration Frequency Analysis
               </h2>
 
-              <div className="flex flex-wrap items-center gap-6 bg-[#1f2937]/30 p-3 rounded-lg border border-[#374151]">
+              <div className="flex flex-wrap items-center gap-3 md:gap-6 bg-[#1f2937]/30 p-2 md:p-3 rounded-lg border border-[#374151]">
                 {/* Axis Selection */}
                 <div className="flex items-center gap-4 pr-4 border-r border-[#374151]">
                   <span className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
@@ -87,7 +87,7 @@ export const VibrationAnalysisSection: React.FC<
                       />
                       <span
                         className={cn(
-                          "text-lg font-bold group-hover:text-blue-400 transition-colors",
+                          "text-sm sm:text-base md:text-lg font-bold group-hover:text-blue-400 transition-colors",
                           selectedAxis === "H-axis"
                             ? "text-blue-500"
                             : "text-white"
@@ -107,7 +107,7 @@ export const VibrationAnalysisSection: React.FC<
                       />
                       <span
                         className={cn(
-                          "text-lg font-bold group-hover:text-blue-400 transition-colors",
+                          "text-sm sm:text-base md:text-lg font-bold group-hover:text-blue-400 transition-colors",
                           selectedAxis === "V-axis"
                             ? "text-blue-500"
                             : "text-white"
@@ -127,7 +127,7 @@ export const VibrationAnalysisSection: React.FC<
                       />
                       <span
                         className={cn(
-                          "text-lg font-bold group-hover:text-blue-400 transition-colors",
+                          "text-sm sm:text-base md:text-lg font-bold group-hover:text-blue-400 transition-colors",
                           selectedAxis === "A-axis"
                             ? "text-blue-500"
                             : "text-white"
@@ -203,8 +203,8 @@ export const VibrationAnalysisSection: React.FC<
               {/* RMS Overall + Time Domain Section */}
               <div className="flex flex-col lg:flex-row gap-4">
                 {/* Left Column: RMS Overall + Top 5 Peaks (30%) */}
-                <div className="w-full lg:w-[30%] bg-[#0B1121] border-[1.35px] border-[#374151] rounded-lg p-6">
-                  <div className="flex flex-col items-center justify-center mb-8 gap-y-1">
+                <div className="w-full lg:w-[30%] bg-[#0B1121] border-[1.35px] border-[#374151] rounded-lg p-3 sm:p-4 md:p-6">
+                  <div className="flex flex-col items-center justify-center mb-4 md:mb-8 gap-y-1">
                     <h4 className="text-lg md:text-xl lg:text-2xl font-extrabold text-white whitespace-nowrap">
                       {selectedUnit.split(" ")[0]} RMS Overall
                     </h4>
@@ -253,8 +253,8 @@ export const VibrationAnalysisSection: React.FC<
                 </div>
 
                 {/* Right Column: Time Domain Graph (70%) */}
-                <div className="w-full lg:w-[70%] bg-[#0B1121] border-[1.35px] border-[#374151] rounded-lg p-6">
-                  <h4 className="text-lg md:text-xl lg:text-2xl font-extrabold text-white mb-8 text-center">
+                <div className="w-full lg:w-[70%] bg-[#0B1121] border-[1.35px] border-[#374151] rounded-lg p-2 sm:p-4 md:p-6">
+                  <h4 className="text-base sm:text-lg md:text-xl lg:text-2xl font-extrabold text-white mb-4 md:mb-8 text-center">
                     Time Domain :{" "}
                     {selectedAxis === "H-axis"
                       ? "Horizontal (H)"
@@ -262,7 +262,7 @@ export const VibrationAnalysisSection: React.FC<
                         ? "Vertical (V)"
                         : "Axial (A)"}
                   </h4>
-                  <div className="h-80 w-full">
+                  <div className="h-60 sm:h-72 md:h-80 w-full">
                     {hasData && vibrationData.timeData ? (
                       <ReactECharts
                         notMerge={true}
@@ -375,11 +375,11 @@ export const VibrationAnalysisSection: React.FC<
 
               {/* Frequency Domain Section */}
               <div className="!mt-2">
-                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-3">
-                  <h3 className="text-lg md:text-xl lg:text-2xl font-extrabold text-white">
+                <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-2 md:gap-4 mb-3">
+                  <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-extrabold text-white">
                     Frequency Domain
                   </h3>
-                  <div className="flex items-center gap-4 bg-[#1f2937]/30 p-3 rounded-lg border border-[#374151]">
+                  <div className="flex flex-wrap items-center gap-3 md:gap-4 bg-[#1f2937]/30 p-2 md:p-3 rounded-lg border border-[#374151]">
                     <label className="flex items-center gap-2 cursor-pointer group">
                       <input
                         type="checkbox"
@@ -389,7 +389,7 @@ export const VibrationAnalysisSection: React.FC<
                       />
                       <span
                         className={cn(
-                          "text-lg font-bold group-hover:text-yellow-400 transition-colors",
+                          "text-sm sm:text-base md:text-lg font-bold group-hover:text-yellow-400 transition-colors",
                           selectedUnit === "Acceleration (G)"
                             ? "text-yellow-500"
                             : "text-white"
@@ -407,7 +407,7 @@ export const VibrationAnalysisSection: React.FC<
                       />
                       <span
                         className={cn(
-                          "text-lg font-bold group-hover:text-yellow-400 transition-colors",
+                          "text-sm sm:text-base md:text-lg font-bold group-hover:text-yellow-400 transition-colors",
                           selectedUnit === "Acceleration (mm/s²)"
                             ? "text-yellow-500"
                             : "text-white"
@@ -425,7 +425,7 @@ export const VibrationAnalysisSection: React.FC<
                       />
                       <span
                         className={cn(
-                          "text-lg font-bold group-hover:text-yellow-400 transition-colors",
+                          "text-sm sm:text-base md:text-lg font-bold group-hover:text-yellow-400 transition-colors",
                           selectedUnit === "Velocity (mm/s)"
                             ? "text-yellow-500"
                             : "text-white"
@@ -470,7 +470,7 @@ export const VibrationAnalysisSection: React.FC<
                             <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
                             {axis.label}
                           </h4>
-                          <div className="h-[300px] w-full bg-[#030616] border-[1.35px] border-[#374151] rounded-lg p-4 relative">
+                          <div className="h-[220px] sm:h-[260px] md:h-[300px] w-full bg-[#030616] border-[1.35px] border-[#374151] rounded-lg p-2 md:p-4 relative">
                             {axisHasData &&
                               axisData.freqData?.labels?.length > 0 ? (
                               <ReactECharts

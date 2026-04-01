@@ -143,7 +143,7 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
         <div className="flex flex-col xl:flex-row gap-6 items-stretch">
           {/* Column 1: Image */}
           <div className="flex-1 flex justify-center">
-            <div className="w-48 h-full min-h-[280px] bg-[#0B1121] border-[1.35px] border-[#374151] rounded-md flex items-center justify-center overflow-hidden relative">
+            <div className="w-full max-w-[200px] md:w-48 h-full min-h-[160px] md:min-h-[280px] bg-[#0B1121] border-[1.35px] border-[#374151] rounded-md flex items-center justify-center overflow-hidden relative">
               {sensorImage || configData.image_url ? (
                 <Image
                   src={sensorImage || configData.image_url || ""}
@@ -180,9 +180,9 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                 )}
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-[140px_1fr] 2xl:grid-cols-[160px_1fr] gap-x-2 gap-y-2 text-sm sm:text-base 2xl:text-lg">
-              <span className="text-gray-400">Area Operation</span>
-              <span className="text-lg 2xl:text-xl text-white">
+            <div className="grid grid-cols-[110px_1fr] md:grid-cols-[140px_1fr] 2xl:grid-cols-[160px_1fr] gap-x-2 gap-y-2 text-xs sm:text-sm md:text-base 2xl:text-lg">
+              <span className="text-gray-400 flex items-center">Area Operation</span>
+              <span className="text-sm md:text-lg 2xl:text-xl text-white truncate break-words whitespace-normal">
                 {sensorLastData?.area ||
                   sensor?.area ||
                   sensor?.location ||
@@ -190,7 +190,7 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
               </span>
 
               <span className="text-gray-400">Machine Name</span>
-              <span className="text-lg 2xl:text-xl text-white">
+              <span className="text-sm md:text-lg 2xl:text-xl text-white truncate break-words whitespace-normal">
                 {sensorLastData?.machine ||
                   sensor?.machine ||
                   sensor?.machineName ||
@@ -200,7 +200,7 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
               <span className="text-gray-400">Machine Number</span>
               <span
                 className={cn(
-                  "text-lg 2xl:text-xl",
+                  "text-sm md:text-lg 2xl:text-xl truncate break-words whitespace-normal",
                   configData.machineNumber ? "text-white" : "text-gray-500"
                 )}
               >
@@ -210,7 +210,7 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
               <span className="text-gray-400">Installation Point</span>
               <span
                 className={cn(
-                  "text-lg 2xl:text-xl",
+                  "text-sm md:text-lg 2xl:text-xl truncate break-words whitespace-normal",
                   configData.installationPoint ? "text-white" : "text-gray-500"
                 )}
               >
@@ -220,7 +220,7 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
               <span className="text-gray-400">Machine Class</span>
               <span
                 className={cn(
-                  "text-lg 2xl:text-xl",
+                  "text-sm md:text-lg 2xl:text-xl truncate break-words whitespace-normal",
                   configData.machineClass ? "text-white" : "text-gray-500"
                 )}
               >
@@ -228,7 +228,7 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
               </span>
 
               <span className="text-gray-400">Machine Installation Date</span>
-              <span className="text-lg 2xl:text-xl text-white">
+              <span className="text-sm md:text-lg 2xl:text-xl text-white truncate break-words whitespace-normal">
                 {(() => {
                   const dateVal =
                     sensor?.motor_start_time || sensor?.installationDate;
@@ -246,7 +246,7 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
               </span>
 
               <span className="text-gray-400">Machine Age</span>
-              <span className="text-lg 2xl:text-xl text-white">
+              <span className="text-sm md:text-lg 2xl:text-xl text-white truncate break-words whitespace-normal">
                 {(() => {
                   const dateVal =
                     sensor?.motor_start_time || sensor?.installationDate;
@@ -364,8 +364,8 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                 })()}
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-[135px_1fr] 2xl:grid-cols-[150px_1fr] gap-x-2 gap-y-2 text-sm sm:text-base 2xl:text-lg">
-              <span className="text-gray-400">Signal Strength</span>
+            <div className="grid grid-cols-[110px_1fr] md:grid-cols-[135px_1fr] 2xl:grid-cols-[150px_1fr] gap-x-2 gap-y-2 text-xs sm:text-sm md:text-base 2xl:text-lg">
+              <span className="text-gray-400 flex items-center">Signal Strength</span>
               <span className="flex items-center gap-2 text-white">
                 {(() => {
                   const level = getSignalStrength(currentData.rssi || 0);
@@ -421,19 +421,19 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
               </span>
 
               <span className="text-gray-400">Battery</span>
-              <span className="text-lg 2xl:text-xl text-white">
+              <span className="text-sm md:text-lg 2xl:text-xl text-white truncate break-words whitespace-normal">
                 {safeBattery.toFixed(0)}%
               </span>
 
               <span className="text-gray-400">Sensor Installation Date</span>
-              <span className="text-lg 2xl:text-xl text-white">
+              <span className="text-sm md:text-lg 2xl:text-xl text-white truncate break-words whitespace-normal">
                 {sensor?.installationDate
                   ? formatDate(new Date(sensor.installationDate).toISOString())
                   : formatDate("2025-04-26")}
               </span>
 
               <span className="text-gray-400">Last Updated</span>
-              <span className="text-lg 2xl:text-xl text-white">
+              <span className="text-sm md:text-lg 2xl:text-xl text-white truncate break-words whitespace-normal">
                 {formatThaiDate(String(currentData.datetime))}
               </span>
 
@@ -463,8 +463,7 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
               </span>
             </div>
             <div
-              className="bg-[#0B1121] rounded-md overflow-y-auto custom-scrollbar"
-              style={{ maxHeight: "280px" }}
+              className="bg-[#0B1121] rounded-md overflow-y-auto custom-scrollbar max-h-[220px] md:max-h-[280px]"
               onScroll={(e) => {
                 const { scrollTop, scrollHeight, clientHeight } =
                   e.currentTarget;
