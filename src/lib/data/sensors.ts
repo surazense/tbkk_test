@@ -15,6 +15,38 @@ import {
 } from "@/lib/sensorCalculations";
 import { getToken } from "@/lib/auth";
 
+export interface SensorHistoryParams {
+  limit?: number;
+  start_date?: number; // Unix timestamp in seconds
+  end_date?: number;   // Unix timestamp in seconds
+}
+
+export async function fetchSensorHistory(sensorId: string, params: SensorHistoryParams = {}) {
+  const token = getToken();
+  let url = `/api/sensors/${sensorId}/history`;
+  const queryParams = [];
+  
+  if (params.limit) queryParams.push(`limit=${params.limit}`);
+  if (params.start_date) queryParams.push(`start_date=${params.start_date}`);
+  if (params.end_date) queryParams.push(`end_date=${params.end_date}`);
+  
+  if (queryParams.length > 0) {
+    url += `?${queryParams.join("&")}`;
+  }
+
+  try {
+    const response = await fetch(url, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!response.ok) return [];
+    const json = await response.json();
+    return json.data?.history || json.history || (Array.isArray(json) ? json : json.data) || [];
+  } catch (error) {
+    console.error(`Error fetching history for sensor ${sensorId}:`, error);
+    return [];
+  }
+}
+
 // Cache for real sensors from API
 const CACHE_DURATION = 5 * 60 * 1000; // Cache for 5 minutes (for background re-use)
 let realSensorsCache: Sensor[] | null = null;

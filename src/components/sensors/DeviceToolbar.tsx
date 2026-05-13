@@ -35,6 +35,7 @@ const DeviceToolbar: React.FC<DeviceToolbarProps> = ({
 
   const canRegister =
     user?.role?.toLowerCase() === "admin" ||
+    user?.role?.toLowerCase() === "superadmin" ||
     user?.role?.toLowerCase() === "editor";
 
   return (

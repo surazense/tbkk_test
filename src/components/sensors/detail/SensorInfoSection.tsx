@@ -135,7 +135,17 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
 
   const visibleDatetimes = filteredDatetimes.slice(0, visibleCount);
 
-  // Map dates to RMS values for quick lookup
+  // Map dates to RMS and RSSI values for quick lookup
+  const rssiLookup = React.useMemo(() => {
+    const lookup: Record<string, string> = {};
+    history.forEach((item) => {
+      lookup[item.datetime] = item.rssi !== undefined && item.rssi !== null 
+        ? `${item.rssi} dBm` 
+        : "-";
+    });
+    return lookup;
+  }, [history]);
+
   const rmsLookup = React.useMemo(() => {
     const lookup: Record<string, string> = {};
     const axisKey =
@@ -190,6 +200,7 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                 Machine Information
               </h2>
               {(user?.role?.toLowerCase() === "admin" ||
+                user?.role?.toLowerCase() === "superadmin" ||
                 user?.role?.toLowerCase() === "editor") && (
                   <Button
                     variant="outline"
@@ -525,9 +536,14 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                   )}
                 </div>
               </div>
-              <span className="text-sm 2xl:text-lg font-semibold text-white">
-                RMS Overall
-              </span>
+              <div className="flex gap-6 2xl:gap-8">
+                <span className="text-sm 2xl:text-lg font-semibold text-white min-w-[70px] text-right">
+                  RSSI
+                </span>
+                <span className="text-sm 2xl:text-lg font-semibold text-white min-w-[80px] text-right">
+                  RMS Overall
+                </span>
+              </div>
             </div>
             <div
               className="bg-[#0B1121] rounded-md overflow-y-auto custom-scrollbar max-h-[220px] md:max-h-[280px]"
@@ -573,9 +589,14 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                         <span className="shrink-0">
                           {formatDateTimeDayFirst(datetime)}
                         </span>
-                        <span className="text-white mr-1 text-right truncate">
-                          {rmsLookup[datetime] || ""}
-                        </span>
+                        <div className="flex items-center gap-6 2xl:gap-8 mr-1">
+                          <span className="text-gray-400 text-sm 2xl:text-lg min-w-[70px] text-right">
+                            {rssiLookup[datetime] || "-"}
+                          </span>
+                          <span className="text-white text-right truncate min-w-[80px]">
+                            {rmsLookup[datetime] || ""}
+                          </span>
+                        </div>
                       </button>
                     </li>
                   ))}

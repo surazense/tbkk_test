@@ -79,7 +79,8 @@ export default function BottomNav() {
 
   const filteredItems = navItems.filter((item) => {
     if (item.name === "Admin") {
-      return user?.role?.toLowerCase() === "admin";
+      const role = user?.role?.toLowerCase();
+      return role === "admin" || role === "superadmin";
     }
     return true;
   });

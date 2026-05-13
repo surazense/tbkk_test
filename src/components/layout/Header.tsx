@@ -159,15 +159,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
           // Add to display list
           const datetime = sensor.last_data?.datetime
             ? new Date(sensor.last_data.datetime.replace("Z", ""))
-              .toLocaleString("en-GB", {
-                year: "numeric",
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: false,
-              })
-              .replace(",", "")
+                .toLocaleString("en-GB", {
+                  year: "numeric",
+                  month: "2-digit",
+                  day: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                  hour12: false,
+                })
+                .replace(",", "")
             : "-";
 
           let statusClass = "";
@@ -393,7 +393,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
             <span className="text-sm sm:text-lg 2xl:text-2xl font-medium text-white truncate">
               {organizationName}
             </span>
-            <span className="text-gray-400 2xl:text-xl hidden sm:inline">/</span>
+            <span className="text-gray-400 2xl:text-xl hidden sm:inline">
+              /
+            </span>
             <span className="text-gray-300 text-sm 2xl:text-lg hidden sm:inline truncate">
               {pageTitle}
             </span>
@@ -524,11 +526,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
                     <AvatarFallback className="bg-gray-600 text-gray-300 text-xs font-medium">
                       {user?.name
                         ? user.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")
-                          .toUpperCase()
-                          .slice(0, 2)
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()
+                            .slice(0, 2)
                         : "U"}
                     </AvatarFallback>
                   </Avatar>

@@ -90,10 +90,18 @@ export function SensorFormContent({
     "Integrated driver Motor pump Flexible Installed",
   ];
 
-  // Time Interval options (2, 5 to 60, step 5)
+  // Time Interval options
   const timeIntervalOptions = [
-    "2",
-    ...Array.from({ length: 12 }, (_, i) => ((i + 1) * 5).toString()),
+    { label: "2 min", value: "2" },
+    { label: "5 min", value: "5" },
+    { label: "10 min", value: "10" },
+    { label: "30 min", value: "30" },
+    { label: "1 Hr", value: "60" },
+    { label: "2 Hr", value: "120" },
+    { label: "4 Hr", value: "240" },
+    { label: "8 Hr", value: "480" },
+    { label: "12 Hr", value: "720" },
+    { label: "24 Hr", value: "1440" },
   ];
 
   // Watch machine class to auto-update thresholds
@@ -931,7 +939,7 @@ export function SensorFormContent({
           render={({ field }) => (
             <FormItem>
               <FormLabel className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
-                Time Interval (min.)
+                Time Interval
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -949,10 +957,10 @@ export function SensorFormContent({
                     <SelectValue placeholder="Select interval" />
                   </SelectTrigger>
                 </FormControl>
-                <SelectContent>
+                <SelectContent className="bg-[#0B1121] border-[#374151] text-white">
                   {timeIntervalOptions.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option} min.
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

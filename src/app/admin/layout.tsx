@@ -5,7 +5,7 @@ import { ReactNode } from "react";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
-    <RoleGuard allowedRoles={["admin"]} mode="redirect" redirectPath="/">
+    <RoleGuard allowedRoles={["admin", "superadmin"]} mode="redirect" redirectPath="/">
       {children}
     </RoleGuard>
   );

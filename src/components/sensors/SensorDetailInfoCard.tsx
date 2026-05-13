@@ -112,6 +112,7 @@ export default function SensorDetailInfoCard({
                 Sensor Information
               </h3>
               {(user?.role?.toLowerCase() === "admin" ||
+                user?.role?.toLowerCase() === "superadmin" ||
                 user?.role?.toLowerCase() === "editor") && (
                 <button
                   type="button"

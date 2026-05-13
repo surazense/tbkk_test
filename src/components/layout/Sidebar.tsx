@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, LogOut } from "lucide-react";
+import { Menu, LogOut, BarChart3 } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -34,6 +34,11 @@ export default function Sidebar() {
           style={{ filter: "invert(1) brightness(2)" }}
         />
       ),
+    },
+    {
+      name: "Reports",
+      href: "/reports",
+      icon: () => <BarChart3 size={20} />,
     },
     {
       name: "Admin",
@@ -108,7 +113,11 @@ export default function Sidebar() {
         {navItems
           .filter((item) => {
             if (item.name === "Admin") {
-              return user?.role?.toLowerCase() === "admin";
+              const role = user?.role?.toLowerCase();
+              return role === "admin" || role === "superadmin";
+            }
+            if (item.name === "Reports") {
+              return user?.role?.toLowerCase() === "superadmin";
             }
             return true;
           })
