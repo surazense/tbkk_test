@@ -78,7 +78,7 @@ export function SensorFormContent({
   const lorOptions = ["200", "400", "800", "1600", "3200", "6400"];
 
   // G-Scale options
-  const gScaleOptions = ["2", "4", "8", "16"];
+  const defaultGScaleOptions = ["2", "4", "8", "16"];
 
   // Motor Type options
   const motorTypeOptions = [
@@ -91,7 +91,7 @@ export function SensorFormContent({
   ];
 
   // Time Interval options
-  const timeIntervalOptions = [
+  const defaultTimeIntervalOptions = [
     { label: "2 min", value: "2" },
     { label: "5 min", value: "5" },
     { label: "10 min", value: "10" },
@@ -112,6 +112,28 @@ export function SensorFormContent({
   const watchedNamePlaceEnabled = form.watch(
     `sensors.${index}.namePlaceEnabled`
   );
+  
+  const watchedTimeInterval = form.watch(`sensors.${index}.timeInterval`);
+  
+  // Ensure the current time interval value is in the options list so it displays correctly
+  const timeIntervalOptions = [...defaultTimeIntervalOptions];
+  if (
+    watchedTimeInterval && 
+    !defaultTimeIntervalOptions.some(opt => opt.value === watchedTimeInterval)
+  ) {
+    timeIntervalOptions.push({
+      label: `${watchedTimeInterval} min (Custom)`,
+      value: watchedTimeInterval
+    });
+  }
+
+  const watchedGScale = form.watch(`sensors.${index}.gScale`);
+  
+  // Ensure the current G-Scale value is in the options list so it displays correctly
+  const gScaleOptions = [...defaultGScaleOptions];
+  if (watchedGScale && !defaultGScaleOptions.includes(watchedGScale)) {
+    gScaleOptions.push(watchedGScale);
+  }
 
   // Auto-update thresholds when machine class changes
   useEffect(() => {
@@ -545,7 +567,7 @@ export function SensorFormContent({
                 </FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  defaultValue={field.value}
+                  value={field.value}
                 >
                   <FormControl>
                     <SelectTrigger className="bg-[#080808] border-[1px] border-[#4B5563] text-white">
@@ -728,7 +750,7 @@ export function SensorFormContent({
                   </FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
                   >
                     <FormControl>
                       <SelectTrigger className="bg-[#080808] border-[1px] border-[#4B5563] text-white">
@@ -951,7 +973,7 @@ export function SensorFormContent({
                   </Tooltip>
                 </TooltipProvider>
               </FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger className="bg-[#080808] border-[1px] border-[#4B5563] text-white">
                     <SelectValue placeholder="Select interval" />
@@ -994,7 +1016,7 @@ export function SensorFormContent({
                   </Tooltip>
                 </TooltipProvider>
               </FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger className="bg-[#080808] border-[1px] border-[#4B5563] text-white h-9 sm:h-12 text-sm sm:text-lg 2xl:text-xl">
                     <SelectValue placeholder="Select G-scale" />
@@ -1034,7 +1056,7 @@ export function SensorFormContent({
                   </Tooltip>
                 </TooltipProvider>
               </FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger className="bg-[#080808] border-[1px] border-[#4B5563] text-white h-9 sm:h-12 text-sm sm:text-lg 2xl:text-xl">
                     <SelectValue placeholder="Select LOR" />
@@ -1071,7 +1093,7 @@ export function SensorFormContent({
                   </Tooltip>
                 </TooltipProvider>
               </FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger className="bg-[#080808] border-[1px] border-[#4B5563] text-white h-9 sm:h-12 text-sm sm:text-lg 2xl:text-xl">
                     <SelectValue placeholder="Select frequency" />

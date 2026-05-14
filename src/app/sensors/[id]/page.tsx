@@ -447,6 +447,7 @@ export default function SensorDetailPage() {
                 Share
               </DropdownMenuItem>
               {(user?.role?.toLowerCase() === "admin" ||
+                user?.role?.toLowerCase() === "superadmin" ||
                 user?.role?.toLowerCase() === "editor") && (
                 <DropdownMenuItem
                   className="text-red-500 cursor-pointer"

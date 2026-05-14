@@ -6,7 +6,7 @@ export default function RegisterPage() {
   return (
     <div className="max-w-full mx-auto space-y-4 px-2 sm:px-8 pt-4 bg-[#0B1121]">
       <RoleGuard
-        allowedRoles={["admin", "editor"]}
+        allowedRoles={["admin", "editor", "superadmin"]}
         mode="redirect"
         redirectPath="/"
       >
