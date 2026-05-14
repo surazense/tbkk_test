@@ -197,3 +197,14 @@ export async function toBase64(file: File): Promise<string> {
     reader.readAsDataURL(file);
   });
 }
+
+/**
+ * Generates a distinct color based on an index using golden angle approximation.
+ * Shared between charts and tables to ensure color consistency.
+ */
+export const getDistinctColor = (index: number) => {
+  if (index < 0) return "transparent";
+  const hue = (index * 137.508) % 360;
+  const lightness = 55 + (index % 3) * 5;
+  return `hsl(${hue}, 85%, ${lightness}%)`;
+};

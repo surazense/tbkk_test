@@ -480,6 +480,7 @@ export default function ReportsPage() {
                       .map((i) => i.name)
                   : tableData.map((i) => i.name)
               }
+              allEntities={tableData.map((i) => i.name)}
               selectedArea={selectedArea}
               selectedMachine={selectedMachine}
               chartMode={chartMode}

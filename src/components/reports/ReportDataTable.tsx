@@ -21,7 +21,7 @@ import {
   Battery,
   BatteryWarning,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getDistinctColor } from "@/lib/utils";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
@@ -107,6 +107,9 @@ export default function ReportDataTable({
     const m = Math.round(mins % 60);
     return `${hours}h ${m}m`;
   };
+
+  // Compute a stable list of all possible entity names in this view level
+  const allEntityNames = data.map(item => item.name);
 
   return (
     <div className="bg-transparent flex flex-col">
@@ -280,33 +283,52 @@ export default function ReportDataTable({
               const isSelected = comparisonIds.includes(row.id);
               const uptime = row.uptime || 0;
               const lossPercentage = row.lossPercentage || 0;
+              
+              // Determine color based on stable index in the full data list
+              const stableIndex = allEntityNames.indexOf(row.name);
+              const rowColor = isSelected ? getDistinctColor(stableIndex >= 0 ? stableIndex : 0) : null;
 
               return (
                 <TableRow
                   key={row.id}
+                  style={rowColor ? { backgroundColor: `${rowColor}08` } : {}}
                   className={cn(
                     "border-slate-800/50 hover:bg-slate-800/30 transition-colors group",
-                    isSelected && "bg-blue-500/5"
+                    isSelected && "border-l-2"
                   )}
                 >
-                  <TableCell className="py-4">
+                  <TableCell className="py-4" style={rowColor ? { borderLeftColor: rowColor } : {}}>
                     <Checkbox
                       checked={isSelected}
                       onCheckedChange={() => onToggleComparison(row.id)}
-                      className="border-slate-700 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                      style={rowColor ? { 
+                        backgroundColor: isSelected ? rowColor : "transparent",
+                        borderColor: isSelected ? rowColor : undefined
+                      } : {}}
+                      className="border-slate-700 data-[state=checked]:text-slate-900"
                     />
                   </TableCell>
                   <TableCell className="py-4">
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-slate-200">{row.name}</span>
-                      {viewLevel === "sensor" && row.rawSensors[0]?.serialNumber && (
-                        <span className="text-[9px] text-blue-400/70 font-mono">
-                          SN: {row.rawSensors[0].serialNumber}
-                        </span>
-                      )}
-                      <span className="text-[10px] text-slate-500 truncate max-w-[150px]">
-                        {row.rawSensors[0]?.sensor_type || "Group"}
-                      </span>
+                    <div className="flex items-center gap-2">
+                       {rowColor && (
+                         <div 
+                           className="w-1.5 h-6 rounded-full shrink-0" 
+                           style={{ backgroundColor: rowColor }} 
+                         />
+                       )}
+                       <div className="flex flex-col">
+                         <span className="font-semibold text-slate-200">{row.name}</span>
+                         {viewLevel === "sensor" && row.rawSensors[0]?.serialNumber && (
+                           <span className="text-[9px] text-blue-400/70 font-mono">
+                             SN: {row.rawSensors[0].serialNumber}
+                           </span>
+                         )}
+                         {viewLevel === "sensor" && (
+                           <span className="text-[10px] text-slate-500 truncate max-w-[150px]">
+                             {row.rawSensors[0]?.sensor_type || "Group"}
+                           </span>
+                         )}
+                       </div>
                     </div>
                   </TableCell>
                   <TableCell className="py-4">
