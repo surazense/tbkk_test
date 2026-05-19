@@ -48,12 +48,14 @@ export default function NotificationHistoryPage() {
 
       return {
         id: log.id,
+        sensorId: log.sensor_id,
         sensorName: log.sensor_name || "-",
         area: log.area || "-",
         machine: log.machine || "-",
         status: finalStatus,
         datetime,
         timestamp: dateObj.getTime(),
+        createdAt: log.created_at,
         hVrms: log.h_vrms,
         vVrms: log.v_vrms,
         aVrms: log.a_vrms,

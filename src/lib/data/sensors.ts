@@ -14,7 +14,7 @@ import {
   accelerationToVelocity,
 } from "@/lib/sensorCalculations";
 import { getToken } from "@/lib/auth";
-import { getDecayedBattery } from "@/lib/utils";
+import { getDecayedBattery, parseThailandTime } from "@/lib/utils";
 
 export interface SensorHistoryParams {
   limit?: number;
@@ -210,9 +210,9 @@ export async function fetchRealSensors(
       const tMax = apiSensor.threshold_max || 9.0;
 
       const lastUpdated = apiSensor.last_data?.datetime
-        ? new Date(apiSensor.last_data.datetime.replace("Z", "")).getTime()
+        ? parseThailandTime(apiSensor.last_data.datetime)
         : apiSensor.updated_at
-          ? new Date(apiSensor.updated_at.replace("Z", "")).getTime()
+          ? parseThailandTime(apiSensor.updated_at)
           : Date.now();
 
       // Check for "Lost" status based on time timeout (same logic as full path)
@@ -442,9 +442,7 @@ export async function fetchRealSensors(
 
       // Create readings with temperature only (vibration data comes from H, V, A arrays)
       readings.push({
-        timestamp: new Date(
-          apiSensor.last_data.datetime.replace("Z", "")
-        ).getTime(),
+        timestamp: parseThailandTime(apiSensor.last_data.datetime),
         temperature,
         vibrationX: 0, // Vibration data is calculated from H, V, A arrays
         vibrationY: 0,
@@ -476,10 +474,10 @@ export async function fetchRealSensors(
     };
 
     const lastDataTime = apiSensor.last_data?.datetime
-      ? new Date(apiSensor.last_data.datetime.replace("Z", "")).getTime()
+      ? parseThailandTime(apiSensor.last_data.datetime)
       : 0;
     const updatedAtTime = apiSensor.updated_at
-      ? new Date(apiSensor.updated_at.replace("Z", "")).getTime()
+      ? parseThailandTime(apiSensor.updated_at)
       : 0;
 
     // Select the latest timestamp between the actual data time and the record's update time

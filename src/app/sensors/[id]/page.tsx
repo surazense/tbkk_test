@@ -55,6 +55,7 @@ import { SensorStatsCards } from "@/components/sensors/detail/SensorStatsCards";
 import { SensorInfoSection } from "@/components/sensors/detail/SensorInfoSection";
 import { VibrationAnalysisSection } from "@/components/sensors/detail/VibrationAnalysisSection";
 import { useSensorDetails } from "@/hooks/useSensorDetails";
+import DiagnosticDashboard from "@/components/diagnostics/DiagnosticDashboard";
 
 export default function SensorDetailPage() {
   const router = useRouter();
@@ -523,6 +524,15 @@ export default function SensorDetailPage() {
           selectedAxis={selectedAxis}
           selectedUnit={selectedUnit}
         />
+
+        {selectedDatetime && (
+          <div className="mt-6">
+            <DiagnosticDashboard
+              sensorId={sensor.id}
+              datetime={selectedDatetime}
+            />
+          </div>
+        )}
 
         <VibrationAnalysisSection
           configData={configData}

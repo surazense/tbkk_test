@@ -12,12 +12,14 @@ type NotificationStatus =
 
 export interface NotificationEntry {
   id: string;
+  sensorId?: string;
   sensorName: string;
   area?: string | number;
   machine?: string | number;
   status: NotificationStatus;
   datetime: string;
   timestamp: number;
+  createdAt?: string;
   hVrms?: number | null;
   vVrms?: number | null;
   aVrms?: number | null;
@@ -35,6 +37,13 @@ export interface NotificationEntry {
 
 import React, { useMemo, useState } from "react";
 import SensorPagination from "../sensors/SensorPagination";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import DiagnosticDashboard from "@/components/diagnostics/DiagnosticDashboard";
 
 interface NotificationHistoryTableProps {
   entries: NotificationEntry[];
@@ -105,6 +114,7 @@ export function NotificationHistoryTable({
   const [dateEnd, setDateEnd] = useState("");
   const [internalPage, setInternalPage] = useState(1);
   const [data, setData] = useState(entries);
+  const [selectedEntry, setSelectedEntry] = useState<NotificationEntry | null>(null);
 
   // Use controlled page if provided, else internal
   const activePage = currentPage ?? internalPage;
@@ -350,7 +360,8 @@ export function NotificationHistoryTable({
               return (
                 <div
                   key={entry.id}
-                  className="bg-[#11171F] border border-[#374151] rounded-xl p-3 space-y-2"
+                  className="bg-[#11171F] border border-[#374151] hover:border-blue-500/50 rounded-xl p-3 space-y-2 cursor-pointer transition-colors"
+                  onClick={() => setSelectedEntry(entry)}
                 >
                   {/* Row 1: Sensor name + Status */}
                   <div className="flex items-center justify-between gap-2">
@@ -530,7 +541,8 @@ export function NotificationHistoryTable({
                 return (
                   <tr
                     key={entry.id}
-                    className="border-t border-gray-700 hover:bg-[#374151]/50 transition-colors text-center"
+                    className="border-t border-gray-700 hover:bg-[#374151]/50 transition-colors text-center cursor-pointer"
+                    onClick={() => setSelectedEntry(entry)}
                   >
                     <td className="py-4 px-4 font-semibold text-white">
                       {entry.sensorName}
@@ -607,6 +619,22 @@ export function NotificationHistoryTable({
           totalPages={totalPages}
           onPageChange={handlePageChange}
         />
+
+        {selectedEntry && selectedEntry.sensorId && selectedEntry.createdAt && (
+          <Dialog open={!!selectedEntry} onOpenChange={(open) => !open && setSelectedEntry(null)}>
+            <DialogContent className="max-w-5xl bg-[#0B1121] border-[#374151] text-white overflow-y-auto max-h-[90vh] p-6">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold text-white">Rule-based Diagnosis Report</DialogTitle>
+              </DialogHeader>
+              <div className="mt-4">
+                <DiagnosticDashboard
+                  sensorId={selectedEntry.sensorId}
+                  datetime={selectedEntry.createdAt}
+                />
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </CardContent>
     </Card>
   );

@@ -122,7 +122,6 @@ export default function SensorsPage() {
         });
 
         setSensors(fetchedSensors);
-        updateSensorStatusData(fetchedSensors);
 
         // Cache for next initial load
         if (fetchedSensors.length > 0) {
@@ -137,7 +136,7 @@ export default function SensorsPage() {
         setLoading(false);
       }
     },
-    [updateSensorStatusData]
+    []
   );
 
   const updateSensorData = useCallback(async () => {
@@ -163,7 +162,6 @@ export default function SensorsPage() {
           const parsed = JSON.parse(cached);
           if (Array.isArray(parsed) && parsed.length > 0) {
             setSensors(parsed);
-            updateSensorStatusData(parsed);
             setLoading(false);
           }
         } catch (e) {
@@ -177,7 +175,13 @@ export default function SensorsPage() {
     const isFirstTime = !hasInitiallyLoaded.current;
     fetchSensors(!isFirstTime);
     hasInitiallyLoaded.current = true;
-  }, [selectedIds, fetchSensors, updateSensorStatusData]);
+  }, [selectedIds, fetchSensors]);
+
+  useEffect(() => {
+    const isShowingAll = !selectedIds || selectedIds.length === 0 || selectedIds.includes("organization");
+    const activeList = isShowingAll ? sensors : selectedSensors;
+    updateSensorStatusData(activeList);
+  }, [sensors, selectedSensors, selectedIds, updateSensorStatusData]);
 
   useEffect(() => {
     if (autoRefreshIntervalRef.current) {

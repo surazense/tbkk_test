@@ -1,11 +1,20 @@
 "use client";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuth } from "@/components/auth/AuthProvider";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { AlertOctagon } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 import type { Sensor } from "@/lib/types";
 import {
@@ -13,7 +22,7 @@ import {
   getVibrationColorFromVelocity,
   type SensorConfig,
 } from "@/lib/utils/vibrationUtils";
-import { cn, getSignalStrength, getSignalStrengthLabel } from "@/lib/utils";
+import { cn, getSignalStrength, getSignalStrengthLabel, parseThailandTime, formatToThailandTime } from "@/lib/utils";
 
 interface SensorCardProps {
   sensor: Sensor;
@@ -27,6 +36,55 @@ type SensorRoleFields = {
 };
 
 export default function SensorCard({ sensor, onClick }: SensorCardProps) {
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role?.toLowerCase() === "superadmin";
+
+  const [dominantFault, setDominantFault] = useState<any>(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [diagnosticRules, setDiagnosticRules] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!isSuperAdmin) return;
+    import("@/lib/api/diagnostics").then(({ diagnosticsApi }) => {
+      diagnosticsApi.getDiagnosticRules()
+        .then((res) => {
+          if (res) {
+            setDiagnosticRules(res);
+          }
+        })
+        .catch(() => {});
+    });
+  }, [isSuperAdmin]);
+
+  useEffect(() => {
+    if (!isSuperAdmin) {
+      setDominantFault(null);
+      return;
+    }
+    if (
+      sensor.status === "critical" ||
+      sensor.status === "concern" ||
+      sensor.status === "warning"
+    ) {
+      import("@/lib/api/diagnostics").then(({ diagnosticsApi }) => {
+        const isoDate = new Date(sensor.lastUpdated).toISOString();
+        diagnosticsApi
+          .getDiagnosticHistory(sensor.id, isoDate)
+          .then((res) => {
+            if (res && res.dominant_fault) {
+              setDominantFault(res.dominant_fault);
+            } else {
+              setDominantFault(null);
+            }
+          })
+          .catch(() => {
+            setDominantFault(null);
+          });
+      });
+    } else {
+      setDominantFault(null);
+    }
+  }, [sensor.id, sensor.status, sensor.lastUpdated, isSuperAdmin]);
   const deviceId =
     sensor?.serialNumber || sensor?.id?.substring(0, 3)?.toUpperCase() || "D01";
   // Prefer sensor_type from DB, then role/deviceRole, then default to empty string
@@ -143,14 +201,14 @@ export default function SensorCard({ sensor, onClick }: SensorCardProps) {
     const times: number[] = [];
 
     if (s.last_data?.datetime) {
-      const d = new Date(s.last_data.datetime.replace("Z", ""));
-      if (!isNaN(d.getTime())) times.push(d.getTime());
+      const t = parseThailandTime(s.last_data.datetime);
+      if (!isNaN(t)) times.push(t);
     }
 
     const updatedAt = (s as any).updatedAt || (s as any).updated_at;
     if (updatedAt && typeof updatedAt === "string") {
-      const d = new Date(updatedAt.replace("Z", ""));
-      if (!isNaN(d.getTime())) times.push(d.getTime());
+      const t = parseThailandTime(updatedAt);
+      if (!isNaN(t)) times.push(t);
     }
 
     if (times.length === 0) return null;
@@ -159,21 +217,10 @@ export default function SensorCard({ sensor, onClick }: SensorCardProps) {
     return new Date(Math.max(...times));
   };
 
-  // Fix: Treat server time as Local by removing Z if present
-  // The API sends "2025-12-18T13:16:09Z" when it means 13:16 Local Time.
-  // Standard parsing shifts this to 20:16 (+7h), so we must strip Z to force local interpretation.
   const lastUpdate = resolveLastUpdate(sensor);
 
   const lastUpdateText = lastUpdate
-    ? lastUpdate.toLocaleString("en-GB", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-      })
+    ? formatToThailandTime(lastUpdate)
     : "-";
 
   // Determine card background color based on sensor status
@@ -279,12 +326,17 @@ export default function SensorCard({ sensor, onClick }: SensorCardProps) {
                     )}
                   </div>
                 </div>
-                <div className="min-w-0 flex-1 overflow-hidden">
+                <div className="min-w-0 flex-1 overflow-hidden flex items-center gap-2">
                   <div
                     className={`text-[0.9rem] sm:text-base lg:text-lg 2xl:text-xl font-extrabold tracking-tight leading-tight truncate ${sensor.status === "lost" ? "text-[#404040]" : "text-white"}`}
                   >
                     {deviceId}
                   </div>
+                  {dominantFault && (
+                    <span className="shrink-0 bg-red-500/20 text-red-400 border border-red-500/30 text-[0.65rem] sm:text-xs font-bold px-1.5 py-0.5 rounded uppercase tracking-wider hidden sm:inline-block">
+                      {dominantFault.name_th || dominantFault.fault_name}
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-1 shrink-0 mr-1.5 sm:mr-2 2xl:mr-3">
                   <span

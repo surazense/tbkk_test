@@ -226,6 +226,8 @@ const FolderTree: React.FC<{
   }, [treeData]);
 
   // Set default expansion to "All Folders" once data is loaded
+  const hasInitializedSelection = React.useRef(false);
+
   useEffect(() => {
     if (flatNodes.length > 0 && expandedIds.size === 0) {
       const folderIds = flatNodes
@@ -234,6 +236,31 @@ const FolderTree: React.FC<{
       setExpandedIds(new Set(folderIds));
     }
   }, [flatNodes]);
+
+  const prevPathnameRef = React.useRef<string | null>(null);
+
+  useEffect(() => {
+    if (flatNodes.length > 0) {
+      if (pathname === "/" && prevPathnameRef.current !== "/") {
+        const mode = localStorage.getItem("dashboard_area_mode") || "first_only";
+        if (mode === "first_only") {
+          const firstArea = flatNodes.find((n) => n.parentId === "organization");
+          if (firstArea) {
+            const newSet = new Set([firstArea.id]);
+            setSelectedIds(newSet);
+            setTempSelectedIds(newSet);
+          }
+        } else {
+          const newSet = new Set(["organization"]);
+          setSelectedIds(newSet);
+          setTempSelectedIds(newSet);
+        }
+        prevPathnameRef.current = "/";
+      } else if (pathname !== "/") {
+        prevPathnameRef.current = pathname;
+      }
+    }
+  }, [pathname, flatNodes]);
 
   // Derived visible nodes based on expansion
   const visibleNodes = useMemo(() => {

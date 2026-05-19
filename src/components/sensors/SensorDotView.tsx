@@ -1,21 +1,12 @@
 "use client";
 
 import type React from "react";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Sensor } from "@/lib/types";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import SensorPagination from "./SensorPagination";
-import {
-  getCardBackgroundColor,
-  getVibrationColorFromVelocity,
-  SensorConfig,
-} from "@/lib/utils/vibrationUtils";
+import SensorDotNode from "./SensorDotNode";
 
 interface SensorDotViewProps {
   sensorGroups?: Sensor[][];
@@ -38,15 +29,7 @@ export default function SensorDotView({
     4: "w-20 h-20",
   };
 
-  const textSizeClasses: Record<number, string> = {
-    1: "text-sm",
-    2: "text-base",
-    3: "text-lg",
-    4: "text-xl",
-  };
-
   const sizeClass = dotSizeClasses[dotSize] || "w-12 h-12";
-  const textSizeClass = textSizeClasses[dotSize] || "text-[10px]";
 
   // Flatten sensorGroups to a single array of sensors
   const sensors: Sensor[] = propsSensorGroups ? propsSensorGroups.flat() : [];
@@ -56,8 +39,6 @@ export default function SensorDotView({
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentSensors = sensors.slice(startIndex, endIndex);
-
-  // Determine status color code for sorting/display if needed, but mainly we just iterate.
 
   const handleSensorClick = (sensorId: string) => {
     router.push(`/sensors/${sensorId}`);
@@ -76,231 +57,26 @@ export default function SensorDotView({
     );
   }
 
-  // Helper to render a single sensor node
-  const renderSensorNode = (sensor: Sensor) => {
-    const role = (sensor.sensor_type || "Satellite").toLowerCase();
-    const isMaster = role === "master";
-
-    // Get temperature value
-    const temperature = sensor.last_data?.temperature || 0;
-
-    // Determine status color code
-    let statusColorCode = "#72ff82"; // Default Normal (Green)
-
-    // Calculate Max RMS and determine status color (Same logic as SensorCard)
-    const veloRmsH = sensor.last_data?.velo_rms_h
-      ? Number(sensor.last_data.velo_rms_h)
-      : 0;
-    const veloRmsV = sensor.last_data?.velo_rms_v
-      ? Number(sensor.last_data.velo_rms_v)
-      : 0;
-    const veloRmsA = sensor.last_data?.velo_rms_a
-      ? Number(sensor.last_data.velo_rms_a)
-      : 0;
-    const maxRms = Math.max(veloRmsH, veloRmsV, veloRmsA);
-
-    const sensorConfig: SensorConfig = {
-      thresholdMin: sensor.threshold_min ? Number(sensor.threshold_min) : 0.1,
-      thresholdMedium: sensor.threshold_medium
-        ? Number(sensor.threshold_medium)
-        : 0.125,
-      thresholdMax: sensor.threshold_max ? Number(sensor.threshold_max) : 0.15,
-      machineClass: sensor.machine_class || undefined,
-    };
-
-    const colorClass = getCardBackgroundColor(maxRms, sensorConfig);
-
-    // Priority 1: Lost
-    if (sensor.status === "lost") {
-      statusColorCode = "#404040"; // Lost - Dark Gray
-    }
-    // Priority 2: Critical (Red)
-    else if (colorClass.includes("bg-[#ff2b05]")) {
-      statusColorCode = "#ff4d4d"; // Critical
-    }
-    // Priority 3: Concern (Orange)
-    else if (colorClass.includes("bg-[#ff9900]")) {
-      statusColorCode = "#ff8c1a"; // Concern
-    }
-    // Priority 4: Warning (Yellow)
-    else if (colorClass.includes("bg-[#ffff00]")) {
-      statusColorCode = "#ffd84d"; // Warning
-    }
-    // Priority 5: Standby
-    else if (sensor.status === "standby") {
-      statusColorCode = "#f8f8f8"; // Standby - Very Light Gray
-    }
-
-    // Determine background style for top 60% (matches status color)
-    const topSectionStyle: React.CSSProperties = {
-      backgroundColor: statusColorCode,
-    };
-
-    // Map dotSize to pixel values for Circle font size
-    const circleFontSizeMap: Record<number, string> = {
-      1: "16px",
-      2: "19px",
-      3: "23px",
-      4: "28px",
-    };
-
-    // Calculate axis colors for tooltip
-    const hColor = getVibrationColorFromVelocity(
-      veloRmsH,
-      sensorConfig,
-      "detail",
-      sensor.connectivity === "offline"
-    );
-    const vColor = getVibrationColorFromVelocity(
-      veloRmsV,
-      sensorConfig,
-      "detail",
-      sensor.connectivity === "offline"
-    );
-    const aColor = getVibrationColorFromVelocity(
-      veloRmsA,
-      sensorConfig,
-      "detail",
-      sensor.connectivity === "offline"
-    );
-
-    // Override axis colors if status is 'lost'
-    const finalHColor =
-      sensor.status === "lost" ? "bg-[#404040] text-white" : hColor;
-    const finalVColor =
-      sensor.status === "lost" ? "bg-[#404040] text-white" : vColor;
-    const finalAColor =
-      sensor.status === "lost" ? "bg-[#404040] text-white" : aColor;
-
-    return (
-      <Tooltip key={sensor.id}>
-        <TooltipTrigger asChild>
-          <div
-            className={`${sizeClass} cursor-pointer hover:opacity-80 transition-all duration-500 relative`}
-            onClick={() => handleSensorClick(sensor.id)}
-          >
-            {isMaster ? (
-              // Master: Bread Loaf shape (Hexagon-ish/Helmet)
-              <div
-                className={`${sizeClass} flex flex-col items-center justify-center overflow-hidden`}
-              >
-                <svg
-                  viewBox="0 0 100 110"
-                  className="w-full h-full overflow-visible drop-shadow-sm"
-                  preserveAspectRatio="xMidYMid meet"
-                >
-                  <path
-                    d="M 50 2 C 20 2 2 20 2 50 L 10 108 L 90 108 L 98 50 C 98 20 80 2 50 2 Z"
-                    fill={statusColorCode}
-                  />
-                  <path d="M 8 52 L 92 52 L 85 102 L 15 102 Z" fill="white" />
-                  <text
-                    x="50"
-                    y="82"
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    fill={sensor.status === "lost" ? "#404040" : "#000"}
-                    fontSize="35"
-                    fontWeight="bold"
-                    fontFamily="'Inter', sans-serif"
-                    className="select-none"
-                  >
-                    {sensor.status === "lost"
-                      ? "-"
-                      : `${Math.round(temperature)}°`}
-                  </text>
-                </svg>
-              </div>
-            ) : (
-              // Satellite: Circle Shape
-              <div
-                className="w-full h-full rounded-full flex flex-col items-center justify-center overflow-hidden relative"
-                style={{
-                  backgroundColor: "white",
-                  border: `3px solid ${statusColorCode}`,
-                }}
-              >
-                <div
-                  className="absolute top-0 left-0 right-0 h-[50%]"
-                  style={topSectionStyle}
-                ></div>
-                <div className="absolute bottom-0 left-0 right-0 h-[50%] bg-white"></div>
-                <div className="absolute bottom-0 left-0 right-0 h-[50%] z-10 flex items-center justify-center pb-1">
-                  <span
-                    className={`font-bold leading-none ${sensor.status === "lost" ? "text-[#404040]" : "text-gray-900"}`}
-                    style={{
-                      fontSize: circleFontSizeMap[dotSize] || "18px",
-                      fontFamily: "'Inter', sans-serif",
-                    }}
-                  >
-                    {sensor.status === "lost"
-                      ? "-"
-                      : `${Math.round(temperature)}°`}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        </TooltipTrigger>
-        <TooltipContent
-          side="top"
-          className="bg-[#0B1121] border-[1.35px] border-[#374151] text-white p-4 min-w-[200px]"
-        >
-          <div className="space-y-3 text-base">
-            <div>
-              <div className="font-bold text-lg leading-tight">
-                {sensor.name || sensor.sensor_name || "Unknown Sensor"}
-              </div>
-              <div className="text-gray-300 text-sm mt-0.5">
-                {sensor.machineName || "Unknown Machine"}
-              </div>
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Temp:</span>
-                <span className="font-mono">{temperature.toFixed(0)}°C</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-gray-400">Battery:</span>
-                <span className="font-mono">
-                  {sensor.batteryLevel?.toFixed(2) ||
-                    sensor.last_data?.battery?.toFixed(2) ||
-                    "0.00"}
-                  %
-                </span>
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between pt-2 border-t border-gray-700">
-              <span className="text-gray-400">Vibration:</span>
-              <div className="flex space-x-2">
-                <div
-                  className={`w-4 h-4 rounded-full ${finalHColor.split(" ")[0]}`}
-                  title="Horizontal (H)"
-                />
-                <div
-                  className={`w-4 h-4 rounded-full ${finalVColor.split(" ")[0]}`}
-                  title="Vertical (V)"
-                />
-                <div
-                  className={`w-4 h-4 rounded-full ${finalAColor.split(" ")[0]}`}
-                  title="Axial (A)"
-                />
-              </div>
-            </div>
-          </div>
-        </TooltipContent>
-      </Tooltip>
-    );
-  };
-
   return (
     <div className="w-full transition-all duration-300">
       <TooltipProvider>
         {/* Simple Flex Layout (Removed grouping and frames) */}
         <div className="flex flex-wrap gap-2">
-          {currentSensors.map((sensor) => renderSensorNode(sensor))}
+          {currentSensors.map((sensor) => (
+            <SensorDotNode
+              key={sensor.id}
+              sensor={sensor}
+              dotSize={dotSize}
+              sizeClass={sizeClass}
+              circleFontSizeMap={{
+                1: "16px",
+                2: "19px",
+                3: "23px",
+                4: "28px",
+              }}
+              handleSensorClick={handleSensorClick}
+            />
+          ))}
         </div>
 
         {/* Pagination */}

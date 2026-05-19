@@ -31,6 +31,7 @@ import { getUserProfile } from "@/api/users/users";
 import { getOrganizationByOrgCode } from "@/api/organizations/organizeapi";
 import { getSensors } from "@/lib/data/sensors";
 import type { Sensor } from "@/lib/types";
+import { formatToThailandTime } from "@/lib/utils";
 
 import {
   getVibrationLevelFromConfig,
@@ -158,16 +159,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
           // Add to display list
           const datetime = sensor.last_data?.datetime
-            ? new Date(sensor.last_data.datetime.replace("Z", ""))
-                .toLocaleString("en-GB", {
-                  year: "numeric",
-                  month: "2-digit",
-                  day: "2-digit",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-                })
-                .replace(",", "")
+            ? formatToThailandTime(sensor.last_data.datetime, { second: undefined }).replace(",", "")
             : "-";
 
           let statusClass = "";

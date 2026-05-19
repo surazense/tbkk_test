@@ -10,30 +10,33 @@ export function formatDate(dateString: string, includeTime = false): string {
   if (!dateString) return "N/A";
 
   try {
-    const date = new Date(dateString);
+    const timestamp = parseThailandTime(dateString);
+    const date = new Date(timestamp);
 
     if (isNaN(date.getTime())) {
       return "Invalid date";
     }
 
-    const options: Intl.DateTimeFormatOptions = {
+    if (includeTime) {
+      return formatToThailandTime(timestamp, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+        second: undefined
+      });
+    }
+
+    return formatToThailandTime(timestamp, {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
-    };
-
-    if (includeTime) {
-      return `${date.toLocaleDateString("en-US", options)}, ${date.toLocaleTimeString(
-        "en-US",
-        {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: true,
-        }
-      )}`;
-    }
-
-    return date.toLocaleDateString("en-US", options);
+      hour: undefined,
+      minute: undefined,
+      second: undefined
+    });
   } catch (error) {
     console.error("Error formatting date:", error);
     return "Error";
@@ -41,18 +44,10 @@ export function formatDate(dateString: string, includeTime = false): string {
 }
 
 export function formatThaiDate(dateString: string | undefined | null): string {
-  if (
-    !dateString ||
-    typeof dateString !== "string" ||
-    !dateString.includes("T")
-  )
-    return "N/A";
+  if (!dateString) return "N/A";
   try {
-    const [datePart, timePartRaw] = dateString.split("T");
-    if (!datePart || !timePartRaw) return "N/A";
-    const date = datePart.split("-").reverse().join("/");
-    const time = timePartRaw.split("Z")[0];
-    return `${date} ${time}`;
+    const timestamp = parseThailandTime(dateString);
+    return formatToThailandTime(timestamp, { second: undefined });
   } catch {
     return "N/A";
   }
@@ -61,19 +56,61 @@ export function formatThaiDate(dateString: string | undefined | null): string {
 export function formatRawTime(dateString: string): string {
   if (!dateString) return "N/A";
   try {
-    // Always parse as UTC, then add 7 hours for Thailand time
-    const date = new Date(dateString);
-    if (isNaN(date.getTime())) return "Invalid date";
-    const thailandTime = new Date(date.getTime() + 7 * 60 * 60 * 1000);
-    const day = thailandTime.getUTCDate().toString().padStart(2, "0");
-    const month = (thailandTime.getUTCMonth() + 1).toString().padStart(2, "0");
-    const year = thailandTime.getUTCFullYear();
-    const hours = thailandTime.getUTCHours().toString().padStart(2, "0");
-    const minutes = thailandTime.getUTCMinutes().toString().padStart(2, "0");
-    return `${day}/${month}/${year} ${hours}:${minutes}`;
+    const timestamp = parseThailandTime(dateString);
+    return formatToThailandTime(timestamp, { second: undefined });
   } catch (error) {
     console.error("Error formatting raw time:", error);
     return "Error";
+  }
+}
+
+export function parseThailandTime(dateInput: string | number | undefined | null): number {
+  if (!dateInput) return Date.now();
+  if (typeof dateInput === "number") return dateInput;
+  
+  const cleanStr = dateInput.replace("Z", "").trim();
+  if (cleanStr.includes("+") || /-\d{2}:\d{2}$/.test(cleanStr)) {
+    const parsed = new Date(cleanStr).getTime();
+    return isNaN(parsed) ? Date.now() : parsed;
+  }
+  
+  const isoStr = cleanStr.replace(" ", "T");
+  const parsed = new Date(`${isoStr}+07:00`).getTime();
+  return isNaN(parsed) ? Date.now() : parsed;
+}
+
+export function formatToThailandTime(
+  dateInput: Date | number | string | undefined | null,
+  options: Intl.DateTimeFormatOptions = {}
+): string {
+  if (!dateInput) return "-";
+  let date: Date;
+  if (dateInput instanceof Date) {
+    date = dateInput;
+  } else if (typeof dateInput === "number") {
+    date = new Date(dateInput);
+  } else {
+    date = new Date(parseThailandTime(dateInput));
+  }
+
+  if (isNaN(date.getTime())) return "-";
+
+  const defaultOptions: Intl.DateTimeFormatOptions = {
+    timeZone: "Asia/Bangkok",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+    ...options
+  };
+
+  try {
+    return date.toLocaleString("en-GB", defaultOptions);
+  } catch (error) {
+    return date.toLocaleString("en-GB", { ...defaultOptions, timeZone: undefined });
   }
 }
 

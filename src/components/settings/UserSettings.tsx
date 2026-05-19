@@ -54,6 +54,24 @@ export default function UserSettings() {
     onConfirm: () => {},
   });
 
+  const [areaMode, setAreaMode] = useState<"first_only" | "show_all">("first_only");
+
+  useEffect(() => {
+    const savedMode = localStorage.getItem("dashboard_area_mode") as "first_only" | "show_all";
+    if (savedMode) {
+      setAreaMode(savedMode);
+    }
+  }, []);
+
+  const handleSaveAreaMode = (mode: "first_only" | "show_all") => {
+    localStorage.setItem("dashboard_area_mode", mode);
+    setAreaMode(mode);
+    toast({
+      title: "Settings Saved",
+      description: `Dashboard view mode updated to ${mode === "first_only" ? "Show First Area Only" : "Show All Areas"}.`,
+    });
+  };
+
   const triggerConfirm = (
     title: string,
     description: string,
@@ -340,6 +358,47 @@ export default function UserSettings() {
             </>
           )}
         </Button>
+      </div>
+
+      {/* ── Dashboard settings ── */}
+      <div className="bg-[#0B1121] border border-[#374151] rounded-2xl p-6 space-y-5">
+        <p className="text-white font-semibold text-base border-b border-[#374151] pb-3">
+          Dashboard View Settings
+        </p>
+
+        <div className="space-y-3">
+          <Label className="text-gray-400 text-sm">
+            Default Area View Mode
+          </Label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button
+              onClick={() => handleSaveAreaMode("first_only")}
+              className={`p-4 rounded-xl border text-left transition-all ${
+                areaMode === "first_only"
+                  ? "bg-blue-600/10 border-blue-500 text-white"
+                  : "bg-[#11171F] border-[#374151] text-gray-400 hover:border-gray-500"
+              }`}
+            >
+              <p className="font-semibold text-sm text-white">Show First Area Only</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Only display the sensors of the first area on dashboard initial load.
+              </p>
+            </button>
+            <button
+              onClick={() => handleSaveAreaMode("show_all")}
+              className={`p-4 rounded-xl border text-left transition-all ${
+                areaMode === "show_all"
+                  ? "bg-blue-600/10 border-blue-500 text-white"
+                  : "bg-[#11171F] border-[#374151] text-gray-400 hover:border-gray-500"
+              }`}
+            >
+              <p className="font-semibold text-sm text-white">Show All Areas</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Display the overview of all areas on dashboard initial load.
+              </p>
+            </button>
+          </div>
+        </div>
       </div>
 
       <ConfirmDialog

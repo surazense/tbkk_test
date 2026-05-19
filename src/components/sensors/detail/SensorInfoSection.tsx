@@ -8,7 +8,14 @@ import {
   WifiLow,
   WifiZero,
   Calendar,
+  AlertOctagon,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -112,6 +119,47 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
 }) => {
   const [visibleCount, setVisibleCount] = React.useState(20);
   const [selectedCalendarDate, setSelectedCalendarDate] = React.useState<string>("");
+  const isSuperAdmin = user?.role?.toLowerCase() === "superadmin";
+
+  const [dominantFault, setDominantFault] = React.useState<any>(null);
+  const [showPopup, setShowPopup] = React.useState(false);
+  const [diagnosticRules, setDiagnosticRules] = React.useState<any[]>([]);
+
+  React.useEffect(() => {
+    if (!isSuperAdmin) return;
+    import("@/lib/api/diagnostics").then(({ diagnosticsApi }) => {
+      diagnosticsApi.getDiagnosticRules()
+        .then((res) => {
+          if (res) {
+            setDiagnosticRules(res);
+          }
+        })
+        .catch(() => {});
+    });
+  }, [isSuperAdmin]);
+
+  React.useEffect(() => {
+    if (!isSuperAdmin) {
+      setDominantFault(null);
+      return;
+    }
+    if (sensor?.id) {
+      import("@/lib/api/diagnostics").then(({ diagnosticsApi }) => {
+        const targetDate = selectedDatetime || (sensorLastData?.data?.datetime || new Date().toISOString());
+        diagnosticsApi.getDiagnosticHistory(sensor.id, targetDate)
+          .then((res) => {
+            if (res) {
+              setDominantFault(res.dominant_fault);
+            } else {
+              setDominantFault(null);
+            }
+          })
+          .catch(() => {
+            setDominantFault(null);
+          });
+      });
+    }
+  }, [sensor?.id, selectedDatetime, sensorLastData, isSuperAdmin]);
 
   // Safely filter datetimes based on calendar selection
   const filteredDatetimes = React.useMemo(() => {
@@ -482,6 +530,101 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                 {configData.notes || "No notes"}
               </span>
             </div>
+
+            {dominantFault && (
+              <>
+                <div className="mt-4 p-3 rounded-xl bg-red-950/20 border border-red-800/40 text-red-100 flex flex-col gap-2">
+                  <div className="text-xs uppercase tracking-wider font-bold opacity-80 flex items-center gap-1.5 text-red-400">
+                    <AlertOctagon className="h-4 w-4" />
+                    Anomaly Detected
+                  </div>
+                  <div className="text-sm font-semibold flex items-center justify-between gap-4">
+                    <span className="text-white truncate">
+                      {(() => {
+                        const matchedRule = diagnosticRules.find(
+                          (r) => r.fault_id?.toUpperCase() === dominantFault.fault_id?.toUpperCase()
+                        );
+                        return matchedRule?.name || dominantFault.fault_name;
+                      })()}
+                    </span>
+                    <button
+                      onClick={() => setShowPopup(true)}
+                      className="text-xs text-blue-400 hover:text-blue-300 underline font-bold shrink-0 cursor-pointer"
+                    >
+                      View Details
+                    </button>
+                  </div>
+                </div>
+
+                <Dialog open={showPopup} onOpenChange={setShowPopup}>
+                  <DialogContent className="bg-[#0B1121] border border-[#374151] text-white max-w-lg rounded-2xl p-6 shadow-2xl">
+                    <DialogHeader>
+                      <DialogTitle className="text-xl font-bold flex items-center gap-2 text-red-500">
+                        <AlertOctagon className="h-6 w-6" />
+                        {(() => {
+                          const matchedRule = diagnosticRules.find(
+                            (r) => r.fault_id?.toUpperCase() === dominantFault.fault_id?.toUpperCase()
+                          );
+                          return matchedRule?.name || dominantFault.fault_name || "Diagnostic Alert";
+                        })()}
+                      </DialogTitle>
+                    </DialogHeader>
+
+                    {(() => {
+                      const matchedRule = diagnosticRules.find(
+                        (r) => r.fault_id?.toUpperCase() === dominantFault.fault_id?.toUpperCase()
+                      );
+
+                      const details = {
+                        cause: matchedRule?.causes?.en ? matchedRule.causes.en.map((c: string) => `• ${c}`).join("\n") : "Potential machine rotation or structural degradation.",
+                        reasoning: matchedRule?.reasoning?.en || "Abnormal vibration amplitudes detected in frequency spectra.",
+                        fix: matchedRule?.how_to_fix?.en || dominantFault.recommendation_en || "Please inspect the physical machine setup.",
+                        measurement: matchedRule?.measurement_method?.en || "Check H, V, A axes vibration levels."
+                      };
+
+                      return (
+                        <div className="space-y-4 text-sm leading-relaxed mt-2 max-h-[70vh] overflow-y-auto custom-scrollbar pr-1">
+                          <div className="bg-[#161E28]/60 p-3 rounded-xl border border-gray-800/40">
+                            <span className="text-xs font-bold text-gray-400 block mb-1">Cause</span>
+                            <p className="text-gray-200 whitespace-pre-line leading-relaxed">{details.cause}</p>
+                          </div>
+
+                          <div className="bg-[#161E28]/60 p-4 rounded-xl border border-gray-800/40">
+                            <span className="text-xs font-bold text-gray-400 block mb-1">Reasoning / Analysis</span>
+                            <p className="text-gray-200 leading-relaxed">{details.reasoning}</p>
+                          </div>
+
+                          <div className="bg-[#161E28]/60 p-4 rounded-xl border border-gray-800/40">
+                            <span className="text-xs font-bold text-gray-400 block mb-1">Recommended Actions / How to Fix</span>
+                            <p className="text-gray-200 leading-relaxed">{details.fix}</p>
+                          </div>
+
+                          <div className="bg-[#161E28]/60 p-4 rounded-xl border border-gray-800/40">
+                            <span className="text-xs font-bold text-gray-400 block mb-1">Measurement Method</span>
+                            <p className="text-gray-200 leading-relaxed">{details.measurement}</p>
+                          </div>
+
+                          {matchedRule?.references && matchedRule.references.length > 0 && (
+                            <div className="bg-[#161E28]/60 p-3 rounded-xl border border-gray-800/40">
+                              <span className="text-xs font-bold text-gray-400 block mb-1">References</span>
+                              <div className="space-y-2 mt-1">
+                                {matchedRule.references.map((ref: any, i: number) => (
+                                  <div key={i} className="text-xs border-l-2 border-blue-500 pl-2">
+                                    <div className="font-semibold text-white">{ref.source}</div>
+                                    {ref.section && <div className="text-[10px] text-blue-400 mt-0.5">{ref.section}</div>}
+                                    <div className="text-gray-400 mt-0.5">{ref.details}</div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+                  </DialogContent>
+                </Dialog>
+              </>
+            )}
           </div>
 
           <div className="hidden xl:block w-[1px] bg-[#374151] my-4 opacity-50"></div>
