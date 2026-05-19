@@ -1,6 +1,6 @@
 "use client";
 
-import { Grid3X3, List, Circle } from "lucide-react";
+import { Grid3X3, List, Circle, CircleDot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
@@ -9,7 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export type ViewMode = "grid" | "list" | "dot";
+export type ViewMode = "grid" | "list" | "grouped-dot" | "dot";
 
 interface ViewSelectorProps {
   currentView: ViewMode;
@@ -32,6 +32,12 @@ export default function ViewSelector({
       icon: List,
       label: "List View",
       description: "Compact list showing more sensors per page",
+    },
+    {
+      mode: "grouped-dot" as ViewMode,
+      icon: CircleDot,
+      label: "Grouped Dot View",
+      description: "Dots grouped by Machine or Area with full details",
     },
     {
       mode: "dot" as ViewMode,

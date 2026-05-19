@@ -13,6 +13,7 @@ import SensorGrid from "@/components/sensors/SensorGrid";
 import SensorPagination from "@/components/sensors/SensorPagination";
 import SensorListView from "@/components/sensors/SensorListView";
 import SensorDotView from "@/components/sensors/SensorDotView";
+import SensorGroupedDotView from "@/components/sensors/SensorGroupedDotView";
 import { ViewMode } from "@/components/sensors/ViewSelector";
 import SensorFilters from "@/components/sensors/SensorFilters";
 import LoadingSkeleton from "@/components/ui/LoadingSkeleton";
@@ -33,11 +34,12 @@ export default function SensorsPage() {
   // Pagination state for card view
   const [cardPage, setCardPage] = useState(1);
   const [currentView, setCurrentView] = useState<ViewMode>("grid");
-  const [dotSize, setDotSize] = useState<number>(1); // Add dotSize state
+  const [dotSize, setDotSize] = useState<number>(4); // Add dotSize state
   const [searchQuery, setSearchQuery] = useState(""); // Add search state
   const [selectedStatuses, setSelectedStatuses] = useState<SensorStatusType[]>(
     []
   );
+  const [roleFilter, setRoleFilter] = useState<"all" | "master" | "satellite">("all");
   const [sensors, setSensors] = useState<Sensor[]>([]);
   const [loading, setLoading] = useState(true);
   const autoRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -259,8 +261,16 @@ export default function SensorsPage() {
       });
     }
 
+    // Filter by role
+    if (roleFilter !== "all") {
+      result = result.filter((sensor) => {
+        const isMaster = (sensor.sensor_type || "").toLowerCase() === "master";
+        return roleFilter === "master" ? isMaster : !isMaster;
+      });
+    }
+
     return result;
-  }, [sensors, selectedStatuses, searchQuery, selectedIds, selectedSensors]);
+  }, [sensors, selectedStatuses, searchQuery, selectedIds, selectedSensors, roleFilter]);
 
   // Group sensors for different views
   const sensorGroups = useMemo(() => {
@@ -327,6 +337,12 @@ export default function SensorsPage() {
         );
       case "list":
         return <SensorListView sensorGroups={sensorGroups} />;
+      case "grouped-dot":
+        return (
+          <div className="bg-[#0B1121] text-white w-full px-1 sm:px-4 py-2 sm:py-4">
+            <SensorGroupedDotView sensorGroups={sensorGroups} dotSize={dotSize} />
+          </div>
+        );
       case "dot":
         return (
           <div className="bg-[#0B1121] text-white w-full px-1 sm:px-4 py-2 sm:py-4">
@@ -358,6 +374,11 @@ export default function SensorsPage() {
           onDotSizeChange={setDotSize}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
+          roleFilter={roleFilter}
+          onRoleFilterChange={(filter) => {
+            setRoleFilter(filter);
+            setCardPage(1);
+          }}
         />
       </div>
 

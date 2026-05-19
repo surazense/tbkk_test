@@ -204,8 +204,24 @@ export async function toBase64(file: File): Promise<string> {
  */
 export const getDistinctColor = (index: number) => {
   if (index < 0) return "transparent";
-  const hue = (index * 137.508) % 360;
-  const lightness = 55 + (index % 3) * 5;
+  
+  // Curated premium, vibrant, harmonized colors (slightly darker/richer for dark mode contrast)
+  const premiumColors = [
+    "hsl(142, 72%, 40%)", // 0: Emerald Green
+    "hsl(217, 91%, 48%)", // 1: Sleek Blue
+    "hsl(262, 83%, 52%)", // 2: Modern Violet
+    "hsl(32, 95%, 44%)",  // 3: Warm Amber
+    "hsl(190, 90%, 40%)", // 4: Premium Cyan
+    "hsl(340, 85%, 46%)", // 5: Rose Pink
+  ];
+
+  if (index < premiumColors.length) {
+    return premiumColors[index];
+  }
+
+  // Golden angle fallback for higher indices
+  const hue = ((index - premiumColors.length) * 137.508 + 60) % 360;
+  const lightness = 45 + (index % 3) * 5;
   return `hsl(${hue}, 85%, ${lightness}%)`;
 };
 

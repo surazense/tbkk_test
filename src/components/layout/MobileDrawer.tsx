@@ -43,23 +43,9 @@ export default function MobileDrawer({
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        {/* Drawer Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#374151] shrink-0">
-          <h2 className="text-white font-semibold text-base">
-            Organization Tree
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
-            aria-label="Close drawer"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
         {/* FolderTree Content */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden [&>*]:!w-full [&>*]:!border-r-0">
-          <FolderTree onFilterChange={onFilterChange} />
+          <FolderTree onFilterChange={onFilterChange} onClose={onClose} />
         </div>
       </div>
     </>

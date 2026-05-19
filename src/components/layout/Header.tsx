@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { Bell, LogOut, Settings, ChevronDown, Menu } from "lucide-react";
+import { Bell, LogOut, Settings, ChevronDown, Filter } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
 import { Badge } from "@/components/ui/badge";
@@ -378,16 +378,19 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
   return (
     <>
-      <header className="bg-[#0B1121] border-b-[1.35px] border-[#374151] py-3 px-4 md:px-6 shrink-0">
-        <div className="flex items-center justify-between gap-2">
-          {/* Hamburger Button — mobile only */}
-          <button
-            onClick={onMenuClick}
-            className="md:hidden p-2 rounded-md text-white hover:bg-gray-700 transition-colors shrink-0"
-            aria-label="Open menu"
-          >
-            <Menu size={20} />
-          </button>
+      <header className="bg-[#0B1121] border-b-[1.35px] border-[#374151] h-[65px] flex items-center px-4 md:px-6 shrink-0">
+        <div className="flex items-center justify-between gap-2 w-full">
+          {/* Filter Button — mobile only */}
+          {onMenuClick && (
+            <button
+              onClick={onMenuClick}
+              className="md:hidden py-1 px-2.5 rounded-lg border border-[#374151] bg-[#1e293b]/50 text-white hover:bg-gray-700 transition-all shrink-0 flex items-center gap-1.5 active:scale-[0.98] shadow-sm"
+              aria-label="Open filter"
+            >
+              <Filter size={15} className="text-blue-400" />
+              <span className="text-xs text-blue-400 font-semibold select-none">Filter</span>
+            </button>
+          )}
 
           <div className="flex-1 flex items-center gap-2 min-w-0 overflow-hidden">
             <span className="text-sm sm:text-lg 2xl:text-2xl font-medium text-white truncate">

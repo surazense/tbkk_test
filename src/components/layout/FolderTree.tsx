@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { ChevronRight, ChevronDown, Menu } from "lucide-react";
+import { ChevronRight, ChevronDown, Loader2, X } from "lucide-react";
 import Box from "@mui/material/Box";
 import Popover from "@mui/material/Popover";
 
@@ -128,7 +128,8 @@ interface FlatNode {
 
 const FolderTree: React.FC<{
   onFilterChange?: (ids: string[], sensors: Sensor[]) => void;
-}> = ({ onFilterChange }) => {
+  onClose?: () => void;
+}> = ({ onFilterChange, onClose }) => {
   const [sensors, setSensors] = useState<Sensor[]>([]);
   const [loading, setLoading] = useState(true);
   const { collapsed, setCollapsed } = useFolderTree();
@@ -140,6 +141,13 @@ const FolderTree: React.FC<{
   const [selectedIds, setSelectedIds] = useState<Set<string>>(
     new Set(["organization"])
   );
+  const [tempSelectedIds, setTempSelectedIds] = useState<Set<string>>(
+    new Set(["organization"])
+  );
+
+  const hasSelections = useMemo(() => {
+    return Array.from(tempSelectedIds).some((id) => id !== "organization");
+  }, [tempSelectedIds]);
 
   // --- Data Fetching ---
   const fetchAll = useCallback(async () => {
@@ -245,10 +253,11 @@ const FolderTree: React.FC<{
       const node = nodeMap.get(id);
       if (!node) return;
 
-      const newSelected = new Set(selectedIds);
+      const newSelected = new Set(tempSelectedIds);
       const targetIds = [id, ...node.allDescendantIds];
 
       if (checked) {
+        newSelected.delete("organization");
         targetIds.forEach((targetId) => newSelected.add(targetId));
         // Optionally check parents if all siblings are selected
         let curr = node.parentId;
@@ -268,9 +277,9 @@ const FolderTree: React.FC<{
           curr = nodeMap.get(curr)?.parentId || null;
         }
       }
-      setSelectedIds(newSelected);
+      setTempSelectedIds(newSelected);
     },
-    [selectedIds, nodeMap]
+    [tempSelectedIds, nodeMap]
   );
 
   // Trigger filter change
@@ -283,20 +292,22 @@ const FolderTree: React.FC<{
     selectedArray.forEach((id) => {
       const node = nodeMap.get(id);
       if (node?.sensorId) {
-        if (!processedSensorIds.has(node.sensorId)) {
-          const s = sensors.find((s) => s.id === node.sensorId);
+        const strSensorId = String(node.sensorId);
+        if (!processedSensorIds.has(strSensorId)) {
+          const s = sensors.find((s) => String(s.id) === strSensorId);
           if (s) {
             selectedSensors.push(s);
-            processedSensorIds.add(node.sensorId);
+            processedSensorIds.add(strSensorId);
           }
         }
       } else if (node?.sensorIds) {
         node.sensorIds.forEach((sid) => {
-          if (!processedSensorIds.has(sid)) {
-            const s = sensors.find((s) => s.id === sid);
+          const strSid = String(sid);
+          if (!processedSensorIds.has(strSid)) {
+            const s = sensors.find((s) => String(s.id) === strSid);
             if (s) {
               selectedSensors.push(s);
-              processedSensorIds.add(sid);
+              processedSensorIds.add(strSid);
             }
           }
         });
@@ -307,12 +318,31 @@ const FolderTree: React.FC<{
 
   const handleItemClick = useCallback(
     (id: string, sensorId?: string) => {
-      setSelectedIds(new Set([id]));
+      const newSet = new Set([id]);
+      setTempSelectedIds(newSet);
+      setSelectedIds(newSet);
       if (pathname !== "/") router.push("/");
       if (sensorId) setCollapsed(true);
     },
     [pathname, router, setCollapsed]
   );
+
+  const handleRowClick = useCallback(
+    (id: string, checked: boolean) => {
+      handleToggleSelect(id, checked);
+      if (pathname !== "/") router.push("/");
+    },
+    [handleToggleSelect, pathname, router]
+  );
+
+  const handleApply = useCallback(() => {
+    setSelectedIds(new Set(tempSelectedIds));
+    if (onClose) onClose();
+  }, [tempSelectedIds, onClose]);
+
+  const handleClearAll = useCallback(() => {
+    setTempSelectedIds(new Set());
+  }, []);
 
   // Listen for external "Select All" trigger
   useEffect(() => {
@@ -321,6 +351,7 @@ const FolderTree: React.FC<{
       if (isSelected) {
         // Toggle off
         setSelectedIds(new Set());
+        setTempSelectedIds(new Set());
       } else {
         // Toggle on
         handleItemClick("organization");
@@ -401,8 +432,8 @@ const FolderTree: React.FC<{
 
   if (loading)
     return (
-      <div className="h-full bg-[#0B1121] border-r border-[#374151] flex flex-col items-center pt-4">
-        <Menu className="text-white mb-4 animate-pulse" />
+      <div className="h-full bg-[#0B1121] border-r border-[#374151] flex flex-col items-center justify-center pt-8">
+        <Loader2 className="text-blue-500 mb-4 animate-spin h-6 w-6" />
         {!collapsed && (
           <span className="text-gray-400 text-sm">Loading Tree...</span>
         )}
@@ -410,63 +441,58 @@ const FolderTree: React.FC<{
     );
 
   return (
-    <div
-      className={`h-full bg-[#0B1121] border-r border-[#374151] flex flex-col transition-all duration-300 ${collapsed ? "w-[52px]" : "w-64"}`}
-    >
-      {/* Header / Toggle */}
-      <div
-        className={`flex items-center transition-all duration-300 ${collapsed ? "justify-center p-2" : "justify-end p-4"}`}
-      >
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="p-2 rounded-md hover:bg-white/10 text-white transition-colors flex items-center justify-center"
-        >
-          {collapsed ? (
-            <Menu size={20} />
-          ) : (
-            <Image
-              src="/Group 639.png"
-              alt="close"
-              width={20}
-              height={20}
-              className="invert"
-            />
+    <div className="h-full w-64 bg-[#0B1121] flex flex-col">
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-[#1f2937]">
+        <span className="text-white font-semibold text-sm">
+          Organization Tree
+        </span>
+        <div className="flex items-center gap-2">
+          {hasSelections && (
+            <button
+              onClick={handleApply}
+              className="py-1.5 px-4 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-all active:scale-[0.98] shadow-md"
+            >
+              Apply
+            </button>
           )}
-        </button>
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1 rounded-md text-gray-400 hover:text-white hover:bg-white/10 transition-colors md:hidden"
+            >
+              <X size={18} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Content */}
       <div className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar">
-        {collapsed ? (
-          <div className="flex flex-col items-center gap-2 p-2">
-            {flatNodes
-              .filter((n) => n.type === "folder" && n.depth <= 2)
-              .map((node) => (
-                <div
-                  key={node.id}
-                  className="w-8 h-8 flex items-center justify-center bg-blue-500/10 rounded-lg text-white font-bold text-xs cursor-pointer hover:bg-blue-500/30 transition-all hover:scale-110"
-                  title={node.label}
-                  onMouseEnter={(e) => handlePopoverOpen(e, node.id)}
-                  onMouseLeave={handlePopoverClose}
-                >
-                  {getFirstChar(node.label)}
-                </div>
-              ))}
-          </div>
-        ) : (
-          <div className="py-2">
-            {visibleNodes.map((node) => {
+        <div className="py-2">
+          {flatNodes
+            .filter((node) => {
+              // Hide the root "organization" node
+              if (node.id === "organization") return false;
+
+              if (!node.parentId) return true;
+              return node.path
+                .slice(0, -1)
+                .every((ancestorId) => ancestorId === "organization" || expandedIds.has(ancestorId));
+            })
+            .map((node) => {
               const isExpanded = expandedIds.has(node.id);
-              const isSelected = selectedIds.has(node.id);
+              const isTempSelected = tempSelectedIds.has(node.id);
+              const visualDepth = Math.max(0, node.depth - 1);
 
               return (
                 <div
                   key={node.id}
-                  className={`flex items-center group py-1 px-4 cursor-pointer hover:bg-white/5 transition-colors relative ${isSelected ? "bg-[#161E28]" : ""}`}
-                  onClick={() => handleItemClick(node.id, node.sensorId)}
+                  className={`flex items-center group py-1 px-4 cursor-pointer hover:bg-white/5 transition-colors relative ${isTempSelected ? "bg-[#161E28]" : ""}`}
+                  onClick={() => handleRowClick(node.id, !isTempSelected)}
                 >
                   {/* Hierarchy Lines */}
-                  {Array.from({ length: node.depth }).map((_, i) => (
+                  {Array.from({ length: visualDepth }).map((_, i) => (
                     <div
                       key={i}
                       className="absolute w-[1px] bg-gray-700 h-full top-0"
@@ -476,13 +502,13 @@ const FolderTree: React.FC<{
 
                   <div
                     className="flex items-center w-full"
-                    style={{ paddingLeft: `${node.depth * 16}px` }}
+                    style={{ paddingLeft: `${visualDepth * 16}px` }}
                   >
                     <div className="flex items-center gap-2 mr-2 shrink-0">
                       <input
                         type="checkbox"
                         className="w-4 h-4 rounded border-gray-600 bg-transparent text-blue-600 focus:ring-blue-500 cursor-pointer"
-                        checked={isSelected}
+                        checked={isTempSelected}
                         onClick={(e) => e.stopPropagation()}
                         onChange={(e) =>
                           handleToggleSelect(node.id, e.target.checked)
@@ -520,9 +546,10 @@ const FolderTree: React.FC<{
                 </div>
               );
             })}
-          </div>
-        )}
+        </div>
       </div>
+
+
 
       {/* Summary Popover */}
       {popover.id && (

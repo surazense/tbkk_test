@@ -4,10 +4,11 @@ import { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import SummaryCards from "@/components/reports/SummaryCards";
 import DataTransmissionChart from "@/components/reports/DataTransmissionChart";
-import ReportFilters from "@/components/reports/ReportFilters";
 import ReportDataTable from "@/components/reports/ReportDataTable";
 import {
   subDays,
+  subMonths,
+  subYears,
   startOfDay,
   endOfDay,
   eachDayOfInterval,
@@ -18,8 +19,15 @@ import {
 import { fetchRealSensors } from "@/lib/data/sensors";
 import { fetchTransmissionReport } from "@/lib/data/reports";
 import { Sensor } from "@/lib/types";
-import { Loader2 } from "lucide-react";
+import { Loader2, CalendarDays } from "lucide-react";
 import RoleGuard from "@/components/auth/RoleGuard";
+import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 
 export default function ReportsPage() {
   const [viewLevel, setViewLevel] = useState<"area" | "machine" | "sensor">(
@@ -28,12 +36,95 @@ export default function ReportsPage() {
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
   const [selectedMachine, setSelectedMachine] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
-    from: new Date(),
-    to: new Date(),
+    from: subDays(new Date(), 7),
+    to: subDays(new Date(), 1),
   });
+  const [tempDateRange, setTempDateRange] = useState<{ from: Date; to: Date }>({
+    from: subDays(new Date(), 7),
+    to: subDays(new Date(), 1),
+  });
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+
+  useEffect(() => {
+    setTempDateRange(dateRange);
+  }, [dateRange]);
+
+  const timePresets = [
+    { label: "Today", getValue: () => ({ from: new Date(), to: new Date() }) },
+    {
+      label: "Yesterday",
+      getValue: () => ({
+        from: subDays(new Date(), 1),
+        to: subDays(new Date(), 1),
+      }),
+    },
+    {
+      label: "This week",
+      getValue: () => ({ from: subDays(new Date(), 7), to: new Date() }),
+    },
+    {
+      label: "Last week",
+      getValue: () => ({
+        from: subDays(new Date(), 14),
+        to: subDays(new Date(), 7),
+      }),
+    },
+    {
+      label: "This month",
+      getValue: () => ({ from: subMonths(new Date(), 1), to: new Date() }),
+    },
+    {
+      label: "Last month",
+      getValue: () => ({
+        from: subMonths(new Date(), 2),
+        to: subMonths(new Date(), 1),
+      }),
+    },
+    {
+      label: "This year",
+      getValue: () => ({ from: subYears(new Date(), 1), to: new Date() }),
+    },
+    {
+      label: "All time",
+      getValue: () => ({ from: subYears(new Date(), 10), to: new Date() }),
+    },
+  ];
+
+  const toDatetimeLocal = (d: Date | undefined) => {
+    if (!d) return "";
+    try {
+      const pad = (num: number) => String(num).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    } catch (e) {
+      return "";
+    }
+  };
+
+  const handleFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val) {
+      const d = new Date(val);
+      if (!isNaN(d.getTime())) {
+        setTempDateRange((prev) => ({ ...prev, from: d }));
+      }
+    }
+  };
+
+  const handleToChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (val) {
+      const d = new Date(val);
+      if (!isNaN(d.getTime())) {
+        setTempDateRange((prev) => ({ ...prev, to: d }));
+      }
+    }
+  };
+
   const [sensorType, setSensorType] = useState<string>("all");
   const [chartMode, setChartMode] = useState<"stacked" | "grouped">("stacked");
   const [comparisonIds, setComparisonIds] = useState<string[]>([]);
+  const [isComparisonMode, setIsComparisonMode] = useState(false);
+  const [showSensorDetails, setShowSensorDetails] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortConfig, setSortConfig] = useState<{
     key: string;
@@ -72,7 +163,7 @@ export default function ReportsPage() {
   // Enrich API Data with metadata from `sensors`
   const enrichedData = useMemo(() => {
     let base = apiData.map((d) => {
-      const s = sensors.find((sen) => sen.id === d.sensor_id);
+      const s = sensors.find((sen) => String(sen.id) === String(d.sensor_id));
       return {
         ...d,
         area: s?.area || "Unassigned",
@@ -105,8 +196,9 @@ export default function ReportsPage() {
 
     const apiBySensor = enrichedData.reduce(
       (acc, d) => {
-        if (!acc[d.sensor_id]) acc[d.sensor_id] = [];
-        acc[d.sensor_id].push(d);
+        const key = String(d.sensor_id);
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(d);
         return acc;
       },
       {} as Record<string, typeof enrichedData>
@@ -154,6 +246,10 @@ export default function ReportsPage() {
             tempMax = r.temperature_max;
           if (r.velo_rms_h_max !== null && r.velo_rms_h_max > vibMax)
             vibMax = r.velo_rms_h_max;
+          if (r.velo_rms_v_max !== null && r.velo_rms_v_max > vibMax)
+            vibMax = r.velo_rms_v_max;
+          if (r.velo_rms_a_max !== null && r.velo_rms_a_max > vibMax)
+            vibMax = r.velo_rms_a_max;
         });
       });
 
@@ -333,31 +429,86 @@ export default function ReportsPage() {
 
         entity.rawSensors.forEach((s: any) => {
           const records = dataByDay[bucketDateStr] || [];
-          const record = records.find((r: any) => r.sensor_id === s.id);
+          const record = records.find((r: any) => String(r.sensor_id) === String(s.id));
+
+          let sensorCount = 0;
+          let sensorBatterySum = 0;
+          let sensorBatteryCount = 0;
+          let sensorTempMax = -999;
+          let sensorAlerts = 0;
+          let sensorIsLost = true;
 
           if (record) {
             if (isDaily) {
-              entityCount += record.actual_count || 0;
-              if ((record.actual_count || 0) > 0) isLost = false;
+              sensorCount = record.actual_count || 0;
+              if ((record.actual_count || 0) > 0) sensorIsLost = false;
             } else {
-              const hCount = record.hourly_counts?.[hourIdx] || 0;
-              entityCount += hCount;
-              if (hCount > 0) isLost = false;
+              let hourlyCountsArray: number[] = [];
+              if (Array.isArray(record.hourly_counts)) {
+                hourlyCountsArray = record.hourly_counts;
+              } else if (typeof record.hourly_counts === "string") {
+                let cleanStr = record.hourly_counts.trim();
+                if (cleanStr.startsWith("{") && cleanStr.endsWith("}")) {
+                  cleanStr = cleanStr.slice(1, -1);
+                  hourlyCountsArray = cleanStr.split(",").map(Number);
+                } else {
+                  try {
+                    const parsed = JSON.parse(cleanStr);
+                    if (Array.isArray(parsed)) {
+                      hourlyCountsArray = parsed;
+                    }
+                  } catch {
+                    hourlyCountsArray = cleanStr.split(",").map(Number);
+                  }
+                }
+              }
+
+              let hCount = hourlyCountsArray?.[hourIdx] || 0;
+              
+              // Robust Fallback: If hourly breakdown is empty/missing but daily total actual_count is present
+              if (
+                (!hourlyCountsArray || 
+                 hourlyCountsArray.length === 0 || 
+                 hourlyCountsArray.reduce((sum, val) => sum + val, 0) === 0) && 
+                record.actual_count > 0
+              ) {
+                hCount = Math.round(record.actual_count / 24);
+              }
+
+              sensorCount = hCount;
+              if (hCount > 0) sensorIsLost = false;
             }
 
             // Aggregate extra metrics
             if (record.battery_avg != null) {
-              entityBatterySum += record.battery_avg;
-              entityBatteryCount++;
+              sensorBatterySum = record.battery_avg;
+              sensorBatteryCount = 1;
             }
-            if (
-              record.temperature_max != null &&
-              record.temperature_max > entityTempMax
-            ) {
-              entityTempMax = record.temperature_max;
+            if (record.temperature_max != null) {
+              sensorTempMax = record.temperature_max;
             }
-            entityAlerts += record.alert_count || 0;
+            sensorAlerts = record.alert_count || 0;
           }
+
+          // Accumulate for entity
+          entityCount += sensorCount;
+          if (!sensorIsLost) isLost = false;
+          if (sensorBatteryCount > 0) {
+            entityBatterySum += sensorBatterySum;
+            entityBatteryCount++;
+          }
+          if (sensorTempMax > entityTempMax) {
+            entityTempMax = sensorTempMax;
+          }
+          entityAlerts += sensorAlerts;
+
+          // Store for individual sensor (breakdown mode)
+          const sensorName = s.name || s.serialNumber;
+          bucket[sensorName] = sensorCount;
+          bucket[`${sensorName}_packets`] = sensorCount;
+          bucket[`${sensorName}_battery`] = sensorBatteryCount > 0 ? Number(sensorBatterySum.toFixed(1)) : null;
+          bucket[`${sensorName}_temp`] = sensorTempMax === -999 ? null : Number(sensorTempMax.toFixed(1));
+          bucket[`${sensorName}_alerts`] = sensorAlerts;
         });
 
         // Store standard metric for legacy compatibility, and specific ones for the new Chart toggles
@@ -389,12 +540,34 @@ export default function ReportsPage() {
     });
   }, [tableData, enrichedData, comparisonIds, dateRange]);
 
+  const handleToggleComparisonMode = () => {
+    setIsComparisonMode((prev) => {
+      const next = !prev;
+      if (next) {
+        setComparisonIds((ids) => ids.slice(-2));
+      } else {
+        setComparisonIds([]);
+      }
+      return next;
+    });
+  };
+
   const toggleComparison = (id: string) => {
-    setComparisonIds((prev) =>
-      prev.includes(id)
-        ? prev.filter((i) => i !== id)
-        : [...prev, id].slice(-10)
-    );
+    if (isComparisonMode) {
+      setComparisonIds((prev) => {
+        if (prev.includes(id)) {
+          return prev.filter((i) => i !== id);
+        } else {
+          return [...prev, id].slice(-2);
+        }
+      });
+    } else {
+      setComparisonIds((prev) =>
+        prev.includes(id)
+          ? prev.filter((i) => i !== id)
+          : [...prev, id].slice(-10)
+      );
+    }
   };
 
   const handleDrillDown = (name: string) => {
@@ -429,7 +602,7 @@ export default function ReportsPage() {
 
   return (
     <RoleGuard allowedRoles={["superadmin"]} mode="redirect" redirectPath="/">
-      <div className="flex flex-col gap-6 p-6 min-h-screen bg-transparent">
+      <div className="flex flex-col gap-6 p-4 sm:p-6 pt-20 md:pt-6 min-h-screen bg-transparent">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-white">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
@@ -444,73 +617,59 @@ export default function ReportsPage() {
 
       <SummaryCards sensors={filteredSensors} apiData={enrichedData} />
 
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        <div className="xl:col-span-1 border-r border-slate-800 pr-0 xl:pr-6">
-          <ReportFilters
+      <div className="w-full space-y-6">
+        <Card className="p-6 border-slate-800 shadow-xl bg-slate-900/50 backdrop-blur-sm">
+          <DataTransmissionChart
             viewLevel={viewLevel}
-            setViewLevel={setViewLevel}
+            data={timeSeriesData}
+            entities={
+              comparisonIds.length > 0
+                ? tableData
+                    .filter(
+                      (i) => i.id && comparisonIds.includes(i.id as string)
+                    )
+                    .map((i) => i.name)
+                : tableData.map((i) => i.name)
+            }
+            allEntities={tableData.map((i) => i.name)}
+            selectedArea={selectedArea}
+            selectedMachine={selectedMachine}
+            chartMode={chartMode}
+            setChartMode={setChartMode}
+            onDrillDown={handleDrillDown}
+            onGoBack={handleGoBack}
             dateRange={dateRange}
             setDateRange={setDateRange}
+            loading={fetchingData}
+            sensors={sensors}
+            isComparisonMode={isComparisonMode}
+            showSensorDetails={showSensorDetails}
+          />
+        </Card>
+
+        <Card className="p-0 border-slate-800 shadow-xl bg-slate-900/50 backdrop-blur-sm overflow-hidden text-white">
+          <ReportDataTable
+            viewLevel={viewLevel}
+            data={tableData}
+            selectedArea={selectedArea}
+            selectedMachine={selectedMachine}
             sensorType={sensorType}
-            setSensorType={setSensorType}
+            dateRange={dateRange}
+            comparisonIds={comparisonIds}
+            onToggleComparison={toggleComparison}
+            onDrillDown={handleDrillDown}
+            onGoBack={handleGoBack}
+            sortConfig={sortConfig}
+            setSortConfig={setSortConfig}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
-            onReset={() => {
-              setViewLevel("area");
-              setSelectedArea(null);
-              setSelectedMachine(null);
-              setSensorType("all");
-              setComparisonIds([]);
-              setSearchQuery("");
-            }}
+            isComparisonMode={isComparisonMode}
+            onToggleComparisonMode={handleToggleComparisonMode}
+            showSensorDetails={showSensorDetails}
+            onToggleSensorDetails={() => setShowSensorDetails((prev) => !prev)}
+            timeSeriesData={timeSeriesData}
           />
-        </div>
-
-        <div className="xl:col-span-3 space-y-6">
-          <Card className="p-6 border-slate-800 shadow-xl bg-slate-900/50 backdrop-blur-sm">
-            <DataTransmissionChart
-              viewLevel={viewLevel}
-              data={timeSeriesData}
-              entities={
-                comparisonIds.length > 0
-                  ? tableData
-                      .filter(
-                        (i) => i.id && comparisonIds.includes(i.id as string)
-                      )
-                      .map((i) => i.name)
-                  : tableData.map((i) => i.name)
-              }
-              allEntities={tableData.map((i) => i.name)}
-              selectedArea={selectedArea}
-              selectedMachine={selectedMachine}
-              chartMode={chartMode}
-              setChartMode={setChartMode}
-              onDrillDown={handleDrillDown}
-              onGoBack={handleGoBack}
-              dateRange={dateRange}
-              loading={fetchingData}
-            />
-          </Card>
-
-          <Card className="p-0 border-slate-800 shadow-xl bg-slate-900/50 backdrop-blur-sm overflow-hidden text-white">
-            <ReportDataTable
-              viewLevel={viewLevel}
-              data={tableData}
-              selectedArea={selectedArea}
-              selectedMachine={selectedMachine}
-              sensorType={sensorType}
-              dateRange={dateRange}
-              comparisonIds={comparisonIds}
-              onToggleComparison={toggleComparison}
-              onDrillDown={handleDrillDown}
-              onGoBack={handleGoBack}
-              sortConfig={sortConfig}
-              setSortConfig={setSortConfig}
-              searchQuery={searchQuery}
-              setSearchQuery={setSearchQuery}
-            />
-          </Card>
-        </div>
+        </Card>
       </div>
     </div>
     </RoleGuard>

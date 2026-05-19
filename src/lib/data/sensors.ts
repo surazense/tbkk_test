@@ -72,7 +72,12 @@ async function sendLostNotification(apiSensor: any) {
   }
 
   try {
+    const generatedId = typeof crypto !== "undefined" && crypto.randomUUID 
+      ? crypto.randomUUID() 
+      : Math.random().toString(36).substring(2, 15);
+
     const payload = {
+      id: generatedId,
       sensor_id: sensorId,
       status: "lost",
       alert_type: "lost",
@@ -98,6 +103,20 @@ async function sendLostNotification(apiSensor: any) {
       threshold_max: 0,
       temperature_threshold_min: 0,
       temperature_threshold_max: 0,
+      organization_id: apiSensor.organization_id || null,
+      h_vrms: 0,
+      v_vrms: 0,
+      a_vrms: 0,
+      temperature: apiSensor.last_data?.temperature || 0,
+      battery: apiSensor.last_data?.battery || 100,
+      h_vrms_color: 0,
+      v_vrms_color: 0,
+      a_vrms_color: 0,
+      is_read: false,
+      read_at: null,
+      read_by: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
     };
 
     const url = `${"/api"}/notification-logs`;
@@ -235,7 +254,7 @@ export async function fetchRealSensors(
         signalStrength: apiSensor.last_data?.rssi || 0,
         operationalStatus: apiSensor.last_data ? "running" : "standby",
         machine_class: apiSensor.machine_class,
-        area: apiSensor.area,
+        area: apiSensor.area ? apiSensor.area.trim() : "",
         sensor_type: apiSensor.sensor_type || "Master",
         installationDate: new Date(apiSensor.created_at).getTime(),
         model: `Model-${apiSensor.id.substring(0, 8)}`,
@@ -600,7 +619,7 @@ export async function fetchRealSensors(
       machine_class: apiSensor.machine_class,
       machine_number: apiSensor.machine_no,
       installation_point: apiSensor.installed_point,
-      area: apiSensor.area,
+      area: apiSensor.area ? apiSensor.area.trim() : "",
       machine: apiSensor.machine,
       sensor_name: apiSensor.sensor_name,
       temperature_threshold_min: apiSensor.temperature_threshold_min,

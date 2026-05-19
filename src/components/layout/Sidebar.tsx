@@ -85,9 +85,9 @@ export default function Sidebar() {
     <aside
       className={`${
         collapsed ? "w-16" : "w-64"
-      } bg-[#0B1121] border-[1.35px] border-[#374151] transition-all duration-300 ease-in-out h-full flex flex-col`}
+      } bg-[#0B1121] border-r-[1.35px] border-[#374151] transition-all duration-300 ease-in-out h-full flex flex-col`}
     >
-      <div className="flex items-center justify-between p-4 border-b border-[#374151]">
+      <div className="flex items-center justify-between px-4 h-[65px] border-b-[1.35px] border-[#374151] shrink-0">
         {!collapsed && (
           <h1 className="text-xl font-bold text-white">VIBRATION-SZ</h1>
         )}

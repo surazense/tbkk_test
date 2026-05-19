@@ -4,24 +4,35 @@ import { useState, useEffect } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Calendar as CalendarIcon, 
-  Filter, 
+import {
+  Calendar as CalendarIcon,
+  Filter,
   RotateCcw,
   LayoutGrid,
   Zap,
-  Cpu
+  Cpu,
 } from "lucide-react";
-import { subDays, subMonths, subYears, subMinutes, subHours, format } from "date-fns";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  subDays,
+  subMonths,
+  subYears,
+  subMinutes,
+  subHours,
+  format,
+} from "date-fns";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 
@@ -39,13 +50,43 @@ interface ReportFiltersProps {
 
 const timePresets = [
   { label: "Today", getValue: () => ({ from: new Date(), to: new Date() }) },
-  { label: "Yesterday", getValue: () => ({ from: subDays(new Date(), 1), to: subDays(new Date(), 1) }) },
-  { label: "This week", getValue: () => ({ from: subDays(new Date(), 7), to: new Date() }) },
-  { label: "Last week", getValue: () => ({ from: subDays(new Date(), 14), to: subDays(new Date(), 7) }) },
-  { label: "This month", getValue: () => ({ from: subMonths(new Date(), 1), to: new Date() }) },
-  { label: "Last month", getValue: () => ({ from: subMonths(new Date(), 2), to: subMonths(new Date(), 1) }) },
-  { label: "This year", getValue: () => ({ from: subYears(new Date(), 1), to: new Date() }) },
-  { label: "All time", getValue: () => ({ from: subYears(new Date(), 10), to: new Date() }) },
+  {
+    label: "Yesterday",
+    getValue: () => ({
+      from: subDays(new Date(), 1),
+      to: subDays(new Date(), 1),
+    }),
+  },
+  {
+    label: "This week",
+    getValue: () => ({ from: subDays(new Date(), 7), to: new Date() }),
+  },
+  {
+    label: "Last week",
+    getValue: () => ({
+      from: subDays(new Date(), 14),
+      to: subDays(new Date(), 7),
+    }),
+  },
+  {
+    label: "This month",
+    getValue: () => ({ from: subMonths(new Date(), 1), to: new Date() }),
+  },
+  {
+    label: "Last month",
+    getValue: () => ({
+      from: subMonths(new Date(), 2),
+      to: subMonths(new Date(), 1),
+    }),
+  },
+  {
+    label: "This year",
+    getValue: () => ({ from: subYears(new Date(), 1), to: new Date() }),
+  },
+  {
+    label: "All time",
+    getValue: () => ({ from: subYears(new Date(), 10), to: new Date() }),
+  },
 ];
 
 export default function ReportFilters({
@@ -57,7 +98,7 @@ export default function ReportFilters({
   setSensorType,
   searchQuery,
   setSearchQuery,
-  onReset
+  onReset,
 }: ReportFiltersProps) {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [localDateRange, setLocalDateRange] = useState(dateRange);
@@ -80,7 +121,12 @@ export default function ReportFilters({
         <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold text-white">Filters</h2>
         </div>
-        <Button variant="ghost" size="sm" onClick={onReset} className="text-slate-400 hover:text-white hover:bg-slate-800">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onReset}
+          className="text-slate-400 hover:text-white hover:bg-slate-800"
+        >
           Reset
         </Button>
       </div>
@@ -88,9 +134,11 @@ export default function ReportFilters({
       <div className="space-y-4">
         {/* Search Input */}
         <div className="space-y-2">
-          <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-[0.2em]">Search Entity</Label>
+          <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-[0.2em]">
+            Search Entity
+          </Label>
           <div className="relative">
-            <input 
+            <input
               type="text"
               placeholder="Search name or ID..."
               value={searchQuery}
@@ -102,15 +150,18 @@ export default function ReportFilters({
 
         {/* Date Range Picker */}
         <div className="space-y-2">
-          <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-[0.2em]">Time Range</Label>
-          
+          <Label className="text-[10px] font-bold uppercase text-slate-500 tracking-[0.2em]">
+            Time Range
+          </Label>
+
           <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
             <PopoverTrigger asChild>
               <Button variant="outline" className={triggerStyles}>
                 {dateRange?.from ? (
                   dateRange.to ? (
                     <span className="text-sm">
-                      {format(dateRange.from, "MMM dd, yy")} - {format(dateRange.to, "MMM dd, yy")}
+                      {format(dateRange.from, "MMM dd, yy")} -{" "}
+                      {format(dateRange.to, "MMM dd, yy")}
                     </span>
                   ) : (
                     format(dateRange.from, "MMM dd, yy")
@@ -120,7 +171,10 @@ export default function ReportFilters({
                 )}
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 bg-[#0b0f1a] border-slate-800 shadow-2xl flex overflow-hidden rounded-xl" align="start">
+            <PopoverContent
+              className="w-auto p-0 bg-[#0b0f1a] border-slate-800 shadow-2xl flex overflow-hidden rounded-xl"
+              align="start"
+            >
               {/* Sidebar Presets */}
               <div className="w-44 border-r border-slate-800/50 bg-slate-950/40 p-3 flex flex-col gap-0.5">
                 {timePresets.map((preset) => (
@@ -129,7 +183,7 @@ export default function ReportFilters({
                     variant="ghost"
                     size="sm"
                     className={cn(
-                      "justify-start text-[11px] font-medium h-9 text-slate-500 hover:text-blue-400 hover:bg-blue-500/5 transition-all rounded-lg",
+                      "justify-start text-[11px] font-medium h-9 text-slate-500 hover:text-blue-400 hover:bg-blue-500/5 transition-all rounded-lg"
                     )}
                     onClick={() => {
                       setDateRange(preset.getValue());
@@ -147,47 +201,61 @@ export default function ReportFilters({
                   initialFocus
                   mode="range"
                   defaultMonth={localDateRange?.from}
-                  selected={{ from: localDateRange.from, to: localDateRange.to }}
+                  selected={{
+                    from: localDateRange.from,
+                    to: localDateRange.to,
+                  }}
                   onSelect={(range: any) => {
                     if (range?.from) {
-                      setLocalDateRange({ from: range.from, to: range.to || range.from });
+                      setLocalDateRange({
+                        from: range.from,
+                        to: range.to || range.from,
+                      });
                     }
                   }}
                   numberOfMonths={2}
                 />
-                
+
                 {/* Footer Actions & Inputs */}
                 <div className="px-6 py-4 bg-slate-950 border-t border-slate-800/50 flex items-center justify-between gap-8">
                   <div className="flex items-center gap-2 flex-1 max-w-[400px]">
                     <div className="flex-1">
-                       <input 
-                         disabled
-                         value={localDateRange?.from ? format(localDateRange.from, "MM/dd/yyyy HH:mm") : "Start Date"}
-                         className="w-full bg-slate-900/30 border border-slate-800/50 rounded-lg px-3 py-2 text-[11px] text-slate-400 font-mono focus:outline-none"
-                       />
+                      <input
+                        disabled
+                        value={
+                          localDateRange?.from
+                            ? format(localDateRange.from, "MM/dd/yyyy HH:mm")
+                            : "Start Date"
+                        }
+                        className="w-full bg-slate-900/30 border border-slate-800/50 rounded-lg px-3 py-2 text-[11px] text-slate-400 font-mono focus:outline-none"
+                      />
                     </div>
                     <span className="text-slate-700 text-xs">—</span>
                     <div className="flex-1">
-                       <input 
-                         disabled
-                         value={localDateRange?.to ? format(localDateRange.to, "MM/dd/yyyy HH:mm") : "End Date"}
-                         className="w-full bg-slate-900/30 border border-slate-800/50 rounded-lg px-3 py-2 text-[11px] text-slate-400 font-mono focus:outline-none"
-                       />
+                      <input
+                        disabled
+                        value={
+                          localDateRange?.to
+                            ? format(localDateRange.to, "MM/dd/yyyy HH:mm")
+                            : "End Date"
+                        }
+                        className="w-full bg-slate-900/30 border border-slate-800/50 rounded-lg px-3 py-2 text-[11px] text-slate-400 font-mono focus:outline-none"
+                      />
                     </div>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
+                    <Button
+                      variant="ghost"
+                      size="sm"
                       className="h-9 text-xs text-slate-500 hover:text-white px-4"
                       onClick={() => setIsPopoverOpen(false)}
                     >
                       Cancel
                     </Button>
-                    <Button 
-                      variant="default" 
-                      size="sm" 
+                    <Button
+                      variant="default"
+                      size="sm"
                       className="h-9 text-xs bg-blue-600 hover:bg-blue-700 text-white px-8 rounded-lg font-bold"
                       onClick={() => {
                         setDateRange(localDateRange);
@@ -205,7 +273,9 @@ export default function ReportFilters({
 
         {/* Sensor Type Filter */}
         <div className="space-y-2">
-          <Label className="text-xs font-bold uppercase text-slate-400 tracking-wider">Sensor Categories</Label>
+          <Label className="text-xs font-bold uppercase text-slate-400 tracking-wider">
+            Sensor Categories
+          </Label>
           <div className="flex flex-wrap gap-2">
             {["all", "master", "seterline"].map((type) => (
               <Badge
@@ -213,7 +283,9 @@ export default function ReportFilters({
                 variant={sensorType === type ? "default" : "outline"}
                 className={cn(
                   "cursor-pointer px-3 py-1 capitalize",
-                  sensorType === type ? "bg-blue-600 hover:bg-blue-700" : "text-slate-500"
+                  sensorType === type
+                    ? "bg-blue-600 hover:bg-blue-700"
+                    : "text-slate-500"
                 )}
                 onClick={() => setSensorType(type)}
               >
@@ -222,8 +294,6 @@ export default function ReportFilters({
             ))}
           </div>
         </div>
-
-
       </div>
     </div>
   );

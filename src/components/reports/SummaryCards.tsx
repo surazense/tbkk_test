@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
-import { Activity, Signal, Zap, AlertCircle, TrendingDown, Clock, ActivitySquare } from "lucide-react";
+import { Activity, TrendingDown, Clock, ActivitySquare } from "lucide-react";
 import { Sensor } from "@/lib/types";
 
 interface SummaryCardsProps {
@@ -10,12 +10,7 @@ interface SummaryCardsProps {
 }
 
 export default function SummaryCards({ sensors, apiData = [] }: SummaryCardsProps) {
-  const totalSensors = sensors.length;
-  const activeSensors = sensors.filter(s => s.status === "ok" || s.status === "warning").length;
   const criticalSensors = sensors.filter(s => s.status === "critical" || s.status === "concern").length;
-  const lostSensors = sensors.filter(s => s.status === "lost").length;
-  
-  const onlineSensors = sensors.filter(s => s.connectivity === "online").length;
 
   let totalPackets = 0;
   let totalExpected = 0;
@@ -50,7 +45,7 @@ export default function SummaryCards({ sensors, apiData = [] }: SummaryCardsProp
     {
       label: "Data Loss",
       value: `${lossPercentage.toFixed(2)}%`,
-      change: lossPercentage > 5 ? "Action Required" : "Acceptable",
+      change: lossPercentage > 5 ? "Action Req." : "Acceptable",
       trend: lossPercentage > 5 ? "down" : "up",
       icon: TrendingDown,
       color: lossPercentage > 5 ? "text-rose-400" : "text-green-400",
@@ -60,7 +55,7 @@ export default function SummaryCards({ sensors, apiData = [] }: SummaryCardsProp
     {
       label: "Total Lost Time",
       value: formatLostTime(totalLostMins),
-      change: "Accumulated downtime",
+      change: "Downtime",
       trend: "neutral",
       icon: Clock,
       color: "text-amber-400",
@@ -70,7 +65,7 @@ export default function SummaryCards({ sensors, apiData = [] }: SummaryCardsProp
     {
       label: "Vibration Alerts",
       value: totalAlerts.toString(),
-      change: `${criticalSensors} current critical`,
+      change: `${criticalSensors} critical`,
       trend: totalAlerts > 0 ? "down" : "neutral",
       icon: ActivitySquare,
       color: "text-purple-400",
@@ -80,16 +75,16 @@ export default function SummaryCards({ sensors, apiData = [] }: SummaryCardsProp
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
       {stats.map((stat, index) => (
         <Card key={index} className="border-slate-800 shadow-xl bg-slate-900/50 backdrop-blur-sm overflow-hidden">
-          <CardContent className="p-5">
+          <CardContent className="p-4 sm:p-5">
             <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{stat.label}</p>
-                <div className="flex items-baseline gap-2">
-                  <h3 className="text-2xl font-bold text-white tracking-tight">{stat.value}</h3>
-                  <span className={`text-[10px] font-semibold ${
+              <div className="space-y-1 w-full min-w-0">
+                <p className="text-[9px] sm:text-[10px] font-bold text-slate-500 uppercase tracking-widest truncate">{stat.label}</p>
+                <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2">
+                  <h3 className="text-lg sm:text-2xl font-bold text-white tracking-tight leading-none truncate">{stat.value}</h3>
+                  <span className={`text-[8px] sm:text-[10px] font-semibold leading-none truncate ${
                     stat.trend === "up" ? "text-green-500" : stat.trend === "down" ? "text-rose-500" : "text-slate-500"
                   }`}>
                     {stat.change}
