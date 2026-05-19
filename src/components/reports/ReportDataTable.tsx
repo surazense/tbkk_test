@@ -385,7 +385,7 @@ export default function ReportDataTable({
                        {row.batteryMin != null ? (
                           <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-slate-900/50 border border-slate-800">
                              <span className={cn("text-[10px] font-mono", row.batteryMin < 20 ? "text-rose-400 font-bold" : "text-slate-300")}>
-                                {row.batteryMin.toFixed(0)}%
+                                {row.batteryMin.toFixed(2)}%
                              </span>
                           </div>
                        ) : <span className="text-[10px] text-slate-600 font-mono">-</span>}

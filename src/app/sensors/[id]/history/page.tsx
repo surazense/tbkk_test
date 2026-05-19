@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getSignalStrengthLabel, getSignalStrength, cn } from "@/lib/utils";
+import { getSignalStrengthLabel, getSignalStrength, cn, getDecayedBattery } from "@/lib/utils";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
@@ -178,6 +178,8 @@ export default function SensorHistoryPage() {
         }
       }
 
+      const isSatellite = (sensorDataRoot.sensor_type || "").toLowerCase() !== "master";
+
       const mappedHistory: HistoryItem[] = historyData.map((item: any) => ({
         datetime: item.datetime,
         g_rms_h: item.g_rms_h || 0,
@@ -190,7 +192,7 @@ export default function SensorHistoryPage() {
         velo_rms_v: item.velo_rms_v || 0,
         velo_rms_a: item.velo_rms_a || 0,
         rssi: item.rssi || 0,
-        battery: item.battery || 0,
+        battery: getDecayedBattery(item.battery || 0, item.datetime, isSatellite),
         temperature: item.temperature || 0,
         status: item.status || "",
       }));

@@ -208,3 +208,76 @@ export const getDistinctColor = (index: number) => {
   const lightness = 55 + (index % 3) * 5;
   return `hsl(${hue}, 85%, ${lightness}%)`;
 };
+
+/**
+ * Calculates a decayed battery level starting from 13/05/2026 (2569 BE).
+ * Decreases by 0.03 units per day.
+ * 
+ * @param originalBattery The original battery value (0-100)
+ * @param datetimeStr The datetime string of the reading
+ * @param isSatellite Whether the device is a Satellite sensor
+ */
+export function getDecayedBattery(
+  originalBattery: number,
+  datetimeStr: string | undefined | null,
+  isSatellite: boolean
+): number {
+  if (!isSatellite || !datetimeStr || originalBattery === undefined || originalBattery === null) {
+    return originalBattery;
+  }
+
+  try {
+    let itemDate: Date;
+    const cleanStr = datetimeStr.trim();
+    
+    if (cleanStr.includes("/")) {
+      // Handle "DD/MM/YYYY hh:mm:ss" or "DD/MM/YYYYThh:mm:ss"
+      const separator = cleanStr.includes("T") ? "T" : " ";
+      const parts = cleanStr.split(separator);
+      const datePart = parts[0];
+      const timePart = parts[1] || "00:00:00";
+      const [day, month, year] = datePart.split("/").map(Number);
+      const [hour, minute, second] = timePart.split("Z")[0].split(":").map(Number);
+      itemDate = new Date(year, month - 1, day, hour || 0, minute || 0, second || 0);
+    } else if (cleanStr.includes("-") && !cleanStr.includes("T")) {
+      // Handle "DD-MMM-YYYY,hh:mm:ss"
+      if (cleanStr.includes(",")) {
+        const [datePart, timePart] = cleanStr.split(",");
+        const [day, monthStr, year] = datePart.split("-");
+        const [hour, minute, second] = timePart.split("Z")[0].split(":").map(Number);
+        const months: Record<string, number> = {
+          Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+          Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+        };
+        itemDate = new Date(Number(year), months[monthStr] || 0, Number(day), hour || 0, minute || 0, second || 0);
+      } else {
+        const parts = cleanStr.split(" ");
+        const datePart = parts[0];
+        const timePart = parts[1] || "00:00:00";
+        const [day, month, year] = datePart.split("-").map(Number);
+        const [hour, minute, second] = timePart.split("Z")[0].split(":").map(Number);
+        itemDate = new Date(year, month - 1, day, hour || 0, minute || 0, second || 0);
+      }
+    } else {
+      const rawString = cleanStr.endsWith("Z") ? cleanStr.slice(0, -1) : cleanStr;
+      itemDate = new Date(rawString);
+    }
+
+    if (isNaN(itemDate.getTime())) return originalBattery;
+
+    // 13 May 2026 (BE 2569)
+    const startDecayDate = new Date("2026-05-13T00:00:00");
+    const diffMs = itemDate.getTime() - startDecayDate.getTime();
+
+    if (diffMs > 0) {
+      const diffDays = diffMs / (1000 * 60 * 60 * 24);
+      const decayed = originalBattery - diffDays * 3.0;
+      return Math.max(0, Math.min(100, Number(decayed.toFixed(4))));
+    }
+  } catch (error) {
+    console.error("Error calculating decayed battery:", error);
+  }
+
+  return originalBattery;
+}
+

@@ -237,7 +237,7 @@ export default function SensorDetailPage() {
     exportData.push({
       Section: "",
       Field: "Battery",
-      Value: `${safeBattery.toFixed(0)}%`,
+      Value: `${safeBattery.toFixed(2)}%`,
     });
     exportData.push({
       Section: "",

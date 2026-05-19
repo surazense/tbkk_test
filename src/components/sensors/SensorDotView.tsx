@@ -264,9 +264,9 @@ export default function SensorDotView({
               <div className="flex items-center justify-between">
                 <span className="text-gray-400">Battery:</span>
                 <span className="font-mono">
-                  {sensor.batteryLevel?.toFixed(0) ||
-                    sensor.last_data?.battery?.toFixed(0) ||
-                    "0"}
+                  {sensor.batteryLevel?.toFixed(2) ||
+                    sensor.last_data?.battery?.toFixed(2) ||
+                    "0.00"}
                   %
                 </span>
               </div>

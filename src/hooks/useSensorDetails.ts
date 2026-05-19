@@ -12,6 +12,7 @@ import {
   calculateVelocityFromFrequency,
   calculateFFT,
 } from "@/lib/utils/sensorCalculations";
+import { getDecayedBattery } from "@/lib/utils";
 
 // Global cache for inflight promises to prevent redundant simultaneous requests
 const configInflight = new Map<string, Promise<any>>();
@@ -134,6 +135,17 @@ export function useSensorDetails({
 
         if (response.ok) {
           const data = await response.json();
+
+          // Apply battery decay to sensor details
+          const isSatellite = (data.sensor_type || "").toLowerCase() !== "master";
+          if (data.battery_level !== undefined && data.battery_level !== null) {
+            data.battery_level = getDecayedBattery(
+              data.battery_level, 
+              data.updated_at || data.lastSeen || new Date().toISOString(), 
+              isSatellite
+            );
+          }
+
           setSensor(data);
           setConfigData((prev) => ({
             ...prev,
@@ -221,7 +233,12 @@ export function useSensorDetails({
                 velo_rms_v: data.velo_rms_v || data.data?.velo_rms_v || 0,
                 velo_rms_a: data.velo_rms_a || data.data?.velo_rms_a || 0,
                 temperature: data.temperature || data.data?.temperature || 0,
-                battery: data.battery || data.data?.battery || 0,
+                battery: (() => {
+                  const isSatellite = (data.sensor_type || "").toLowerCase() !== "master";
+                  const rawBattery = data.battery || data.data?.battery || 0;
+                  const datetime = data.datetime || data.data?.datetime || "";
+                  return getDecayedBattery(rawBattery, datetime, isSatellite);
+                })(),
                 rssi: data.rssi || data.data?.rssi || 0,
                 level_vibration:
                   data.level_vibration || data.data?.level_vibration,
@@ -311,7 +328,12 @@ export function useSensorDetails({
                   velo_rms_v: sensorData.last_data?.velo_rms_v,
                   velo_rms_a: sensorData.last_data?.velo_rms_a,
                   temperature: sensorData.last_data?.temperature,
-                  battery: sensorData.last_data?.battery,
+                  battery: (() => {
+                    const isSatellite = (sensorData.sensor_type || "").toLowerCase() !== "master";
+                    const rawBattery = sensorData.last_data?.battery || 0;
+                    const datetime = sensorData.last_data?.datetime || "";
+                    return getDecayedBattery(rawBattery, datetime, isSatellite);
+                  })(),
                   rssi: sensorData.last_data?.rssi,
                   level_vibration: sensorData.last_data?.level_vibration,
                   level_temperature: sensorData.last_data?.level_temperature,
@@ -418,8 +440,15 @@ export function useSensorDetails({
           ? histData
           : histData.history || histData.data || [];
 
-        setHistory(items);
-        const dts = items.map((item: any) => item.datetime).filter(Boolean);
+        const isSatellite = (details?.sensor_type || "").toLowerCase() !== "master";
+
+        const decayedItems = items.map((item: any) => ({
+          ...item,
+          battery: getDecayedBattery(item.battery || 0, item.datetime, isSatellite),
+        }));
+
+        setHistory(decayedItems);
+        const dts = decayedItems.map((item: any) => item.datetime).filter(Boolean);
         setDatetimes(Array.from(new Set(dts)));
       }
     } catch (err) {
