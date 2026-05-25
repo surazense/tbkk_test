@@ -56,24 +56,11 @@ export default function DiagnosticDashboard({ sensorId, datetime }: DiagnosticDa
   };
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center p-12 bg-[#0B1121] border-[1.35px] border-[#374151] rounded-2xl min-h-[300px]">
-        <Loader2 className="h-8 w-8 text-blue-500 animate-spin mb-4" />
-        <span className="text-gray-400 text-sm">Evaluating diagnostic rules...</span>
-      </div>
-    );
+    return null;
   }
 
   if (error || !data) {
-    return (
-      <div className="flex flex-col items-center justify-center p-12 bg-[#0B1121] border-[1.35px] border-[#374151] rounded-2xl min-h-[300px]">
-        <AlertTriangle className="h-8 w-8 text-[#FF9900] mb-4" />
-        <span className="text-gray-300 text-sm mb-4">{error || "No diagnostic records found."}</span>
-        <Button variant="outline" onClick={fetchDiagnostics} className="bg-transparent border-[#374151] text-white hover:bg-[#374151]/50">
-          Retry Evaluation
-        </Button>
-      </div>
-    );
+    return null;
   }
 
   return (

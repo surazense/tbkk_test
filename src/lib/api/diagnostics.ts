@@ -39,8 +39,47 @@ export const diagnosticsApi = {
       // Compute overall health score simply: 100 - max(fault_scores)
       let maxScore = 0;
       
+      // Try fetching rules to provide richer explanations
+      const rules = await diagnosticsApi.getDiagnosticRules().catch(() => null);
+
       const mappedFaults: FaultScore[] = (apiResult.fault_scores || []).map((fs: any) => {
         if (fs.score > maxScore) maxScore = fs.score;
+        
+        // Find matching rule to get detailed explanation
+        const rule = rules?.find((r) => r.fault_id === fs.fault_id);
+        
+        let indicators = [
+          { 
+            name: `Matched Indicators: ${fs.indicators_matched || 0}`, 
+            description: "Rule conditions met for this fault.", 
+            matched: true, 
+            weight: 1.0 
+          }
+        ];
+
+        if (rule) {
+          indicators = [
+            {
+              name: "Description (รายละเอียด)",
+              description: rule.description?.th || rule.description?.en || "No description provided.",
+              matched: true,
+              weight: 1.0
+            },
+            {
+              name: "Reasoning (การคำนวณและเหตุผล)",
+              description: rule.reasoning?.th || rule.reasoning?.en || `Based on ${fs.indicators_matched || 0} matched indicators.`,
+              matched: true,
+              weight: 1.0
+            },
+            {
+              name: "Possible Causes (สาเหตุที่เป็นไปได้)",
+              description: (rule.causes?.th || []).join(", ") || (rule.causes?.en || []).join(", ") || "Unknown",
+              matched: true,
+              weight: 1.0
+            }
+          ];
+        }
+
         return {
           fault_id: fs.fault_id,
           fault_name: fs.name || fs.name_th,
@@ -50,14 +89,7 @@ export const diagnosticsApi = {
           severity: mappedSeverity, // We apply the overall severity to the dominant fault
           recommendation_th: apiResult.recommendation_th || "",
           recommendation_en: apiResult.recommendation || "",
-          indicators: [
-            { 
-              name: `Matched Indicators: ${fs.indicators_matched || 0}`, 
-              description: "Rule conditions met for this fault.", 
-              matched: true, 
-              weight: 1.0 
-            }
-          ]
+          indicators: indicators
         };
       });
 

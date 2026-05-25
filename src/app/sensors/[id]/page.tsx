@@ -525,11 +525,11 @@ export default function SensorDetailPage() {
           selectedUnit={selectedUnit}
         />
 
-        {selectedDatetime && (
+        {(selectedDatetime || currentData.datetime) && (
           <div className="mt-6">
             <DiagnosticDashboard
               sensorId={sensor.id}
-              datetime={selectedDatetime}
+              datetime={selectedDatetime || currentData.datetime}
             />
           </div>
         )}

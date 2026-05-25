@@ -944,6 +944,8 @@ export function SensorFormContent({
                   <Input
                     type="number"
                     step="0.1"
+                    min={0.1}
+                    max={16}
                     placeholder="0.0"
                     className="bg-[#080808] border-[1px] border-[#4B5563] text-white"
                     {...field}

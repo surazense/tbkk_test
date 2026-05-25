@@ -152,7 +152,7 @@ export function useRegisterSensorForm() {
           warningThreshold: data.threshold_min?.toString() || "",
           concernThreshold: data.threshold_medium?.toString() || "",
           damageThreshold: data.threshold_max?.toString() || "",
-          alarmThreshold: data.alarm_ths?.toString() || "",
+          alarmThreshold: data.alarm_ths ? (data.alarm_ths / 10).toString() : "",
           gScale: data.g_scale?.toString() || "16",
           temperatureThresholdMin:
             data.temperature_threshold_min?.toString() || "",
@@ -299,7 +299,7 @@ export function useRegisterSensorForm() {
               threshold_min: parseFloat(sensorData.warningThreshold || "0"),
               threshold_medium: parseFloat(sensorData.concernThreshold || "0"),
               threshold_max: parseFloat(sensorData.damageThreshold || "0"),
-              alarm_ths: parseFloat(sensorData.alarmThreshold || "0"),
+              alarm_ths: parseFloat(sensorData.alarmThreshold || "0") * 10,
               temperature_threshold_min: parseFloat(
                 sensorData.temperatureThresholdMin || "0"
               ),
@@ -437,7 +437,7 @@ export function useRegisterSensorForm() {
             ? Number(sensorData.temperatureThresholdMax)
             : null,
           alarm_ths: sensorData.alarmThreshold
-            ? Number(sensorData.alarmThreshold)
+            ? Number(sensorData.alarmThreshold) * 10
             : null,
         };
       });

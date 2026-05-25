@@ -14,7 +14,7 @@ import {
   accelerationToVelocity,
 } from "@/lib/sensorCalculations";
 import { getToken } from "@/lib/auth";
-import { getDecayedBattery, parseThailandTime } from "@/lib/utils";
+import { parseThailandTime } from "@/lib/utils";
 
 export interface SensorHistoryParams {
   limit?: number;
@@ -244,13 +244,7 @@ export async function fetchRealSensors(
         status,
         lastUpdated,
         connectivity: apiSensor.last_data ? "online" : "offline",
-        batteryLevel: (() => {
-          const role = (apiSensor.sensor_type || "").toLowerCase();
-          const isSatellite = role !== "master";
-          const originalBattery = apiSensor.last_data?.battery || 0;
-          const datetime = apiSensor.last_data?.datetime || apiSensor.updated_at || "";
-          return getDecayedBattery(originalBattery, datetime, isSatellite);
-        })(),
+        batteryLevel: apiSensor.last_data?.battery || 0,
         signalStrength: apiSensor.last_data?.rssi || 0,
         operationalStatus: apiSensor.last_data ? "running" : "standby",
         machine_class: apiSensor.machine_class,
@@ -269,13 +263,7 @@ export async function fetchRealSensors(
               velo_rms_v: veloRmsV,
               velo_rms_a: veloRmsA,
               temperature: apiSensor.last_data.temperature,
-              battery: (() => {
-                const role = (apiSensor.sensor_type || "").toLowerCase();
-                const isSatellite = role !== "master";
-                const originalBattery = apiSensor.last_data?.battery || 0;
-                const datetime = apiSensor.last_data?.datetime || apiSensor.updated_at || "";
-                return getDecayedBattery(originalBattery, datetime, isSatellite);
-              })(),
+              battery: apiSensor.last_data?.battery || 0,
               rssi: apiSensor.last_data.rssi,
               level_vibration: apiSensor.last_data.level_vibration,
               level_temperature: apiSensor.last_data.level_temperature,
@@ -547,13 +535,7 @@ export async function fetchRealSensors(
       name: apiSensor.sensor_name || apiSensor.name, // Use sensor_name if available, otherwise fallback to name
       model: `Model-${apiSensor.id.substring(0, 8)}`,
       operationalStatus: apiSensor.last_data ? "running" : "standby",
-      batteryLevel: (() => {
-        const role = (apiSensor.sensor_type || "").toLowerCase();
-        const isSatellite = role !== "master";
-        const originalBattery = apiSensor.last_data?.battery || 0;
-        const datetime = apiSensor.last_data?.datetime || apiSensor.updated_at || "";
-        return getDecayedBattery(originalBattery, datetime, isSatellite);
-      })(),
+      batteryLevel: apiSensor.last_data?.battery || 0,
       connectivity: apiSensor.last_data ? "online" : "offline",
       signalStrength: apiSensor.last_data?.rssi || 0,
       vibrationH: "normal",
@@ -573,13 +555,7 @@ export async function fetchRealSensors(
             velo_rms_v: apiSensor.last_data.velo_rms_v,
             velo_rms_a: apiSensor.last_data.velo_rms_a,
             temperature: apiSensor.last_data.temperature,
-            battery: (() => {
-              const role = (apiSensor.sensor_type || "").toLowerCase();
-              const isSatellite = role !== "master";
-              const originalBattery = apiSensor.last_data?.battery || 0;
-              const datetime = apiSensor.last_data?.datetime || apiSensor.updated_at || "";
-              return getDecayedBattery(originalBattery, datetime, isSatellite);
-            })(),
+            battery: apiSensor.last_data?.battery || 0,
             rssi: apiSensor.last_data.rssi,
             level_vibration: apiSensor.last_data.level_vibration,
             level_temperature: apiSensor.last_data.level_temperature,

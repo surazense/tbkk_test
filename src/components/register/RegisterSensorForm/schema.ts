@@ -117,9 +117,18 @@ export const singleSensorSchema = z
       if (!data.alarmThreshold) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Alarm Temperature is required",
+          message: "Alarm Threshold is required",
           path: ["alarmThreshold"],
         });
+      } else {
+        const alarmVal = parseFloat(data.alarmThreshold);
+        if (isNaN(alarmVal) || alarmVal < 0.1 || alarmVal > 16) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Alarm Threshold must be between 0.1 and 16",
+            path: ["alarmThreshold"],
+          });
+        }
       }
       if (!data.timeInterval) {
         ctx.addIssue({
