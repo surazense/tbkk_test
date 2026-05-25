@@ -1,5 +1,6 @@
 import { DiagnosticResult, FaultScore, CategoryScore, DiagnosticCategory } from "../types/diagnostic";
 import { getToken } from "../auth";
+import { LOCAL_DIAGNOSTIC_RULES } from "../data/diagnosticRules";
 
 export const diagnosticsApi = {
   getDiagnosticHistory: async (sensorId: string, datetime: string): Promise<DiagnosticResult | null> => {
@@ -45,8 +46,8 @@ export const diagnosticsApi = {
       const mappedFaults: FaultScore[] = (apiResult.fault_scores || []).map((fs: any) => {
         if (fs.score > maxScore) maxScore = fs.score;
         
-        // Find matching rule to get detailed explanation
-        const rule = rules?.find((r) => r.fault_id === fs.fault_id);
+        const rule = rules?.find((r) => r.fault_id?.toLowerCase() === fs.fault_id?.toLowerCase()) || 
+                     LOCAL_DIAGNOSTIC_RULES.find((r) => r.fault_id?.toLowerCase() === fs.fault_id?.toLowerCase());
         
         let indicators = [
           { 
@@ -73,12 +74,35 @@ export const diagnosticsApi = {
             },
             {
               name: "Possible Causes (สาเหตุที่เป็นไปได้)",
-              description: (rule.causes?.th || []).join(", ") || (rule.causes?.en || []).join(", ") || "Unknown",
+              description: Array.isArray(rule.causes?.th) ? rule.causes.th.join(", ") : (Array.isArray(rule.causes?.en) ? rule.causes.en.join(", ") : "Unknown"),
+              matched: true,
+              weight: 1.0
+            },
+            {
+              name: "How to Fix (วิธีแก้ไข)",
+              description: rule.how_to_fix?.th || rule.how_to_fix?.en || "Contact maintenance.",
+              matched: true,
+              weight: 1.0
+            },
+            {
+              name: "Measurement Method (วิธีวัดผล)",
+              description: rule.measurement_method?.th || rule.measurement_method?.en || "See technical manual.",
               matched: true,
               weight: 1.0
             }
           ];
+          
+          if (rule.references && rule.references.length > 0) {
+            indicators.push({
+              name: "References (อ้างอิง)",
+              description: rule.references.map((ref: any) => `${ref.source} - ${ref.section}: ${ref.details}`).join("\n\n"),
+              matched: true,
+              weight: 1.0
+            });
+          }
         }
+        
+        console.log(`[DEBUG] Mapped indicators for ${fs.fault_id}:`, indicators.length);
 
         return {
           fault_id: fs.fault_id,

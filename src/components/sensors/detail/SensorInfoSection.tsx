@@ -504,7 +504,7 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
 
               <span className="text-gray-400">Battery</span>
               <span className="text-sm md:text-lg 2xl:text-xl text-white truncate break-words whitespace-normal">
-                {safeBattery.toFixed(2)}%
+                {safeBattery.toFixed(0)}%
               </span>
 
               <span className="text-gray-400">Sensor Installation Date</span>

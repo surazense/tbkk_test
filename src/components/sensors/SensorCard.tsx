@@ -452,7 +452,7 @@ export default function SensorCard({ sensor, onClick }: SensorCardProps) {
                         })}
                       </svg>
                       {Math.max(0, Math.min(100, Number(battery) || 0)).toFixed(
-                        2
+                        0
                       )}
                       %
                     </span>

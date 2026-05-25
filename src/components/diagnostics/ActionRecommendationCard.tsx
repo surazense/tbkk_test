@@ -74,14 +74,7 @@ export default function ActionRecommendationCard({ dominantFault, overallScore }
         </div>
       </div>
 
-      {!isHealthy && (
-        <div className="shrink-0 flex self-stretch md:self-center items-center justify-center pt-2 md:pt-0">
-          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm cursor-pointer shadow-md transition-all">
-            <Wrench className="h-4 w-4" />
-            Create Work Order
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
