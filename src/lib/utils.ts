@@ -264,7 +264,7 @@ export const getDistinctColor = (index: number) => {
 
 /**
  * Calculates a decayed battery level starting from 13/05/2026 (2569 BE).
- * Decreases by 0.03 units per day.
+ * Decreases by 0.033 units per day.
  *
  * @param originalBattery The original battery value (0-100)
  * @param datetimeStr The datetime string of the reading
@@ -332,7 +332,7 @@ export function getDecayedBattery(
 
     if (diffMs > 0) {
       const diffDays = diffMs / (1000 * 60 * 60 * 24);
-      const decayed = originalBattery - diffDays * 0.03;
+      const decayed = originalBattery - diffDays * 0.033;
       return Math.max(0, Math.min(100, Number(decayed.toFixed(4))));
     }
   } catch (error) {
