@@ -13,7 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn, formatThaiDate, formatDate } from "@/lib/utils";
+import { cn, formatThaiDate, formatDate, getDecayedBattery } from "@/lib/utils";
 import { exportToCSV, exportToExcel } from "@/lib/exportUtils";
 import * as htmlToImage from "html-to-image";
 import jsPDF from "jspdf";
@@ -126,7 +126,14 @@ export default function SensorDetailPage() {
   };
 
   const safeTemp = Number(currentData.temperature) || 0;
-  const safeBattery = Number(currentData.battery) || 0;
+  const rawBattery = Number(currentData.battery) || 0;
+  const isSatellite = (sensorLastData?.sensor_type || sensor?.sensor_type || "").toLowerCase() === "satellite";
+  const safeBattery = getDecayedBattery(
+    rawBattery,
+    currentData.datetime,
+    isSatellite,
+    user?.org_code
+  );
 
   // Summary log for all axes when data changes
   useEffect(() => {

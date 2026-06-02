@@ -127,7 +127,8 @@ export function useRegisterSensorForm() {
     if (!editId) return;
     setIsEditMode(true);
     try {
-      const response = await fetch(`${"/api"}/sensors/${editId}`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
+      const response = await fetch(`${apiUrl}/sensors/${editId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("auth_token") || ""}`,
         },
@@ -313,8 +314,9 @@ export function useRegisterSensorForm() {
                 : null,
             };
 
+            const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
             const response = await fetch(
-              `${"/api"}/sensors/${targetId}/config`,
+              `${apiUrl}/sensors/${targetId}/config`,
               {
                 method: "PUT",
                 headers: {
@@ -442,7 +444,8 @@ export function useRegisterSensorForm() {
         };
       });
 
-      const response = await fetch(`${"/api"}/sensors/web-register`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
+      const response = await fetch(`${apiUrl}/sensors/web-register`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

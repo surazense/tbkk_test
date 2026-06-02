@@ -22,7 +22,7 @@ import {
   getVibrationColorFromVelocity,
   type SensorConfig,
 } from "@/lib/utils/vibrationUtils";
-import { cn, getSignalStrength, getSignalStrengthLabel, parseThailandTime, formatToThailandTime } from "@/lib/utils";
+import { cn, getSignalStrength, getSignalStrengthLabel, parseThailandTime, formatToThailandTime, getDecayedBattery } from "@/lib/utils";
 
 interface SensorCardProps {
   sensor: Sensor;
@@ -108,7 +108,14 @@ export default function SensorCard({ sensor, onClick }: SensorCardProps) {
     "Machine 1"
   ).toString();
   const temperature = sensor?.last_data?.temperature ?? 0;
-  const battery = sensor?.batteryLevel ?? sensor?.last_data?.battery ?? 0;
+  const rawBattery = sensor?.batteryLevel ?? sensor?.last_data?.battery ?? 0;
+  const isSatellite = (sensor?.sensor_type || "").toLowerCase() === "satellite";
+  const battery = getDecayedBattery(
+    rawBattery,
+    sensor?.last_data?.datetime,
+    isSatellite,
+    user?.org_code
+  );
   const connectivity = sensor?.connectivity || "offline";
 
   // Get vibration RMS values for each axis

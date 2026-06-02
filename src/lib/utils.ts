@@ -265,16 +265,24 @@ export const getDistinctColor = (index: number) => {
 /**
  * Calculates a decayed battery level starting from 13/05/2026 (2569 BE).
  * Decreases by 0.03 units per day.
- * 
+ *
  * @param originalBattery The original battery value (0-100)
  * @param datetimeStr The datetime string of the reading
  * @param isSatellite Whether the device is a Satellite sensor
+ * @param orgCode The org_code of the logged-in user. Pass undefined to apply decay to all orgs.
+ *                If orgCode is "ORG_SURAZENSE", decay is skipped and the original value is returned.
  */
 export function getDecayedBattery(
   originalBattery: number,
   datetimeStr: string | undefined | null,
-  isSatellite: boolean
+  isSatellite: boolean,
+  orgCode?: string | null
 ): number {
+  // Skip decay entirely for ORG_SURAZENSE
+  if (orgCode === "ORG_SURAZENSE") {
+    return originalBattery;
+  }
+
   if (!isSatellite || !datetimeStr || originalBattery === undefined || originalBattery === null) {
     return originalBattery;
   }
@@ -324,7 +332,7 @@ export function getDecayedBattery(
 
     if (diffMs > 0) {
       const diffDays = diffMs / (1000 * 60 * 60 * 24);
-      const decayed = originalBattery - diffDays * 3.0;
+      const decayed = originalBattery - diffDays * 0.03;
       return Math.max(0, Math.min(100, Number(decayed.toFixed(4))));
     }
   } catch (error) {

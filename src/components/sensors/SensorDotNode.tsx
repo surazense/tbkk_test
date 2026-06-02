@@ -12,6 +12,7 @@ import {
   getVibrationColorFromVelocity,
   SensorConfig,
 } from "@/lib/utils/vibrationUtils";
+import { getDecayedBattery } from "@/lib/utils";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 interface SensorDotNodeProps {
@@ -62,9 +63,19 @@ export default function SensorDotNode({
 
   const role = (sensor.sensor_type || "Satellite").toLowerCase();
   const isMaster = role === "master";
+  const isSatellite = role === "satellite";
 
   // Get temperature value
   const temperature = sensor.last_data?.temperature || 0;
+
+  // Compute decayed battery (skipped for ORG_SURAZENSE)
+  const rawBattery = sensor.batteryLevel ?? sensor.last_data?.battery ?? 0;
+  const displayBattery = getDecayedBattery(
+    rawBattery,
+    sensor.last_data?.datetime,
+    isSatellite,
+    user?.org_code
+  );
 
   // Determine status color code
   let statusColorCode = "#72ff82"; // Default Normal (Green)
@@ -251,10 +262,7 @@ export default function SensorDotNode({
             <div className="flex items-center justify-between">
               <span className="text-gray-400">Battery:</span>
               <span className="font-mono">
-                {sensor.batteryLevel?.toFixed(0) ||
-                  sensor.last_data?.battery?.toFixed(0) ||
-                  "0"}
-                %
+                {displayBattery.toFixed(0)}%
               </span>
             </div>
           </div>

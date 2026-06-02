@@ -14,7 +14,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getSignalStrengthLabel, getSignalStrength, cn } from "@/lib/utils";
+import { getSignalStrengthLabel, getSignalStrength, cn, getDecayedBattery } from "@/lib/utils";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
@@ -55,7 +56,9 @@ export default function SensorHistoryPage() {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [sensorName, setSensorName] = useState("");
+  const [sensorType, setSensorType] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
   const chartRef = useRef<any>(null);
   const [selectedDataIndex, setSelectedDataIndex] = useState<number | null>(
     null
@@ -75,7 +78,7 @@ export default function SensorHistoryPage() {
     return `${year}-${month}-${day}`;
   };
 
-  const [selectedUnit, setSelectedUnit] = useState("Velocity (mm/s)");
+  const [selectedUnit, setSelectedUnit] = useState("Velocity RMS (mm/s)");
   const [dateStart, setDateStart] = useState(getTodayString());
   const [dateEnd, setDateEnd] = useState(getTodayString());
 
@@ -157,6 +160,9 @@ export default function SensorHistoryPage() {
       const sensorDataRoot = data.data || data;
       if (sensorDataRoot.name || sensorDataRoot.sensor_name) {
         setSensorName(sensorDataRoot.sensor_name || sensorDataRoot.name);
+      }
+      if (sensorDataRoot.sensor_type) {
+        setSensorType(sensorDataRoot.sensor_type);
       }
 
       let historyData = [];
@@ -301,7 +307,9 @@ export default function SensorHistoryPage() {
     };
 
     const series: any[] = [];
-    const isSatellite = sensorName.toLowerCase().includes("satellite");
+    const isSatellite = sensorType
+      ? sensorType.toLowerCase() === "satellite"
+      : sensorName.toLowerCase().includes("satellite");
     const signalName = isSatellite
       ? "Bluetooth Signal Strength"
       : "Wifi Signal Strength";
@@ -349,7 +357,11 @@ export default function SensorHistoryPage() {
       type: "line",
       xAxisIndex: 1,
       yAxisIndex: 1,
-      data: history.map((h) => (h.status === "lost" ? null : h.battery)),
+      data: history.map((h) =>
+        h.status === "lost"
+          ? null
+          : getDecayedBattery(h.battery ?? 0, h.datetime, isSatellite, user?.org_code)
+      ),
       color: "#4C6FFF",
       symbol: "circle",
       symbolSize: 4,
@@ -767,7 +779,7 @@ export default function SensorHistoryPage() {
       backgroundColor: "#0B1121",
       animationDurationUpdate: 0,
     };
-  }, [history, selectedAxis, selectedUnit, sensorName, selectedDataIndex]);
+  }, [history, selectedAxis, selectedUnit, sensorName, sensorType, selectedDataIndex, user]);
 
   const handleExportCSV = () => {
     if (history.length === 0) return;
