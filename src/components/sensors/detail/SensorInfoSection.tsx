@@ -24,6 +24,7 @@ import {
   formatDate,
   getSignalStrength,
   getSignalStrengthLabel,
+  parseThailandTime,
 } from "@/lib/utils";
 import {
   SensorConfig,
@@ -166,9 +167,11 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
     if (!selectedCalendarDate) return sortedDatetimes;
     return sortedDatetimes.filter((dt) => {
       let dtObj;
-      if (dt.includes("T")) dtObj = new Date(dt.split("T")[0]);
-      else if (dt.includes(",")) dtObj = parseCustomDate(dt);
-      else dtObj = new Date(dt.split(" ")[0]);
+      if (dt.includes(",")) {
+        dtObj = parseCustomDate(dt);
+      } else {
+        dtObj = new Date(parseThailandTime(dt));
+      }
 
       if (isNaN(dtObj.getTime())) return true;
 

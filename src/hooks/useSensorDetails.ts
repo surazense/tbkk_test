@@ -89,7 +89,7 @@ export function useSensorDetails({
     return withDedupe(historyInflight, id, async () => {
       try {
         const token = localStorage.getItem("auth_token");
-        const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/sensors/${id}/history?limit=1000`;
+        const url = `${process.env.NEXT_PUBLIC_API_BASE_URL}/sensors/${id}/history?limit=100000`;
         const response = await fetch(url, {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
