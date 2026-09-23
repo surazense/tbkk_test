@@ -53,15 +53,27 @@ const DeviceToolbar: React.FC<DeviceToolbarProps> = ({
           {/* Left: Title + M/S */}
           <div className="flex items-center gap-2 min-w-0">
             <span className="text-sm font-semibold text-white whitespace-nowrap">
-              {currentView === "dot" ? "Dot View" : currentView === "grouped-dot" ? "Grouped Dot View" : "Card View"}
+              {currentView === "dot"
+                ? "Dot View"
+                : currentView === "grouped-dot"
+                  ? "Grouped Dot View"
+                  : "Card View"}
             </span>
 
             {/* M badge */}
             <span
-              title={roleFilter === "master" ? "Clear Master filter" : "Filter by Master"}
-              onClick={() => onRoleFilterChange?.(roleFilter === "master" ? "all" : "master")}
+              title={
+                roleFilter === "master"
+                  ? "Clear Master filter"
+                  : "Filter by Master"
+              }
+              onClick={() =>
+                onRoleFilterChange?.(roleFilter === "master" ? "all" : "master")
+              }
               className={`flex items-center shrink-0 cursor-pointer select-none transition-all duration-300 hover:scale-105 active:scale-95 ${
-                roleFilter !== "all" && roleFilter !== "master" ? "opacity-30 grayscale" : "opacity-100"
+                roleFilter !== "all" && roleFilter !== "master"
+                  ? "opacity-30 grayscale"
+                  : "opacity-100"
               }`}
             >
               <div className="w-6 h-6 relative flex items-center justify-center">
@@ -83,10 +95,20 @@ const DeviceToolbar: React.FC<DeviceToolbarProps> = ({
 
             {/* S badge */}
             <span
-              title={roleFilter === "satellite" ? "Clear Satellite filter" : "Filter by Satellite"}
-              onClick={() => onRoleFilterChange?.(roleFilter === "satellite" ? "all" : "satellite")}
+              title={
+                roleFilter === "satellite"
+                  ? "Clear Satellite filter"
+                  : "Filter by Satellite"
+              }
+              onClick={() =>
+                onRoleFilterChange?.(
+                  roleFilter === "satellite" ? "all" : "satellite"
+                )
+              }
               className={`flex items-center shrink-0 cursor-pointer select-none transition-all duration-300 hover:scale-105 active:scale-95 ${
-                roleFilter !== "all" && roleFilter !== "satellite" ? "opacity-30 grayscale" : "opacity-100"
+                roleFilter !== "all" && roleFilter !== "satellite"
+                  ? "opacity-30 grayscale"
+                  : "opacity-100"
               }`}
             >
               <span className="flex items-center justify-center w-6 h-6 rounded-full bg-purple-500 text-white font-bold text-xs">
@@ -189,14 +211,26 @@ const DeviceToolbar: React.FC<DeviceToolbarProps> = ({
         >
           <h2 className="text-lg font-semibold text-gray-900 whitespace-nowrap min-w-0">
             <span className="font-semibold text-lg mr-2 text-white truncate block max-w-[120px] sm:max-w-[180px]">
-              {currentView === "dot" ? "Dot View" : currentView === "grouped-dot" ? "Grouped Dot View" : "Card View"}
+              {currentView === "dot"
+                ? "Dot View"
+                : currentView === "grouped-dot"
+                  ? "Grouped Dot View"
+                  : "Card View"}
             </span>
           </h2>
           <span
-            title={roleFilter === "master" ? "Clear Master filter" : "Filter by Master"}
-            onClick={() => onRoleFilterChange?.(roleFilter === "master" ? "all" : "master")}
+            title={
+              roleFilter === "master"
+                ? "Clear Master filter"
+                : "Filter by Master"
+            }
+            onClick={() =>
+              onRoleFilterChange?.(roleFilter === "master" ? "all" : "master")
+            }
             className={`flex items-center gap-2 min-w-0 cursor-pointer select-none transition-all duration-300 hover:scale-105 active:scale-95 ${
-              roleFilter !== "all" && roleFilter !== "master" ? "opacity-30 grayscale" : "opacity-100"
+              roleFilter !== "all" && roleFilter !== "master"
+                ? "opacity-30 grayscale"
+                : "opacity-100"
             }`}
           >
             <span className="flex items-center min-w-0">
@@ -221,10 +255,20 @@ const DeviceToolbar: React.FC<DeviceToolbarProps> = ({
             </span>
           </span>
           <span
-            title={roleFilter === "satellite" ? "Clear Satellite filter" : "Filter by Satellite"}
-            onClick={() => onRoleFilterChange?.(roleFilter === "satellite" ? "all" : "satellite")}
+            title={
+              roleFilter === "satellite"
+                ? "Clear Satellite filter"
+                : "Filter by Satellite"
+            }
+            onClick={() =>
+              onRoleFilterChange?.(
+                roleFilter === "satellite" ? "all" : "satellite"
+              )
+            }
             className={`flex items-center gap-2 min-w-0 cursor-pointer select-none transition-all duration-300 hover:scale-105 active:scale-95 ${
-              roleFilter !== "all" && roleFilter !== "satellite" ? "opacity-30 grayscale" : "opacity-100"
+              roleFilter !== "all" && roleFilter !== "satellite"
+                ? "opacity-30 grayscale"
+                : "opacity-100"
             }`}
           >
             <span className="flex items-center min-w-0">
@@ -242,7 +286,9 @@ const DeviceToolbar: React.FC<DeviceToolbarProps> = ({
         <div className="flex items-center gap-2">
           <div
             className={`relative flex-1 min-w-0 ${
-              currentView === "dot" || currentView === "grouped-dot" ? "max-w-[250px]" : "max-w-[500px]"
+              currentView === "dot" || currentView === "grouped-dot"
+                ? "max-w-[250px]"
+                : "max-w-[500px]"
             }`}
           >
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />

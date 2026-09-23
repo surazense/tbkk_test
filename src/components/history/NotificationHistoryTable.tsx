@@ -114,7 +114,9 @@ export function NotificationHistoryTable({
   const [dateEnd, setDateEnd] = useState("");
   const [internalPage, setInternalPage] = useState(1);
   const [data, setData] = useState(entries);
-  const [selectedEntry, setSelectedEntry] = useState<NotificationEntry | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<NotificationEntry | null>(
+    null
+  );
 
   // Use controlled page if provided, else internal
   const activePage = currentPage ?? internalPage;
@@ -621,10 +623,15 @@ export function NotificationHistoryTable({
         />
 
         {selectedEntry && selectedEntry.sensorId && selectedEntry.createdAt && (
-          <Dialog open={!!selectedEntry} onOpenChange={(open) => !open && setSelectedEntry(null)}>
+          <Dialog
+            open={!!selectedEntry}
+            onOpenChange={(open) => !open && setSelectedEntry(null)}
+          >
             <DialogContent className="max-w-5xl bg-[#0B1121] border-[#374151] text-white overflow-y-auto max-h-[90vh] p-6">
               <DialogHeader>
-                <DialogTitle className="text-xl font-bold text-white">Rule-based Diagnosis Report</DialogTitle>
+                <DialogTitle className="text-xl font-bold text-white">
+                  Rule-based Diagnosis Report
+                </DialogTitle>
               </DialogHeader>
               <div className="mt-4">
                 <DiagnosticDashboard

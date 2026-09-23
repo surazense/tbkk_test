@@ -5,7 +5,10 @@ import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { Sensor } from "@/lib/types";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { getCardBackgroundColor, SensorConfig } from "@/lib/utils/vibrationUtils";
+import {
+  getCardBackgroundColor,
+  SensorConfig,
+} from "@/lib/utils/vibrationUtils";
 import SensorDotNode from "./SensorDotNode";
 
 interface SensorGroupedDotViewProps {
@@ -63,14 +66,22 @@ export default function SensorGroupedDotView({
     const getSensorSeverity = (s: Sensor): number => {
       if (s.status === "lost") return 1;
 
-      const veloRmsH = s.last_data?.velo_rms_h ? Number(s.last_data.velo_rms_h) : 0;
-      const veloRmsV = s.last_data?.velo_rms_v ? Number(s.last_data.velo_rms_v) : 0;
-      const veloRmsA = s.last_data?.velo_rms_a ? Number(s.last_data.velo_rms_a) : 0;
+      const veloRmsH = s.last_data?.velo_rms_h
+        ? Number(s.last_data.velo_rms_h)
+        : 0;
+      const veloRmsV = s.last_data?.velo_rms_v
+        ? Number(s.last_data.velo_rms_v)
+        : 0;
+      const veloRmsA = s.last_data?.velo_rms_a
+        ? Number(s.last_data.velo_rms_a)
+        : 0;
       const maxRms = Math.max(veloRmsH, veloRmsV, veloRmsA);
 
       const sensorConfig: SensorConfig = {
         thresholdMin: s.threshold_min ? Number(s.threshold_min) : 0.1,
-        thresholdMedium: s.threshold_medium ? Number(s.threshold_medium) : 0.125,
+        thresholdMedium: s.threshold_medium
+          ? Number(s.threshold_medium)
+          : 0.125,
         thresholdMax: s.threshold_max ? Number(s.threshold_max) : 0.15,
         machineClass: s.machine_class || undefined,
       };
@@ -103,7 +114,9 @@ export default function SensorGroupedDotView({
         if (sevA !== sevB) return sevB - sevA;
 
         // Fallback to serial number/name
-        return (a.name || a.sensor_name || "").localeCompare(b.name || b.sensor_name || "");
+        return (a.name || a.sensor_name || "").localeCompare(
+          b.name || b.sensor_name || ""
+        );
       });
       groupsMap.set(key, sortedSensors);
     });
@@ -178,7 +191,8 @@ export default function SensorGroupedDotView({
                 </div>
                 {groupBy === "area" && (
                   <span className="text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full bg-blue-500/10 text-blue-400 font-semibold border border-blue-500/20">
-                    {groupSensors.length} {groupSensors.length === 1 ? "Device" : "Devices"}
+                    {groupSensors.length}{" "}
+                    {groupSensors.length === 1 ? "Device" : "Devices"}
                   </span>
                 )}
               </div>

@@ -177,7 +177,7 @@ export default function ReportsPage() {
         (d) => d.sensor_type?.toLowerCase() === sensorType.toLowerCase()
       );
     }
-    
+
     return base;
   }, [apiData, sensors, sensorType]);
 
@@ -429,7 +429,9 @@ export default function ReportsPage() {
 
         entity.rawSensors.forEach((s: any) => {
           const records = dataByDay[bucketDateStr] || [];
-          const record = records.find((r: any) => String(r.sensor_id) === String(s.id));
+          const record = records.find(
+            (r: any) => String(r.sensor_id) === String(s.id)
+          );
 
           let sensorCount = 0;
           let sensorBatterySum = 0;
@@ -464,12 +466,12 @@ export default function ReportsPage() {
               }
 
               let hCount = hourlyCountsArray?.[hourIdx] || 0;
-              
+
               // Robust Fallback: If hourly breakdown is empty/missing but daily total actual_count is present
               if (
-                (!hourlyCountsArray || 
-                 hourlyCountsArray.length === 0 || 
-                 hourlyCountsArray.reduce((sum, val) => sum + val, 0) === 0) && 
+                (!hourlyCountsArray ||
+                  hourlyCountsArray.length === 0 ||
+                  hourlyCountsArray.reduce((sum, val) => sum + val, 0) === 0) &&
                 record.actual_count > 0
               ) {
                 hCount = Math.round(record.actual_count / 24);
@@ -506,8 +508,10 @@ export default function ReportsPage() {
           const sensorName = s.name || s.serialNumber;
           bucket[sensorName] = sensorCount;
           bucket[`${sensorName}_packets`] = sensorCount;
-          bucket[`${sensorName}_battery`] = sensorBatteryCount > 0 ? Number(sensorBatterySum.toFixed(1)) : null;
-          bucket[`${sensorName}_temp`] = sensorTempMax === -999 ? null : Number(sensorTempMax.toFixed(1));
+          bucket[`${sensorName}_battery`] =
+            sensorBatteryCount > 0 ? Number(sensorBatterySum.toFixed(1)) : null;
+          bucket[`${sensorName}_temp`] =
+            sensorTempMax === -999 ? null : Number(sensorTempMax.toFixed(1));
           bucket[`${sensorName}_alerts`] = sensorAlerts;
         });
 
@@ -603,75 +607,77 @@ export default function ReportsPage() {
   return (
     <RoleGuard allowedRoles={["superadmin"]} mode="redirect" redirectPath="/">
       <div className="flex flex-col gap-6 p-4 sm:p-6 pt-20 md:pt-6 min-h-screen bg-transparent">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-white">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Data Transmission Report
-          </h1>
-          <p className="text-slate-400">
-            Analyze sensor connectivity, loss percentage, and transmission
-            trends over time.
-          </p>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-white">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">
+              Data Transmission Report
+            </h1>
+            <p className="text-slate-400">
+              Analyze sensor connectivity, loss percentage, and transmission
+              trends over time.
+            </p>
+          </div>
+        </div>
+
+        <SummaryCards sensors={filteredSensors} apiData={enrichedData} />
+
+        <div className="w-full space-y-6">
+          <Card className="p-6 border-slate-800 shadow-xl bg-slate-900/50 backdrop-blur-sm">
+            <DataTransmissionChart
+              viewLevel={viewLevel}
+              data={timeSeriesData}
+              entities={
+                comparisonIds.length > 0
+                  ? tableData
+                      .filter(
+                        (i) => i.id && comparisonIds.includes(i.id as string)
+                      )
+                      .map((i) => i.name)
+                  : tableData.map((i) => i.name)
+              }
+              allEntities={tableData.map((i) => i.name)}
+              selectedArea={selectedArea}
+              selectedMachine={selectedMachine}
+              chartMode={chartMode}
+              setChartMode={setChartMode}
+              onDrillDown={handleDrillDown}
+              onGoBack={handleGoBack}
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+              loading={fetchingData}
+              sensors={sensors}
+              isComparisonMode={isComparisonMode}
+              showSensorDetails={showSensorDetails}
+            />
+          </Card>
+
+          <Card className="p-0 border-slate-800 shadow-xl bg-slate-900/50 backdrop-blur-sm overflow-hidden text-white">
+            <ReportDataTable
+              viewLevel={viewLevel}
+              data={tableData}
+              selectedArea={selectedArea}
+              selectedMachine={selectedMachine}
+              sensorType={sensorType}
+              dateRange={dateRange}
+              comparisonIds={comparisonIds}
+              onToggleComparison={toggleComparison}
+              onDrillDown={handleDrillDown}
+              onGoBack={handleGoBack}
+              sortConfig={sortConfig}
+              setSortConfig={setSortConfig}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              isComparisonMode={isComparisonMode}
+              onToggleComparisonMode={handleToggleComparisonMode}
+              showSensorDetails={showSensorDetails}
+              onToggleSensorDetails={() =>
+                setShowSensorDetails((prev) => !prev)
+              }
+              timeSeriesData={timeSeriesData}
+            />
+          </Card>
         </div>
       </div>
-
-      <SummaryCards sensors={filteredSensors} apiData={enrichedData} />
-
-      <div className="w-full space-y-6">
-        <Card className="p-6 border-slate-800 shadow-xl bg-slate-900/50 backdrop-blur-sm">
-          <DataTransmissionChart
-            viewLevel={viewLevel}
-            data={timeSeriesData}
-            entities={
-              comparisonIds.length > 0
-                ? tableData
-                    .filter(
-                      (i) => i.id && comparisonIds.includes(i.id as string)
-                    )
-                    .map((i) => i.name)
-                : tableData.map((i) => i.name)
-            }
-            allEntities={tableData.map((i) => i.name)}
-            selectedArea={selectedArea}
-            selectedMachine={selectedMachine}
-            chartMode={chartMode}
-            setChartMode={setChartMode}
-            onDrillDown={handleDrillDown}
-            onGoBack={handleGoBack}
-            dateRange={dateRange}
-            setDateRange={setDateRange}
-            loading={fetchingData}
-            sensors={sensors}
-            isComparisonMode={isComparisonMode}
-            showSensorDetails={showSensorDetails}
-          />
-        </Card>
-
-        <Card className="p-0 border-slate-800 shadow-xl bg-slate-900/50 backdrop-blur-sm overflow-hidden text-white">
-          <ReportDataTable
-            viewLevel={viewLevel}
-            data={tableData}
-            selectedArea={selectedArea}
-            selectedMachine={selectedMachine}
-            sensorType={sensorType}
-            dateRange={dateRange}
-            comparisonIds={comparisonIds}
-            onToggleComparison={toggleComparison}
-            onDrillDown={handleDrillDown}
-            onGoBack={handleGoBack}
-            sortConfig={sortConfig}
-            setSortConfig={setSortConfig}
-            searchQuery={searchQuery}
-            setSearchQuery={setSearchQuery}
-            isComparisonMode={isComparisonMode}
-            onToggleComparisonMode={handleToggleComparisonMode}
-            showSensorDetails={showSensorDetails}
-            onToggleSensorDetails={() => setShowSensorDetails((prev) => !prev)}
-            timeSeriesData={timeSeriesData}
-          />
-        </Card>
-      </div>
-    </div>
     </RoleGuard>
   );
 }

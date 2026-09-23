@@ -13,6 +13,8 @@ export interface MachineClassInfo {
   id: string;
   code: number;
   name: string;
+  baseName?: string;
+  powerRange?: string;
   description: string;
   thresholds: MachineClassThresholds;
   alarmThreshold?: number; // G - Default alarm threshold
@@ -26,7 +28,9 @@ export const ISO_10816_3_THRESHOLDS: Record<string, MachineClassInfo> = {
   smallMachine: {
     id: "smallMachine",
     code: 1,
-    name: "Small machine",
+    name: "Small machine (Less than 15 kW)",
+    baseName: "Small machine",
+    powerRange: "(Less than 15 kW)",
     description: "G < 0.71 mm/s < Y < 1.80 mm/s < O < 4.50 mm/s < R",
     thresholds: {
       warning: 0.71,
@@ -37,7 +41,9 @@ export const ISO_10816_3_THRESHOLDS: Record<string, MachineClassInfo> = {
   mediumRigid: {
     id: "mediumRigid",
     code: 2,
-    name: "Medium machine rigid",
+    name: "Medium machine rigid (15kW < P ≤ 300 kW)",
+    baseName: "Medium machine rigid",
+    powerRange: "(15kW < P ≤ 300 kW)",
     description: "G < 1.40 mm/s < Y < 2.80 mm/s < O < 4.50 mm/s < R",
     thresholds: {
       warning: 1.4,
@@ -48,7 +54,9 @@ export const ISO_10816_3_THRESHOLDS: Record<string, MachineClassInfo> = {
   mediumFlexible: {
     id: "mediumFlexible",
     code: 3,
-    name: "Medium machine flexible",
+    name: "Medium machine flexible (15kW < P ≤ 300 kW)",
+    baseName: "Medium machine flexible",
+    powerRange: "(15kW < P ≤ 300 kW)",
     description: "G < 2.30 mm/s < Y < 4.50 mm/s < O < 7.10 mm/s < R",
     thresholds: {
       warning: 2.3,
@@ -59,7 +67,9 @@ export const ISO_10816_3_THRESHOLDS: Record<string, MachineClassInfo> = {
   largeRigid: {
     id: "largeRigid",
     code: 4,
-    name: "Large machine rigid",
+    name: "Large machine rigid (300kW < P ≤ 50 MW)",
+    baseName: "Large machine rigid",
+    powerRange: "(300kW < P ≤ 50 MW)",
     description: "G < 2.30 mm/s < Y < 4.50 mm/s < O < 7.10 mm/s < R",
     thresholds: {
       warning: 2.3,
@@ -70,7 +80,9 @@ export const ISO_10816_3_THRESHOLDS: Record<string, MachineClassInfo> = {
   largeFlexible: {
     id: "largeFlexible",
     code: 5,
-    name: "Large machine flexible",
+    name: "Large machine flexible (300kW < P ≤ 50 MW)",
+    baseName: "Large machine flexible",
+    powerRange: "(300kW < P ≤ 50 MW)",
     description: "G < 3.50 mm/s < Y < 7.10 mm/s < O < 11.0 mm/s < R",
     thresholds: {
       warning: 3.5,
@@ -81,7 +93,9 @@ export const ISO_10816_3_THRESHOLDS: Record<string, MachineClassInfo> = {
   integratedRigid: {
     id: "integratedRigid",
     code: 6,
-    name: "Integrated driver motor pump rigid",
+    name: "Integrated driver Motor Pump rigid (More than 15 kW)",
+    baseName: "Integrated driver Motor Pump rigid",
+    powerRange: "(More than 15 kW)",
     description: "G < 1.40 mm/s < Y < 2.80 mm/s < O < 4.50 mm/s < R",
     thresholds: {
       warning: 1.4,
@@ -92,7 +106,9 @@ export const ISO_10816_3_THRESHOLDS: Record<string, MachineClassInfo> = {
   integratedFlexible: {
     id: "integratedFlexible",
     code: 7,
-    name: "Integrated driver motor pump flexible",
+    name: "Integrated driver Motor Pump flexible (More than 15 kW)",
+    baseName: "Integrated driver Motor Pump flexible",
+    powerRange: "(More than 15 kW)",
     description: "G < 2.30 mm/s < Y < 4.50 mm/s < O < 7.10 mm/s < R",
     thresholds: {
       warning: 2.3,
@@ -103,7 +119,9 @@ export const ISO_10816_3_THRESHOLDS: Record<string, MachineClassInfo> = {
   externalRigid: {
     id: "externalRigid",
     code: 8,
-    name: "External driver motor pump rigid",
+    name: "External driver Motor Pump rigid (More than 15 kW)",
+    baseName: "External driver Motor Pump rigid",
+    powerRange: "(More than 15 kW)",
     description: "G < 2.30 mm/s < Y < 4.50 mm/s < O < 7.10 mm/s < R",
     thresholds: {
       warning: 2.3,
@@ -114,7 +132,9 @@ export const ISO_10816_3_THRESHOLDS: Record<string, MachineClassInfo> = {
   externalFlexible: {
     id: "externalFlexible",
     code: 9,
-    name: "External driver motor pump flexible",
+    name: "External driver Motor Pump flexible (More than 15 kW)",
+    baseName: "External driver Motor Pump flexible",
+    powerRange: "(More than 15 kW)",
     description: "G < 3.50 mm/s < Y < 7.10 mm/s < O < 11.0 mm/s < R",
     thresholds: {
       warning: 3.5,
@@ -187,6 +207,50 @@ export function getMachineClassInfo(
 export function getMachineClassCode(machineClassId: string): number | null {
   const info = ISO_10816_3_THRESHOLDS[machineClassId];
   return info ? info.code : null;
+}
+
+export function getMachineClassId(
+  classIdOrCode: string | number | null | undefined
+): string {
+  if (
+    classIdOrCode === null ||
+    classIdOrCode === undefined ||
+    classIdOrCode === ""
+  ) {
+    return "mediumFlexible";
+  }
+
+  // If it's already a valid ID key in ISO_10816_3_THRESHOLDS
+  if (
+    typeof classIdOrCode === "string" &&
+    ISO_10816_3_THRESHOLDS[classIdOrCode]
+  ) {
+    return classIdOrCode;
+  }
+
+  // If it's a code (number or numeric string like 1, "1", 2, "2"...)
+  const code =
+    typeof classIdOrCode === "number"
+      ? classIdOrCode
+      : parseInt(String(classIdOrCode), 10);
+
+  if (!isNaN(code)) {
+    const info = Object.values(ISO_10816_3_THRESHOLDS).find(
+      (v) => v.code === code
+    );
+    if (info) return info.id;
+  }
+
+  // If it matches by name or baseName
+  const matchByName = Object.values(ISO_10816_3_THRESHOLDS).find(
+    (v) =>
+      v.name.toLowerCase() === String(classIdOrCode).toLowerCase() ||
+      (v.baseName &&
+        v.baseName.toLowerCase() === String(classIdOrCode).toLowerCase())
+  );
+  if (matchByName) return matchByName.id;
+
+  return "mediumFlexible";
 }
 
 export function getMachineClassName(

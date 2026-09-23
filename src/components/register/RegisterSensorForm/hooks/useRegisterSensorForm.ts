@@ -15,7 +15,7 @@ import {
   storeMachineNo,
   storeSensorName,
 } from "@/lib/registerStorage";
-import { getMachineClassCode } from "@/lib/iso10816-3";
+import { getMachineClassCode, getMachineClassId } from "@/lib/iso10816-3";
 import { uploadSensorImage } from "@/lib/utils";
 import { formSchema, FormValues, SingleSensorValues } from "../schema";
 import { parseCustomDate, formatMotorStartTime } from "../utils";
@@ -129,13 +129,30 @@ export function useRegisterSensorForm() {
     try {
       const apiUrl = process.env.NEXT_PUBLIC_API_BASE_URL || "/api";
       const response = await fetch(`${apiUrl}/sensors/${editId}`, {
+        cache: "no-store",
         headers: {
+          "Cache-Control": "no-cache",
           Authorization: `Bearer ${localStorage.getItem("auth_token") || ""}`,
         },
       });
 
       if (response.ok) {
-        const data = await response.json();
+        let data = await response.json();
+        try {
+          const configRes = await fetch(`${apiUrl}/sensors/${editId}/config`, {
+            cache: "no-store",
+            headers: {
+              "Cache-Control": "no-cache",
+              Authorization: `Bearer ${localStorage.getItem("auth_token") || ""}`,
+            },
+          });
+          if (configRes.ok) {
+            const configData = await configRes.json();
+            data = { ...data, ...configData };
+          }
+        } catch {
+          // ignore
+        }
         const mappedSensor = {
           id: data.id,
           serialNumber: data.mac_address || data.name || "",
@@ -145,15 +162,18 @@ export function useRegisterSensorForm() {
             : new Date(),
           machine: data.machine || data.machine_no || "",
           machineNo: data.machine_no || "",
-          installationPoint: data.installed_point || data.installation_point || "",
+          installationPoint:
+            data.installed_point || data.installation_point || "",
           machineClassEnabled: true,
           namePlaceEnabled: false,
-          machineClass: data.machine_class || "mediumFlexible",
+          machineClass: getMachineClassId(data.machine_class),
           namePlace: "",
           warningThreshold: data.threshold_min?.toString() || "",
           concernThreshold: data.threshold_medium?.toString() || "",
           damageThreshold: data.threshold_max?.toString() || "",
-          alarmThreshold: data.alarm_ths ? (data.alarm_ths / 10).toString() : "",
+          alarmThreshold: data.alarm_ths
+            ? (data.alarm_ths / 10).toString()
+            : "",
           gScale: data.g_scale?.toString() || "16",
           temperatureThresholdMin:
             data.temperature_threshold_min?.toString() || "",
@@ -290,7 +310,9 @@ export function useRegisterSensorForm() {
                   : null,
               machine: sensorData.machine?.toUpperCase(),
               machine_no: sensorData.machineNo?.toUpperCase(),
+              installed_point: sensorData.installationPoint?.toUpperCase(),
               installation_point: sensorData.installationPoint?.toUpperCase(),
+              name: sensorData.name?.toUpperCase(),
               sensor_name: sensorData.name?.toUpperCase(),
               sensor_type: sensorData.sensorType,
               fmax: parseInt(sensorData.frequencyMax || "0"),
@@ -407,7 +429,9 @@ export function useRegisterSensorForm() {
               : null,
           machine: sensorData.machine?.toUpperCase(),
           machine_no: sensorData.machineNo?.toUpperCase(),
+          installed_point: sensorData.installationPoint?.toUpperCase(),
           installation_point: sensorData.installationPoint?.toUpperCase(),
+          name: sensorData.name?.toUpperCase(),
           sensor_name: sensorData.name?.toUpperCase(),
           sensor_type: sensorData.sensorType,
           motor_start_time: sensorData.motorStartTime

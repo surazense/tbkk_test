@@ -120,7 +120,8 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
   selectedUnit,
 }) => {
   const [visibleCount, setVisibleCount] = React.useState(20);
-  const [selectedCalendarDate, setSelectedCalendarDate] = React.useState<string>("");
+  const [selectedCalendarDate, setSelectedCalendarDate] =
+    React.useState<string>("");
   const [showOnlyAlarm, setShowOnlyAlarm] = React.useState<boolean>(false);
   const isSuperAdmin = user?.role?.toLowerCase() === "superadmin";
 
@@ -132,7 +133,8 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
   React.useEffect(() => {
     if (!isSuperAdmin) return;
     import("@/lib/api/diagnostics").then(({ diagnosticsApi }) => {
-      diagnosticsApi.getDiagnosticRules()
+      diagnosticsApi
+        .getDiagnosticRules()
         .then((res) => {
           if (res) {
             setDiagnosticRules(res);
@@ -149,8 +151,12 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
     }
     if (sensor?.id) {
       import("@/lib/api/diagnostics").then(({ diagnosticsApi }) => {
-        const targetDate = selectedDatetime || (sensorLastData?.data?.datetime || new Date().toISOString());
-        diagnosticsApi.getDiagnosticHistory(sensor.id, targetDate)
+        const targetDate =
+          selectedDatetime ||
+          sensorLastData?.data?.datetime ||
+          new Date().toISOString();
+        diagnosticsApi
+          .getDiagnosticHistory(sensor.id, targetDate)
           .then((res) => {
             if (res) {
               setDominantFault(res.dominant_fault);
@@ -168,7 +174,13 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
   const alarmDatetimes = React.useMemo(() => {
     return new Set(
       history
-        .filter((item) => item.data_type === "ALARM" || item.data_type === "alarm" || item.level_vibration === "critical" || item.level_vibration === "concern")
+        .filter(
+          (item) =>
+            item.data_type === "ALARM" ||
+            item.data_type === "alarm" ||
+            item.level_vibration === "critical" ||
+            item.level_vibration === "concern"
+        )
         .map((item) => item.datetime)
     );
   }, [history]);
@@ -176,7 +188,7 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
   // Safely filter datetimes based on calendar selection and ALARM toggle
   const filteredDatetimes = React.useMemo(() => {
     let result = sortedDatetimes;
-    
+
     if (showOnlyAlarm) {
       result = result.filter((dt) => alarmDatetimes.has(dt));
     }
@@ -208,9 +220,10 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
   const rssiLookup = React.useMemo(() => {
     const lookup: Record<string, string> = {};
     history.forEach((item) => {
-      lookup[item.datetime] = item.rssi !== undefined && item.rssi !== null 
-        ? `${item.rssi} dBm` 
-        : "-";
+      lookup[item.datetime] =
+        item.rssi !== undefined && item.rssi !== null
+          ? `${item.rssi} dBm`
+          : "-";
     });
     return lookup;
   }, [history]);
@@ -245,14 +258,17 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
         <div className="flex flex-col xl:flex-row gap-6 items-stretch">
           {/* Column 1: Image */}
           <div className="flex-1 flex justify-center">
-            <div 
+            <div
               className="w-full max-w-[200px] md:w-48 h-full min-h-[160px] md:min-h-[280px] bg-[#0B1121] border-[1.35px] border-[#374151] rounded-md flex items-center justify-center overflow-hidden relative cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => (sensorImage || configData.image_url) && setShowImagePopup(true)}
+              onClick={() =>
+                (sensorImage || configData.image_url) && setShowImagePopup(true)
+              }
               role="button"
               tabIndex={0}
               onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  (sensorImage || configData.image_url) && setShowImagePopup(true);
+                if (e.key === "Enter" || e.key === " ") {
+                  (sensorImage || configData.image_url) &&
+                    setShowImagePopup(true);
                 }
               }}
             >
@@ -282,7 +298,10 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                       maxScale={4}
                       centerOnInit={true}
                     >
-                      <TransformComponent wrapperClass="!w-full !h-full" contentClass="!w-full !h-full flex items-center justify-center">
+                      <TransformComponent
+                        wrapperClass="!w-full !h-full"
+                        contentClass="!w-full !h-full flex items-center justify-center"
+                      >
                         <div className="relative w-full h-[60vh] sm:h-[80vh]">
                           <Image
                             src={sensorImage || configData.image_url || ""}
@@ -313,21 +332,23 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                 {(user?.role?.toLowerCase() === "admin" ||
                   user?.role?.toLowerCase() === "superadmin" ||
                   user?.role?.toLowerCase() === "editor") && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="bg-transparent border-[1.35px] border-[#374151] hover:bg-[#374151]/50 text-white w-fit 2xl:text-base 2xl:px-3 2xl:py-1"
-                      onClick={() => router.push(`/register?id=${params.id}`)}
-                    >
-                      <Settings className="mr-1.5 h-4 w-4 2xl:h-5 2xl:w-5" />
-                      Edit
-                    </Button>
-                  )}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="bg-transparent border-[1.35px] border-[#374151] hover:bg-[#374151]/50 text-white w-fit 2xl:text-base 2xl:px-3 2xl:py-1"
+                    onClick={() => router.push(`/register?id=${params.id}`)}
+                  >
+                    <Settings className="mr-1.5 h-4 w-4 2xl:h-5 2xl:w-5" />
+                    Edit
+                  </Button>
+                )}
               </div>
             </div>
 
             <div className="grid grid-cols-[110px_1fr] md:grid-cols-[140px_1fr] 2xl:grid-cols-[160px_1fr] gap-x-2 gap-y-2 text-xs sm:text-sm md:text-base 2xl:text-lg">
-              <span className="text-gray-400 flex items-center">Area Operation</span>
+              <span className="text-gray-400 flex items-center">
+                Area Operation
+              </span>
               <span className="text-sm md:text-lg 2xl:text-xl text-white truncate break-words whitespace-normal">
                 {sensorLastData?.area ||
                   sensor?.area ||
@@ -511,7 +532,9 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
               </div>
             </div>
             <div className="grid grid-cols-[110px_1fr] md:grid-cols-[135px_1fr] 2xl:grid-cols-[150px_1fr] gap-x-2 gap-y-2 text-xs sm:text-sm md:text-base 2xl:text-lg">
-              <span className="text-gray-400 flex items-center">Signal Strength</span>
+              <span className="text-gray-400 flex items-center">
+                Signal Strength
+              </span>
               <span className="flex items-center gap-2 text-white">
                 {(() => {
                   const level = getSignalStrength(currentData.rssi || 0);
@@ -606,7 +629,9 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                     <span className="text-white truncate">
                       {(() => {
                         const matchedRule = diagnosticRules.find(
-                          (r) => r.fault_id?.toUpperCase() === dominantFault.fault_id?.toUpperCase()
+                          (r) =>
+                            r.fault_id?.toUpperCase() ===
+                            dominantFault.fault_id?.toUpperCase()
                         );
                         return matchedRule?.name || dominantFault.fault_name;
                       })()}
@@ -627,61 +652,112 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                         <AlertOctagon className="h-6 w-6" />
                         {(() => {
                           const matchedRule = diagnosticRules.find(
-                            (r) => r.fault_id?.toUpperCase() === dominantFault.fault_id?.toUpperCase()
+                            (r) =>
+                              r.fault_id?.toUpperCase() ===
+                              dominantFault.fault_id?.toUpperCase()
                           );
-                          return matchedRule?.name || dominantFault.fault_name || "Diagnostic Alert";
+                          return (
+                            matchedRule?.name ||
+                            dominantFault.fault_name ||
+                            "Diagnostic Alert"
+                          );
                         })()}
                       </DialogTitle>
                     </DialogHeader>
 
                     {(() => {
                       const matchedRule = diagnosticRules.find(
-                        (r) => r.fault_id?.toUpperCase() === dominantFault.fault_id?.toUpperCase()
+                        (r) =>
+                          r.fault_id?.toUpperCase() ===
+                          dominantFault.fault_id?.toUpperCase()
                       );
 
                       const details = {
-                        cause: matchedRule?.causes?.en ? matchedRule.causes.en.map((c: string) => `• ${c}`).join("\n") : "Potential machine rotation or structural degradation.",
-                        reasoning: matchedRule?.reasoning?.en || "Abnormal vibration amplitudes detected in frequency spectra.",
-                        fix: matchedRule?.how_to_fix?.en || dominantFault.recommendation_en || "Please inspect the physical machine setup.",
-                        measurement: matchedRule?.measurement_method?.en || "Check H, V, A axes vibration levels."
+                        cause: matchedRule?.causes?.en
+                          ? matchedRule.causes.en
+                              .map((c: string) => `• ${c}`)
+                              .join("\n")
+                          : "Potential machine rotation or structural degradation.",
+                        reasoning:
+                          matchedRule?.reasoning?.en ||
+                          "Abnormal vibration amplitudes detected in frequency spectra.",
+                        fix:
+                          matchedRule?.how_to_fix?.en ||
+                          dominantFault.recommendation_en ||
+                          "Please inspect the physical machine setup.",
+                        measurement:
+                          matchedRule?.measurement_method?.en ||
+                          "Check H, V, A axes vibration levels.",
                       };
 
                       return (
                         <div className="space-y-4 text-sm leading-relaxed mt-2 max-h-[70vh] overflow-y-auto custom-scrollbar pr-1">
                           <div className="bg-[#161E28]/60 p-3 rounded-xl border border-gray-800/40">
-                            <span className="text-xs font-bold text-gray-400 block mb-1">Cause</span>
-                            <p className="text-gray-200 whitespace-pre-line leading-relaxed">{details.cause}</p>
+                            <span className="text-xs font-bold text-gray-400 block mb-1">
+                              Cause
+                            </span>
+                            <p className="text-gray-200 whitespace-pre-line leading-relaxed">
+                              {details.cause}
+                            </p>
                           </div>
 
                           <div className="bg-[#161E28]/60 p-4 rounded-xl border border-gray-800/40">
-                            <span className="text-xs font-bold text-gray-400 block mb-1">Reasoning / Analysis</span>
-                            <p className="text-gray-200 leading-relaxed">{details.reasoning}</p>
+                            <span className="text-xs font-bold text-gray-400 block mb-1">
+                              Reasoning / Analysis
+                            </span>
+                            <p className="text-gray-200 leading-relaxed">
+                              {details.reasoning}
+                            </p>
                           </div>
 
                           <div className="bg-[#161E28]/60 p-4 rounded-xl border border-gray-800/40">
-                            <span className="text-xs font-bold text-gray-400 block mb-1">Recommended Actions / How to Fix</span>
-                            <p className="text-gray-200 leading-relaxed">{details.fix}</p>
+                            <span className="text-xs font-bold text-gray-400 block mb-1">
+                              Recommended Actions / How to Fix
+                            </span>
+                            <p className="text-gray-200 leading-relaxed">
+                              {details.fix}
+                            </p>
                           </div>
 
                           <div className="bg-[#161E28]/60 p-4 rounded-xl border border-gray-800/40">
-                            <span className="text-xs font-bold text-gray-400 block mb-1">Measurement Method</span>
-                            <p className="text-gray-200 leading-relaxed">{details.measurement}</p>
+                            <span className="text-xs font-bold text-gray-400 block mb-1">
+                              Measurement Method
+                            </span>
+                            <p className="text-gray-200 leading-relaxed">
+                              {details.measurement}
+                            </p>
                           </div>
 
-                          {matchedRule?.references && matchedRule.references.length > 0 && (
-                            <div className="bg-[#161E28]/60 p-3 rounded-xl border border-gray-800/40">
-                              <span className="text-xs font-bold text-gray-400 block mb-1">References</span>
-                              <div className="space-y-2 mt-1">
-                                {matchedRule.references.map((ref: any, i: number) => (
-                                  <div key={i} className="text-xs border-l-2 border-blue-500 pl-2">
-                                    <div className="font-semibold text-white">{ref.source}</div>
-                                    {ref.section && <div className="text-[10px] text-blue-400 mt-0.5">{ref.section}</div>}
-                                    <div className="text-gray-400 mt-0.5">{ref.details}</div>
-                                  </div>
-                                ))}
+                          {matchedRule?.references &&
+                            matchedRule.references.length > 0 && (
+                              <div className="bg-[#161E28]/60 p-3 rounded-xl border border-gray-800/40">
+                                <span className="text-xs font-bold text-gray-400 block mb-1">
+                                  References
+                                </span>
+                                <div className="space-y-2 mt-1">
+                                  {matchedRule.references.map(
+                                    (ref: any, i: number) => (
+                                      <div
+                                        key={i}
+                                        className="text-xs border-l-2 border-blue-500 pl-2"
+                                      >
+                                        <div className="font-semibold text-white">
+                                          {ref.source}
+                                        </div>
+                                        {ref.section && (
+                                          <div className="text-[10px] text-blue-400 mt-0.5">
+                                            {ref.section}
+                                          </div>
+                                        )}
+                                        <div className="text-gray-400 mt-0.5">
+                                          {ref.details}
+                                        </div>
+                                      </div>
+                                    )
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
                         </div>
                       );
                     })()}
@@ -706,8 +782,8 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                     size="sm"
                     className={cn(
                       "px-2 py-1 h-auto text-xs flex items-center gap-1.5",
-                      showOnlyAlarm 
-                        ? "bg-red-900/40 border-red-500/50 text-red-400 hover:bg-red-900/60" 
+                      showOnlyAlarm
+                        ? "bg-red-900/40 border-red-500/50 text-red-400 hover:bg-red-900/60"
                         : "bg-transparent border-[#374151] text-gray-400 hover:text-white"
                     )}
                     onClick={() => {
@@ -724,7 +800,7 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                       const input = e.currentTarget.querySelector(
                         'input[type="date"]'
                       ) as HTMLInputElement;
-                      if (input && typeof input.showPicker === 'function') {
+                      if (input && typeof input.showPicker === "function") {
                         input.showPicker();
                       }
                     }}
@@ -812,9 +888,14 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                       >
                         <span className="shrink-0 flex items-center gap-1.5 md:gap-2 text-xs md:text-base truncate">
                           {alarmDatetimes.has(datetime) && (
-                            <span className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-red-500 shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.6)]" title="ALARM status"></span>
+                            <span
+                              className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-red-500 shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.6)]"
+                              title="ALARM status"
+                            ></span>
                           )}
-                          <span className="truncate">{formatDateTimeDayFirst(datetime)}</span>
+                          <span className="truncate">
+                            {formatDateTimeDayFirst(datetime)}
+                          </span>
                         </span>
                         <div className="flex items-center gap-2 md:gap-6 2xl:gap-8 mr-1 shrink-0">
                           <span className="text-gray-400 text-xs md:text-sm 2xl:text-lg min-w-[50px] md:min-w-[70px] text-right">

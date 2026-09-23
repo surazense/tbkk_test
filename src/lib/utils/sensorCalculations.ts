@@ -55,7 +55,8 @@ export function accelerationToVelocity(
   if (!accelerations.length) return [];
 
   // 1. Detrend Acceleration (Remove DC offset)
-  const meanAcc = accelerations.reduce((a, b) => a + b, 0) / accelerations.length;
+  const meanAcc =
+    accelerations.reduce((a, b) => a + b, 0) / accelerations.length;
   const detrendedAcc = accelerations.map((a) => a - meanAcc);
 
   // 2. Trapezoidal Integration
@@ -66,7 +67,8 @@ export function accelerationToVelocity(
   }
 
   // 3. Detrend Velocity (Remove drift)
-  const meanVel = rawVelocities.reduce((a, b) => a + b, 0) / rawVelocities.length;
+  const meanVel =
+    rawVelocities.reduce((a, b) => a + b, 0) / rawVelocities.length;
   return rawVelocities.map((v) => v - meanVel);
 }
 
@@ -880,7 +882,10 @@ export function findTopPeaksEnhanced(
   // ===== PEAK DETECTION =====
   if (freqMagnitude.length > 0) {
     const maxMag = Math.max(...freqMagnitude);
-    const dynamicThreshold = minPeakHeight !== undefined ? minPeakHeight : Math.max(maxMag * 0.05, 0.001);
+    const dynamicThreshold =
+      minPeakHeight !== undefined
+        ? minPeakHeight
+        : Math.max(maxMag * 0.05, 0.001);
     const topIndices: number[] = [];
     for (let i = 1; i < freqMagnitude.length - 1; i++) {
       // Check if current point is higher than neighbors

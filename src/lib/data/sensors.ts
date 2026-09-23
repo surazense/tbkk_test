@@ -19,18 +19,21 @@ import { parseThailandTime } from "@/lib/utils";
 export interface SensorHistoryParams {
   limit?: number;
   start_date?: number; // Unix timestamp in seconds
-  end_date?: number;   // Unix timestamp in seconds
+  end_date?: number; // Unix timestamp in seconds
 }
 
-export async function fetchSensorHistory(sensorId: string, params: SensorHistoryParams = {}) {
+export async function fetchSensorHistory(
+  sensorId: string,
+  params: SensorHistoryParams = {}
+) {
   const token = getToken();
   let url = `/api/sensors/${sensorId}/history`;
   const queryParams = [];
-  
+
   if (params.limit) queryParams.push(`limit=${params.limit}`);
   if (params.start_date) queryParams.push(`start_date=${params.start_date}`);
   if (params.end_date) queryParams.push(`end_date=${params.end_date}`);
-  
+
   if (queryParams.length > 0) {
     url += `?${queryParams.join("&")}`;
   }
@@ -41,7 +44,12 @@ export async function fetchSensorHistory(sensorId: string, params: SensorHistory
     });
     if (!response.ok) return [];
     const json = await response.json();
-    return json.data?.history || json.history || (Array.isArray(json) ? json : json.data) || [];
+    return (
+      json.data?.history ||
+      json.history ||
+      (Array.isArray(json) ? json : json.data) ||
+      []
+    );
   } catch (error) {
     console.error(`Error fetching history for sensor ${sensorId}:`, error);
     return [];
@@ -53,6 +61,18 @@ const CACHE_DURATION = 5 * 60 * 1000; // Cache for 5 minutes (for background re-
 let realSensorsCache: Sensor[] | null = null;
 let lastFetchTime = 0;
 let inflightRawDataPromise: Promise<SensorApiData[]> | null = null;
+
+export function invalidateSensorsCache() {
+  realSensorsCache = null;
+  lastFetchTime = 0;
+  inflightRawDataPromise = null;
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("REFRESH_SENSORS", () => {
+    invalidateSensorsCache();
+  });
+}
 
 // Helper to send "Lost" status notification to backend
 async function sendLostNotification(apiSensor: any) {
@@ -72,9 +92,10 @@ async function sendLostNotification(apiSensor: any) {
   }
 
   try {
-    const generatedId = typeof crypto !== "undefined" && crypto.randomUUID 
-      ? crypto.randomUUID() 
-      : Math.random().toString(36).substring(2, 15);
+    const generatedId =
+      typeof crypto !== "undefined" && crypto.randomUUID
+        ? crypto.randomUUID()
+        : Math.random().toString(36).substring(2, 15);
 
     const payload = {
       id: generatedId,
@@ -152,11 +173,16 @@ async function sendLostNotification(apiSensor: any) {
 
 // Function to fetch real sensors from API
 export async function fetchRealSensors(
-  isShort: boolean = false
+  isShort: boolean = false,
+  forceRefresh: boolean = false
 ): Promise<Sensor[]> {
   // Check cache first
   const now = Date.now();
-  if (realSensorsCache && now - lastFetchTime < CACHE_DURATION) {
+  if (
+    !forceRefresh &&
+    realSensorsCache &&
+    now - lastFetchTime < CACHE_DURATION
+  ) {
     return realSensorsCache;
   }
 
@@ -238,9 +264,23 @@ export async function fetchRealSensors(
         mac_address: apiSensor.mac_address || null,
         macAddress: apiSensor.mac_address || undefined,
         machineName: apiSensor.machine_no || "Unknown",
+        machine: apiSensor.machine || apiSensor.machine_no || "",
+        machine_no: apiSensor.machine_no || "",
+        machine_number: apiSensor.machine_no || "",
         sensor_name: apiSensor.sensor_name || apiSensor.name,
         name: apiSensor.sensor_name || apiSensor.name,
-        location: apiSensor.installed_point || "N/A",
+        location:
+          apiSensor.installed_point ||
+          (apiSensor as any).installation_point ||
+          "N/A",
+        installation_point:
+          apiSensor.installed_point ||
+          (apiSensor as any).installation_point ||
+          "",
+        installed_point:
+          apiSensor.installed_point ||
+          (apiSensor as any).installation_point ||
+          "",
         status,
         lastUpdated,
         connectivity: apiSensor.last_data ? "online" : "offline",
@@ -592,9 +632,17 @@ export async function fetchRealSensors(
       threshold_max: apiSensor.threshold_max,
       machine_class: apiSensor.machine_class,
       machine_number: apiSensor.machine_no,
-      installation_point: apiSensor.installed_point,
+      machine_no: apiSensor.machine_no,
+      machine: apiSensor.machine || apiSensor.machine_no || "",
+      installation_point:
+        apiSensor.installed_point ||
+        (apiSensor as any).installation_point ||
+        "",
+      installed_point:
+        apiSensor.installed_point ||
+        (apiSensor as any).installation_point ||
+        "",
       area: apiSensor.area ? apiSensor.area.trim() : "",
-      machine: apiSensor.machine,
       sensor_name: apiSensor.sensor_name,
       temperature_threshold_min: apiSensor.temperature_threshold_min,
       temperature_threshold_max: apiSensor.temperature_threshold_max,

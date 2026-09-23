@@ -25,7 +25,7 @@ export function formatDate(dateString: string, includeTime = false): string {
         hour: "2-digit",
         minute: "2-digit",
         hour12: true,
-        second: undefined
+        second: undefined,
       });
     }
 
@@ -35,7 +35,7 @@ export function formatDate(dateString: string, includeTime = false): string {
       day: "2-digit",
       hour: undefined,
       minute: undefined,
-      second: undefined
+      second: undefined,
     });
   } catch (error) {
     console.error("Error formatting date:", error);
@@ -64,16 +64,18 @@ export function formatRawTime(dateString: string): string {
   }
 }
 
-export function parseThailandTime(dateInput: string | number | undefined | null): number {
+export function parseThailandTime(
+  dateInput: string | number | undefined | null
+): number {
   if (!dateInput) return Date.now();
   if (typeof dateInput === "number") return dateInput;
-  
+
   const cleanStr = dateInput.replace("Z", "").trim();
   if (cleanStr.includes("+") || /-\d{2}:\d{2}$/.test(cleanStr)) {
     const parsed = new Date(cleanStr).getTime();
     return isNaN(parsed) ? Date.now() : parsed;
   }
-  
+
   const isoStr = cleanStr.replace(" ", "T");
   const parsed = new Date(`${isoStr}+07:00`).getTime();
   return isNaN(parsed) ? Date.now() : parsed;
@@ -104,13 +106,16 @@ export function formatToThailandTime(
     minute: "2-digit",
     second: "2-digit",
     hour12: false,
-    ...options
+    ...options,
   };
 
   try {
     return date.toLocaleString("en-GB", defaultOptions);
   } catch (error) {
-    return date.toLocaleString("en-GB", { ...defaultOptions, timeZone: undefined });
+    return date.toLocaleString("en-GB", {
+      ...defaultOptions,
+      timeZone: undefined,
+    });
   }
 }
 
@@ -241,13 +246,13 @@ export async function toBase64(file: File): Promise<string> {
  */
 export const getDistinctColor = (index: number) => {
   if (index < 0) return "transparent";
-  
+
   // Curated premium, vibrant, harmonized colors (slightly darker/richer for dark mode contrast)
   const premiumColors = [
     "hsl(142, 72%, 40%)", // 0: Emerald Green
     "hsl(217, 91%, 48%)", // 1: Sleek Blue
     "hsl(262, 83%, 52%)", // 2: Modern Violet
-    "hsl(32, 95%, 44%)",  // 3: Warm Amber
+    "hsl(32, 95%, 44%)", // 3: Warm Amber
     "hsl(190, 90%, 40%)", // 4: Premium Cyan
     "hsl(340, 85%, 46%)", // 5: Rose Pink
   ];

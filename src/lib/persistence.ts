@@ -37,7 +37,10 @@ function openDB(): Promise<IDBDatabase> {
   });
 }
 
-export async function getDailySummary(sensorId: string, dateStr: string): Promise<DailySummary | null> {
+export async function getDailySummary(
+  sensorId: string,
+  dateStr: string
+): Promise<DailySummary | null> {
   try {
     const db = await openDB();
     return new Promise((resolve, reject) => {

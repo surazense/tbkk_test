@@ -13,7 +13,6 @@ import {
   calculateFFT,
 } from "@/lib/utils/sensorCalculations";
 
-
 // Global cache for inflight promises to prevent redundant simultaneous requests
 const configInflight = new Map<string, Promise<any>>();
 const lastDataInflight = new Map<string, Promise<any>>();
@@ -135,8 +134,6 @@ export function useSensorDetails({
 
         if (response.ok) {
           const data = await response.json();
-
-
 
           setSensor(data);
           setConfigData((prev) => ({
@@ -425,7 +422,9 @@ export function useSensorDetails({
         const decayedItems = items;
 
         setHistory(decayedItems);
-        const dts = decayedItems.map((item: any) => item.datetime).filter(Boolean);
+        const dts = decayedItems
+          .map((item: any) => item.datetime)
+          .filter(Boolean);
         setDatetimes(Array.from(new Set(dts)));
       }
     } catch (err) {

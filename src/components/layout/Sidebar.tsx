@@ -31,6 +31,7 @@ export default function Sidebar() {
           alt="Dashboard"
           width={20}
           height={20}
+          priority
           style={{ filter: "invert(1) brightness(2)" }}
         />
       ),
@@ -49,6 +50,7 @@ export default function Sidebar() {
           alt="Admin"
           width={20}
           height={20}
+          priority
           style={{ filter: "invert(1) brightness(2)" }}
         />
       ),
@@ -62,6 +64,7 @@ export default function Sidebar() {
           alt="Settings"
           width={20}
           height={20}
+          priority
           style={{ filter: "invert(1) brightness(2)" }}
         />
       ),
@@ -75,7 +78,8 @@ export default function Sidebar() {
           alt="Notification"
           width={20}
           height={20}
-          style={{ filter: "invert(1) brightness(2)", height: "auto" }}
+          priority
+          style={{ filter: "invert(1) brightness(2)" }}
         />
       ),
     },

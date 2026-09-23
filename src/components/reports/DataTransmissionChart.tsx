@@ -373,7 +373,8 @@ export default function DataTransmissionChart({
       return getSensorColor(entity);
     }
     const stableIndex = allEntities.indexOf(entity);
-    const colorIndex = stableIndex >= 0 ? stableIndex : entities.indexOf(entity);
+    const colorIndex =
+      stableIndex >= 0 ? stableIndex : entities.indexOf(entity);
     return getDistinctColor(colorIndex);
   };
 
@@ -691,49 +692,77 @@ export default function DataTransmissionChart({
               </span>
             </p>
             {activeMetric === "packets" && !showSensorDetails && (
-              <div 
+              <div
                 onClick={() => setShowStatusBg(!showStatusBg)}
                 className={cn(
                   "flex items-center gap-2.5 p-1 px-2.5 bg-slate-950/60 rounded-lg border shrink-0 select-none cursor-pointer transition-all active:scale-95",
-                  showStatusBg 
-                    ? "border-slate-800/80 hover:border-slate-700/80 hover:bg-slate-900/60" 
+                  showStatusBg
+                    ? "border-slate-800/80 hover:border-slate-700/80 hover:bg-slate-900/60"
                     : "border-slate-800/40 opacity-40 hover:opacity-60"
                 )}
-                title={showStatusBg ? "Click to hide all status background colors in the chart" : "Click to show all status background colors in the chart"}
+                title={
+                  showStatusBg
+                    ? "Click to hide all status background colors in the chart"
+                    : "Click to show all status background colors in the chart"
+                }
               >
                 <div className="flex items-center gap-1.5">
-                  <div className={cn(
-                    "w-2 h-2 rounded-full transition-all",
-                    showStatusBg ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" : "bg-slate-500 shadow-none"
-                  )} />
-                  <span className={cn(
-                    "text-[11px] uppercase font-bold tracking-tight transition-colors",
-                    showStatusBg ? "text-slate-300" : "text-slate-500 line-through"
-                  )}>
+                  <div
+                    className={cn(
+                      "w-2 h-2 rounded-full transition-all",
+                      showStatusBg
+                        ? "bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"
+                        : "bg-slate-500 shadow-none"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "text-[11px] uppercase font-bold tracking-tight transition-colors",
+                      showStatusBg
+                        ? "text-slate-300"
+                        : "text-slate-500 line-through"
+                    )}
+                  >
                     Healthy
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className={cn(
-                    "w-2 h-2 rounded-full transition-all",
-                    showStatusBg ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]" : "bg-slate-500 shadow-none"
-                  )} />
-                  <span className={cn(
-                    "text-[11px] uppercase font-bold tracking-tight transition-colors",
-                    showStatusBg ? "text-slate-300" : "text-slate-500 line-through"
-                  )}>
+                  <div
+                    className={cn(
+                      "w-2 h-2 rounded-full transition-all",
+                      showStatusBg
+                        ? "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"
+                        : "bg-slate-500 shadow-none"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "text-[11px] uppercase font-bold tracking-tight transition-colors",
+                      showStatusBg
+                        ? "text-slate-300"
+                        : "text-slate-500 line-through"
+                    )}
+                  >
                     Partial
                   </span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className={cn(
-                    "w-2 h-2 rounded-full transition-all",
-                    showStatusBg ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]" : "bg-slate-500 shadow-none"
-                  )} />
-                  <span className={cn(
-                    "text-[11px] uppercase font-bold tracking-tight transition-colors",
-                    showStatusBg ? "text-slate-300" : "text-slate-500 line-through"
-                  )}>
+                  <div
+                    className={cn(
+                      "w-2 h-2 rounded-full transition-all",
+                      showStatusBg
+                        ? "bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]"
+                        : "bg-slate-500 shadow-none"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "text-[11px] uppercase font-bold tracking-tight transition-colors",
+                      showStatusBg
+                        ? "text-slate-300"
+                        : "text-slate-500 line-through"
+                    )}
+                  >
                     Lost
                   </span>
                 </div>
@@ -744,22 +773,26 @@ export default function DataTransmissionChart({
 
         {/* Right Side: Metric Toggles and In-Pill Date Picker */}
         <div className="flex flex-wrap items-center gap-2 justify-end w-full sm:w-auto">
-          <div 
+          <div
             className="flex items-center bg-slate-950/50 border border-slate-800 rounded-lg p-1 overflow-x-auto max-w-full gap-1"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {/* Integrated Date Picker inside the same container (Far Left) */}
             {setDateRange ? (
-              <Popover open={isPopoverOpen} onOpenChange={(open) => {
-                setIsPopoverOpen(open);
-                if (open) {
-                  setTempDateRange(dateRange);
-                }
-              }}>
+              <Popover
+                open={isPopoverOpen}
+                onOpenChange={(open) => {
+                  setIsPopoverOpen(open);
+                  if (open) {
+                    setTempDateRange(dateRange);
+                  }
+                }}
+              >
                 <PopoverTrigger asChild>
                   <button className="h-7 text-xs px-2.5 gap-1.5 flex items-center text-blue-400 hover:text-blue-300 font-semibold font-mono hover:bg-slate-900 rounded-md transition-all active:scale-[0.98] shrink-0 select-none">
                     <CalendarDays size={12} className="text-blue-400" />
-                    {format(dateRange.from, "MMM dd")} - {format(dateRange.to, "MMM dd")}
+                    {format(dateRange.from, "MMM dd")} -{" "}
+                    {format(dateRange.to, "MMM dd")}
                   </button>
                 </PopoverTrigger>
                 <PopoverContent
@@ -804,10 +837,14 @@ export default function DataTransmissionChart({
                       numberOfMonths={2}
                       classNames={{
                         day: "h-10 w-10 p-0 text-sm font-normal text-slate-400 hover:bg-slate-800 hover:text-white aria-selected:opacity-100 transition-all rounded-md flex items-center justify-center cursor-pointer",
-                        weekday: "text-slate-500 w-10 font-semibold text-xs uppercase text-center",
-                        selected: "bg-blue-600 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:text-white font-bold !rounded-md h-10 w-10",
-                        range_middle: "aria-selected:bg-blue-600/20 aria-selected:text-blue-300 font-medium !rounded-none h-10 w-10",
-                        today: "text-blue-400 font-bold bg-blue-400/10 rounded-md h-10 w-10",
+                        weekday:
+                          "text-slate-500 w-10 font-semibold text-xs uppercase text-center",
+                        selected:
+                          "bg-blue-600 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:text-white font-bold !rounded-md h-10 w-10",
+                        range_middle:
+                          "aria-selected:bg-blue-600/20 aria-selected:text-blue-300 font-medium !rounded-none h-10 w-10",
+                        today:
+                          "text-blue-400 font-bold bg-blue-400/10 rounded-md h-10 w-10",
                       }}
                     />
 
@@ -822,7 +859,9 @@ export default function DataTransmissionChart({
                             className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-xs sm:text-sm font-semibold font-mono text-slate-200 focus:outline-none focus:border-blue-500/50 transition-colors cursor-pointer"
                           />
                         </div>
-                        <span className="text-slate-600 text-sm font-bold shrink-0">—</span>
+                        <span className="text-slate-600 text-sm font-bold shrink-0">
+                          —
+                        </span>
                         <div className="flex-1">
                           <input
                             type="datetime-local"
@@ -862,7 +901,8 @@ export default function DataTransmissionChart({
               </Popover>
             ) : (
               <span className="text-slate-500 font-mono text-xs px-2 shrink-0 select-none">
-                {format(dateRange.from, "MMM dd")} - {format(dateRange.to, "MMM dd")}
+                {format(dateRange.from, "MMM dd")} -{" "}
+                {format(dateRange.to, "MMM dd")}
               </span>
             )}
 
@@ -945,8 +985,6 @@ export default function DataTransmissionChart({
               <div className="h-[220px] sm:h-[380px] w-full relative">
                 {renderSingleEntityChart(entities[0])}
               </div>
-
-
             </div>
             <div className="flex flex-col bg-slate-950/20 border border-slate-800/40 p-3 sm:p-5 rounded-xl backdrop-blur-sm">
               <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
@@ -961,8 +999,6 @@ export default function DataTransmissionChart({
               <div className="h-[220px] sm:h-[380px] w-full relative">
                 {renderSingleEntityChart(entities[1])}
               </div>
-
-
             </div>
           </div>
         ) : (
@@ -988,7 +1024,10 @@ export default function DataTransmissionChart({
           </div>
         )
       ) : (
-        <div ref={chartContainerRef} className="h-[280px] sm:h-[500px] w-full mt-4 relative">
+        <div
+          ref={chartContainerRef}
+          className="h-[280px] sm:h-[500px] w-full mt-4 relative"
+        >
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
               data={chartData}
@@ -1051,7 +1090,7 @@ export default function DataTransmissionChart({
                   paddingTop: "15px",
                   overflowY: "auto",
                   maxHeight: "55px",
-                  zIndex: 20
+                  zIndex: 20,
                 }}
                 formatter={(value) => (
                   <span className="text-[11px] text-slate-300 font-medium ml-1">

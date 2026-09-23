@@ -253,9 +253,7 @@ export default function SensorDotNode({
             </div>
             <div className="flex items-center justify-between">
               <span className="text-gray-400">Battery:</span>
-              <span className="font-mono">
-                {displayBattery.toFixed(0)}%
-              </span>
+              <span className="font-mono">{displayBattery.toFixed(0)}%</span>
             </div>
           </div>
 

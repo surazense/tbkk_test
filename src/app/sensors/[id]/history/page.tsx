@@ -269,7 +269,10 @@ export default function SensorHistoryPage() {
 
     let zr: any = null;
     try {
-      zr = typeof chartInstance.getZr === 'function' ? chartInstance.getZr() : chartInstance.getEchartsInstance?.()?.getZr?.();
+      zr =
+        typeof chartInstance.getZr === "function"
+          ? chartInstance.getZr()
+          : chartInstance.getEchartsInstance?.()?.getZr?.();
     } catch (e) {
       console.warn("Could not get zr instance", e);
     }
@@ -322,7 +325,9 @@ export default function SensorHistoryPage() {
       : sensorName.toLowerCase().includes("satellite");
     const deviceTypeForDecay = sensorType
       ? sensorType.toLowerCase()
-      : (sensorName.toLowerCase().includes("satellite") ? "satellite" : "master");
+      : sensorName.toLowerCase().includes("satellite")
+        ? "satellite"
+        : "master";
     const signalName = isSatellite
       ? "Bluetooth Signal Strength"
       : "Wifi Signal Strength";
@@ -370,11 +375,7 @@ export default function SensorHistoryPage() {
       type: "line",
       xAxisIndex: 1,
       yAxisIndex: 1,
-      data: history.map((h) =>
-        h.status === "lost"
-          ? null
-          : (h.battery ?? 0)
-      ),
+      data: history.map((h) => (h.status === "lost" ? null : (h.battery ?? 0))),
       color: "#4C6FFF",
       symbol: "circle",
       symbolSize: 4,
@@ -792,7 +793,15 @@ export default function SensorHistoryPage() {
       backgroundColor: "#0B1121",
       animationDurationUpdate: 0,
     };
-  }, [history, selectedAxis, selectedUnit, sensorName, sensorType, selectedDataIndex, user]);
+  }, [
+    history,
+    selectedAxis,
+    selectedUnit,
+    sensorName,
+    sensorType,
+    selectedDataIndex,
+    user,
+  ]);
 
   const handleExportCSV = () => {
     if (history.length === 0) return;
@@ -874,16 +883,19 @@ export default function SensorHistoryPage() {
         <Card className="bg-[#0B1121] border-[1.35px] border-[#374151]">
           <CardContent className="p-4 flex flex-col md:flex-row flex-wrap gap-4 md:gap-6 items-start md:items-center">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm font-medium text-gray-300 w-12 md:w-auto">Axis:</span>
+              <span className="text-sm font-medium text-gray-300 w-12 md:w-auto">
+                Axis:
+              </span>
               <div className="flex flex-wrap gap-2">
                 {(["h", "v", "a", "all"] as const).map((axis) => (
                   <button
                     key={axis}
                     onClick={() => setSelectedAxis(axis)}
-                    className={`px-3 py-1.5 md:px-4 rounded-full text-xs md:text-sm border transition-colors ${selectedAxis === axis
-                      ? "bg-blue-600 border-blue-500 text-white"
-                      : "bg-[#0B1121] border-[1.35px] border-[#374151] text-gray-300 hover:bg-[#374151]/50"
-                      }`}
+                    className={`px-3 py-1.5 md:px-4 rounded-full text-xs md:text-sm border transition-colors ${
+                      selectedAxis === axis
+                        ? "bg-blue-600 border-blue-500 text-white"
+                        : "bg-[#0B1121] border-[1.35px] border-[#374151] text-gray-300 hover:bg-[#374151]/50"
+                    }`}
                   >
                     {axis === "all" ? "All" : `${axis.toUpperCase()}-axis`}
                   </button>
@@ -892,7 +904,9 @@ export default function SensorHistoryPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-              <span className="text-sm font-medium text-gray-300 w-12 md:w-auto">Unit:</span>
+              <span className="text-sm font-medium text-gray-300 w-12 md:w-auto">
+                Unit:
+              </span>
               <select
                 className="bg-[#0B1121] border-[1.35px] border-[#374151] text-white text-sm rounded px-3 py-1.5 focus:outline-none flex-1 md:flex-none"
                 value={selectedUnit}
@@ -906,7 +920,9 @@ export default function SensorHistoryPage() {
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full md:w-auto">
               <div className="flex items-center gap-2 w-full sm:w-auto">
-                <span className="text-sm font-medium text-gray-300 w-12 md:w-auto">Date:</span>
+                <span className="text-sm font-medium text-gray-300 w-12 md:w-auto">
+                  Date:
+                </span>
 
                 {/* Start Date Custom Input */}
                 <div
@@ -1211,6 +1227,6 @@ export default function SensorHistoryPage() {
           </CardContent>
         </Card>
       </div>
-    </div >
+    </div>
   );
 }

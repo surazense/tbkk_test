@@ -40,7 +40,9 @@ export default function SensorsPage() {
   const [selectedStatuses, setSelectedStatuses] = useState<SensorStatusType[]>(
     []
   );
-  const [roleFilter, setRoleFilter] = useState<"all" | "master" | "satellite">("all");
+  const [roleFilter, setRoleFilter] = useState<"all" | "master" | "satellite">(
+    "all"
+  );
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [sensors, setSensors] = useState<Sensor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,32 +116,26 @@ export default function SensorsPage() {
     });
   }, []);
 
-  const fetchSensors = useCallback(
-    async (silent = false) => {
-      try {
-        if (!silent) setLoading(true);
-        const { sensors: fetchedSensors } = await getSensors({
-          limit: 1000,
-          isShort: true,
-        });
+  const fetchSensors = useCallback(async (silent = false) => {
+    try {
+      if (!silent) setLoading(true);
+      const { sensors: fetchedSensors } = await getSensors({
+        limit: 1000,
+        isShort: true,
+      });
 
-        setSensors(fetchedSensors);
+      setSensors(fetchedSensors);
 
-        // Cache for next initial load
-        if (fetchedSensors.length > 0) {
-          localStorage.setItem(
-            "cached_sensors",
-            JSON.stringify(fetchedSensors)
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching sensors:", error);
-      } finally {
-        setLoading(false);
+      // Cache for next initial load
+      if (fetchedSensors.length > 0) {
+        localStorage.setItem("cached_sensors", JSON.stringify(fetchedSensors));
       }
-    },
-    []
-  );
+    } catch (error) {
+      console.error("Error fetching sensors:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   const updateSensorData = useCallback(async () => {
     try {
@@ -180,7 +176,10 @@ export default function SensorsPage() {
   }, [selectedIds, fetchSensors]);
 
   useEffect(() => {
-    const isShowingAll = !selectedIds || selectedIds.length === 0 || selectedIds.includes("organization");
+    const isShowingAll =
+      !selectedIds ||
+      selectedIds.length === 0 ||
+      selectedIds.includes("organization");
     const activeList = isShowingAll ? sensors : selectedSensors;
     updateSensorStatusData(activeList);
   }, [sensors, selectedSensors, selectedIds, updateSensorStatusData]);
@@ -279,7 +278,14 @@ export default function SensorsPage() {
     }
 
     return result;
-  }, [sensors, selectedStatuses, debouncedSearchQuery, selectedIds, selectedSensors, roleFilter]);
+  }, [
+    sensors,
+    selectedStatuses,
+    debouncedSearchQuery,
+    selectedIds,
+    selectedSensors,
+    roleFilter,
+  ]);
 
   // Group sensors for different views
   const sensorGroups = useMemo(() => {
@@ -349,7 +355,10 @@ export default function SensorsPage() {
       case "grouped-dot":
         return (
           <div className="bg-[#0B1121] text-white w-full px-1 sm:px-4 py-2 sm:py-4">
-            <SensorGroupedDotView sensorGroups={sensorGroups} dotSize={dotSize} />
+            <SensorGroupedDotView
+              sensorGroups={sensorGroups}
+              dotSize={dotSize}
+            />
           </div>
         );
       case "dot":

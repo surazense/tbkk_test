@@ -22,7 +22,13 @@ import {
   getVibrationColorFromVelocity,
   type SensorConfig,
 } from "@/lib/utils/vibrationUtils";
-import { cn, getSignalStrength, getSignalStrengthLabel, parseThailandTime, formatToThailandTime } from "@/lib/utils";
+import {
+  cn,
+  getSignalStrength,
+  getSignalStrengthLabel,
+  parseThailandTime,
+  formatToThailandTime,
+} from "@/lib/utils";
 
 interface SensorCardProps {
   sensor: Sensor;
@@ -46,7 +52,8 @@ export default function SensorCard({ sensor, onClick }: SensorCardProps) {
   useEffect(() => {
     if (!isSuperAdmin) return;
     import("@/lib/api/diagnostics").then(({ diagnosticsApi }) => {
-      diagnosticsApi.getDiagnosticRules()
+      diagnosticsApi
+        .getDiagnosticRules()
         .then((res) => {
           if (res) {
             setDiagnosticRules(res);
@@ -222,9 +229,7 @@ export default function SensorCard({ sensor, onClick }: SensorCardProps) {
 
   const lastUpdate = resolveLastUpdate(sensor);
 
-  const lastUpdateText = lastUpdate
-    ? formatToThailandTime(lastUpdate)
-    : "-";
+  const lastUpdateText = lastUpdate ? formatToThailandTime(lastUpdate) : "-";
 
   // Determine card background color based on sensor status
   // Colors match SensorStatusSummary status boxes with gradient effect

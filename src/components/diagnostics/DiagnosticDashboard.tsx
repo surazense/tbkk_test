@@ -6,7 +6,13 @@ import { DiagnosticResult } from "@/lib/types/diagnostic";
 import TopFaultsWidget from "./TopFaultsWidget";
 import CategoryOverviewWidget from "./CategoryOverviewWidget";
 import ActionRecommendationCard from "./ActionRecommendationCard";
-import { Loader2, RefreshCw, CheckCircle, AlertTriangle, ShieldCheck } from "lucide-react";
+import {
+  Loader2,
+  RefreshCw,
+  CheckCircle,
+  AlertTriangle,
+  ShieldCheck,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface DiagnosticDashboardProps {
@@ -14,7 +20,10 @@ interface DiagnosticDashboardProps {
   datetime: string;
 }
 
-export default function DiagnosticDashboard({ sensorId, datetime }: DiagnosticDashboardProps) {
+export default function DiagnosticDashboard({
+  sensorId,
+  datetime,
+}: DiagnosticDashboardProps) {
   const [data, setData] = useState<DiagnosticResult | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [calibrating, setCalibrating] = useState<boolean>(false);
@@ -72,8 +81,12 @@ export default function DiagnosticDashboard({ sensorId, datetime }: DiagnosticDa
             <ShieldCheck className="h-5 w-5" />
           </div>
           <div>
-            <h4 className="text-sm font-bold text-white">Rule-based Diagnosis Dashboard</h4>
-            <p className="text-xs text-gray-400">Diagnosis at {datetime.replace("T", " ").replace("Z", "")}</p>
+            <h4 className="text-sm font-bold text-white">
+              Rule-based Diagnosis Dashboard
+            </h4>
+            <p className="text-xs text-gray-400">
+              Diagnosis at {datetime.replace("T", " ").replace("Z", "")}
+            </p>
           </div>
         </div>
 
@@ -82,7 +95,9 @@ export default function DiagnosticDashboard({ sensorId, datetime }: DiagnosticDa
           disabled={calibrating}
           className="bg-transparent border-[1.35px] border-[#374151] text-white hover:bg-[#374151]/50 flex items-center gap-2"
         >
-          <RefreshCw className={`h-4 w-4 ${calibrating ? "animate-spin" : ""}`} />
+          <RefreshCw
+            className={`h-4 w-4 ${calibrating ? "animate-spin" : ""}`}
+          />
           {calibrating ? "Calibrating..." : "Calibrate Rules"}
         </Button>
       </div>

@@ -54,10 +54,14 @@ export default function UserSettings() {
     onConfirm: () => {},
   });
 
-  const [areaMode, setAreaMode] = useState<"first_only" | "show_all">("first_only");
+  const [areaMode, setAreaMode] = useState<"first_only" | "show_all">(
+    "first_only"
+  );
 
   useEffect(() => {
-    const savedMode = localStorage.getItem("dashboard_area_mode") as "first_only" | "show_all";
+    const savedMode = localStorage.getItem("dashboard_area_mode") as
+      | "first_only"
+      | "show_all";
     if (savedMode) {
       setAreaMode(savedMode);
     }
@@ -379,9 +383,12 @@ export default function UserSettings() {
                   : "bg-[#11171F] border-[#374151] text-gray-400 hover:border-gray-500"
               }`}
             >
-              <p className="font-semibold text-sm text-white">Show First Area Only</p>
+              <p className="font-semibold text-sm text-white">
+                Show First Area Only
+              </p>
               <p className="text-xs text-gray-400 mt-1">
-                Only display the sensors of the first area on dashboard initial load.
+                Only display the sensors of the first area on dashboard initial
+                load.
               </p>
             </button>
             <button

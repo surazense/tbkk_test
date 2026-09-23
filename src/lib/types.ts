@@ -218,7 +218,9 @@ export interface Sensor {
   threshold_max?: number;
   machine_class?: string | null;
   machine_number?: string | null;
+  machine_no?: string | null;
   installation_point?: string | null;
+  installed_point?: string | null;
   sensor_name?: string | null;
   image_url?: string | null;
   temperature_threshold_min?: number;

@@ -112,61 +112,71 @@ export default function ReportDataTable({
   const handleExportExcel = async () => {
     const title = `${viewLevel.toUpperCase()} Transmission Report (${selectedArea || "All Areas"}${selectedMachine ? ` - ${selectedMachine}` : ""})`;
     const dateStr = `${dateRange.from.toLocaleDateString()} to ${dateRange.to.toLocaleDateString()}`;
-    
+
     // Generate a high-resolution, professional Chart.js line chart using QuickChart HTTPS API
     // This is 100% natively supported and beautifully rendered by Microsoft Excel!
     let chartImagesHtml = "";
     if (timeSeriesData && timeSeriesData.length > 0) {
       try {
-        const comparisonEntities = data.filter(row => row.id && comparisonIds.includes(row.id));
-        const activeEntities = comparisonEntities.length > 0 ? comparisonEntities : [data[0]];
-        
-        const labels = timeSeriesData.map(point => point.name);
+        const comparisonEntities = data.filter(
+          (row) => row.id && comparisonIds.includes(row.id)
+        );
+        const activeEntities =
+          comparisonEntities.length > 0 ? comparisonEntities : [data[0]];
+
+        const labels = timeSeriesData.map((point) => point.name);
         const datasets = activeEntities.map((ent, idx) => {
-          const color = idx === 0 ? "#0d9488" : idx === 1 ? "#0284c7" : "#7c3aed";
-          const dataPoints = timeSeriesData.map(point => point[`${ent.name}_packets`] || 0);
+          const color =
+            idx === 0 ? "#0d9488" : idx === 1 ? "#0284c7" : "#7c3aed";
+          const dataPoints = timeSeriesData.map(
+            (point) => point[`${ent.name}_packets`] || 0
+          );
           return {
             label: ent.name,
             data: dataPoints,
             borderColor: color,
             backgroundColor: color + "cc", // Semi-solid color fill for bar chart
-            borderWidth: 1
+            borderWidth: 1,
           };
         });
-        
+
         const chartConfig = {
           type: "bar",
           data: {
             labels: labels,
-            datasets: datasets
+            datasets: datasets,
           },
           options: {
             title: {
               display: true,
               text: `Data Transmission packets over Time (${viewLevel.toUpperCase()})`,
               fontSize: 15,
-              fontColor: "#f8fafc"
+              fontColor: "#f8fafc",
             },
             legend: {
               labels: {
-                fontColor: "#f8fafc"
-              }
+                fontColor: "#f8fafc",
+              },
             },
             scales: {
-              xAxes: [{
-                gridLines: { color: "#334155" },
-                ticks: { fontColor: "#94a3b8" }
-              }],
-              yAxes: [{
-                gridLines: { color: "#334155" },
-                ticks: { fontColor: "#94a3b8" }
-              }]
-            }
-          }
+              xAxes: [
+                {
+                  gridLines: { color: "#334155" },
+                  ticks: { fontColor: "#94a3b8" },
+                },
+              ],
+              yAxes: [
+                {
+                  gridLines: { color: "#334155" },
+                  ticks: { fontColor: "#94a3b8" },
+                },
+              ],
+            },
+          },
         };
-        
+
         const quickChartUrl = `https://quickchart.io/chart?bkg=%230f172a&w=800&h=350&c=${encodeURIComponent(JSON.stringify(chartConfig))}`;
-        
+
         chartImagesHtml += `
           <br/>
           <br/>
@@ -248,23 +258,38 @@ export default function ReportDataTable({
     data.forEach((row) => {
       const totalPackets = row.totalPackets || 0;
       const totalExpected = row.totalExpected || 0;
-      const onlineCount = row.rawSensors.filter((s: any) => s.connectivity === "online").length;
+      const onlineCount = row.rawSensors.filter(
+        (s: any) => s.connectivity === "online"
+      ).length;
       const totalCount = row.rawSensors.length;
       const isLost = onlineCount === 0;
       const isPartial = onlineCount > 0 && onlineCount < totalCount;
-      const statusClass = isLost ? 'status-lost' : isPartial ? 'status-partial' : 'status-healthy';
-      const statusText = isLost ? 'LOST' : isPartial ? `PARTIAL (${onlineCount}/${totalCount})` : 'HEALTHY';
-      
+      const statusClass = isLost
+        ? "status-lost"
+        : isPartial
+          ? "status-partial"
+          : "status-healthy";
+      const statusText = isLost
+        ? "LOST"
+        : isPartial
+          ? `PARTIAL (${onlineCount}/${totalCount})`
+          : "HEALTHY";
+
       const lossVal = row.lossPercentage || 0;
-      const lossClass = lossVal > 50 ? 'loss-alert' : '';
-      
-      const batteryStr = row.batteryMin !== null ? `${row.batteryMin}% - ${row.batteryMax}%` : 'N/A';
-      const batteryClass = (row.batteryMin !== null && row.batteryMin < 25) ? 'battery-warn' : '';
-      
-      const tempStr = row.tempMax !== null ? `${row.tempMax.toFixed(1)}°C` : 'N/A';
-      const vibStr = row.vibMax !== null ? row.vibMax.toFixed(2) : 'N/A';
+      const lossClass = lossVal > 50 ? "loss-alert" : "";
+
+      const batteryStr =
+        row.batteryMin !== null
+          ? `${row.batteryMin}% - ${row.batteryMax}%`
+          : "N/A";
+      const batteryClass =
+        row.batteryMin !== null && row.batteryMin < 25 ? "battery-warn" : "";
+
+      const tempStr =
+        row.tempMax !== null ? `${row.tempMax.toFixed(1)}°C` : "N/A";
+      const vibStr = row.vibMax !== null ? row.vibMax.toFixed(2) : "N/A";
       const alertsCount = row.alerts || 0;
-      const alertsClass = alertsCount > 0 ? 'loss-alert' : '';
+      const alertsClass = alertsCount > 0 ? "loss-alert" : "";
       const uptimeVal = row.uptime || 0;
 
       html += `
@@ -295,15 +320,19 @@ export default function ReportDataTable({
       </html>
     `;
 
-    const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8" });
+    const blob = new Blob([html], {
+      type: "application/vnd.ms-excel;charset=utf-8",
+    });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    
+
     const scopeName = (selectedArea || "AllAreas").replace(/\s+/g, "_");
-    const machineName = selectedMachine ? `_${selectedMachine.replace(/\s+/g, "_")}` : "";
-    link.download = `Transmission_Report_${scopeName}${machineName}_${new Date().toISOString().split('T')[0]}.xls`;
-    
+    const machineName = selectedMachine
+      ? `_${selectedMachine.replace(/\s+/g, "_")}`
+      : "";
+    link.download = `Transmission_Report_${scopeName}${machineName}_${new Date().toISOString().split("T")[0]}.xls`;
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -469,7 +498,7 @@ export default function ReportDataTable({
                   <ArrowUpDown size={0} className="hidden" />
                 </div>
               </TableHead>
-              <TableHead 
+              <TableHead
                 className="text-[13px] md:text-[16px] font-bold text-slate-300 uppercase tracking-wide py-4 cursor-help"
                 title="Current connection status. Shows the number of active online sensors."
               >
@@ -495,25 +524,25 @@ export default function ReportDataTable({
                   <ArrowUpDown size={0} className="hidden" />
                 </div>
               </TableHead>
-              <TableHead 
+              <TableHead
                 className="text-[13px] md:text-[16px] font-bold text-slate-300 uppercase tracking-wide py-4 text-center hidden lg:table-cell cursor-help"
                 title="Minimum battery level recorded among the sensors. Prepare replacement if below 20%."
               >
                 Battery
               </TableHead>
-              <TableHead 
+              <TableHead
                 className="text-[13px] md:text-[16px] font-bold text-slate-300 uppercase tracking-wide py-4 text-center hidden lg:table-cell cursor-help"
                 title="Maximum temperature registered by sensors to monitor machinery overheating (>80°C)."
               >
                 Max Temp
               </TableHead>
-              <TableHead 
+              <TableHead
                 className="text-[13px] md:text-[16px] font-bold text-slate-300 uppercase tracking-wide py-4 text-center hidden lg:table-cell cursor-help"
                 title="Peak RMS vibration recorded across all 3 axes (H, V, A). Limits: normal <1.4, warning <2.8, danger >4.5 mm/s."
               >
                 Max Vib
               </TableHead>
-              <TableHead 
+              <TableHead
                 className="text-[13px] md:text-[16px] font-bold text-slate-300 uppercase tracking-wide py-4 text-center hidden md:table-cell cursor-help"
                 title="Total number of alarm thresholds breached during the period (e.g. high temperature or critical vibration)."
               >
@@ -529,7 +558,7 @@ export default function ReportDataTable({
                   <ArrowUpDown size={0} className="hidden" />
                 </div>
               </TableHead>
-              <TableHead 
+              <TableHead
                 className="text-[13px] md:text-[16px] font-bold text-slate-300 uppercase tracking-wide py-4 text-right cursor-help"
                 title="Quick actions. Click to drill-down into sub-elements or view historical telemetry charts."
               >
@@ -689,49 +718,49 @@ export default function ReportDataTable({
                   </TableCell>
                   <TableCell className="text-center py-4 hidden lg:table-cell">
                     {row.tempMax != null ? (
-                       <span
-                         className={cn(
-                           "text-[18px] font-mono font-bold px-2 py-0.5 rounded",
-                           row.tempMax > 80
-                             ? "text-rose-400 bg-rose-500/10"
-                             : "text-amber-400"
-                         )}
-                       >
-                         {row.tempMax.toFixed(1)}°C
-                       </span>
+                      <span
+                        className={cn(
+                          "text-[18px] font-mono font-bold px-2 py-0.5 rounded",
+                          row.tempMax > 80
+                            ? "text-rose-400 bg-rose-500/10"
+                            : "text-amber-400"
+                        )}
+                      >
+                        {row.tempMax.toFixed(1)}°C
+                      </span>
                     ) : (
-                       <span className="text-[18px] text-slate-600 font-mono">
-                         -
-                       </span>
+                      <span className="text-[18px] text-slate-600 font-mono">
+                        -
+                      </span>
                     )}
                   </TableCell>
                   <TableCell className="text-center py-4 hidden lg:table-cell">
                     {row.vibMax != null ? (
-                       <span
-                         className={cn(
-                           "text-[18px] font-mono",
-                           row.vibMax > 9.0
-                             ? "text-rose-400 font-bold"
-                             : "text-slate-300"
-                         )}
-                       >
-                         {row.vibMax.toFixed(2)}
-                       </span>
+                      <span
+                        className={cn(
+                          "text-[18px] font-mono",
+                          row.vibMax > 9.0
+                            ? "text-rose-400 font-bold"
+                            : "text-slate-300"
+                        )}
+                      >
+                        {row.vibMax.toFixed(2)}
+                      </span>
                     ) : (
-                       <span className="text-[18px] text-slate-600 font-mono">
-                         -
-                       </span>
+                      <span className="text-[18px] text-slate-600 font-mono">
+                        -
+                      </span>
                     )}
                   </TableCell>
                   <TableCell className="text-center py-4 hidden md:table-cell">
                     {row.alerts != null && row.alerts > 0 ? (
-                       <span className="text-[18px] font-mono font-bold text-rose-400 px-2 py-0.5 bg-rose-500/10 rounded-full">
-                         {row.alerts}
-                       </span>
+                      <span className="text-[18px] font-mono font-bold text-rose-400 px-2 py-0.5 bg-rose-500/10 rounded-full">
+                        {row.alerts}
+                      </span>
                     ) : (
-                       <span className="text-[18px] text-slate-600 font-mono">
-                         -
-                       </span>
+                      <span className="text-[18px] text-slate-600 font-mono">
+                        -
+                      </span>
                     )}
                   </TableCell>
                   <TableCell className="text-right py-4 font-mono hidden md:table-cell">
@@ -763,7 +792,10 @@ export default function ReportDataTable({
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-right py-3 md:py-4" onClick={(e) => e.stopPropagation()}>
+                  <TableCell
+                    className="text-right py-3 md:py-4"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     {viewLevel !== "sensor" && (
                       <Button
                         variant="ghost"

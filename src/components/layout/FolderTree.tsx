@@ -27,10 +27,13 @@ function buildTreeFromSensors(sensors: Sensor[]): TreeItemData[] {
   const areaMap = new Map<string, Map<string, Sensor[]>>();
 
   sensors.forEach((sensor) => {
+    const loc = sensor.location?.trim();
+    const instPoint =
+      sensor.installation_point?.trim() || sensor.installed_point?.trim();
     const areaName =
       sensor.area?.trim() ||
-      sensor.location?.trim() ||
-      sensor.installation_point?.trim() ||
+      (loc && loc !== "N/A" && loc !== "API Location" ? loc : "") ||
+      instPoint ||
       "Unknown Area";
     const machineName =
       sensor.machine?.trim() ||
@@ -55,23 +58,41 @@ function buildTreeFromSensors(sensors: Sensor[]): TreeItemData[] {
 
     sortedMachines.forEach(([machineName, sensorList]) => {
       const sortedSensors = [...sensorList].sort((a, b) => {
-        const nameA = a.sensor_name || a.name || a.serialNumber || a.id || "";
-        const nameB = b.sensor_name || b.name || b.serialNumber || b.id || "";
+        const nameA =
+          a.installation_point ||
+          a.installed_point ||
+          a.sensor_name ||
+          a.name ||
+          a.serialNumber ||
+          a.id ||
+          "";
+        const nameB =
+          b.installation_point ||
+          b.installed_point ||
+          b.sensor_name ||
+          b.name ||
+          b.serialNumber ||
+          b.id ||
+          "";
         return nameA.localeCompare(nameB, "th", { numeric: true });
       });
 
-      const sensorItems: TreeItemData[] = sortedSensors.map((sensor) => ({
-        id: `sensor-${sensor.id}`,
-        label:
-          sensor.sensor_name ||
-          sensor.name ||
+      const sensorItems: TreeItemData[] = sortedSensors.map((sensor) => {
+        const label =
+          sensor.sensor_name?.trim() ||
+          sensor.name?.trim() ||
           sensor.serialNumber ||
           sensor.id ||
-          "Unknown Sensor",
-        type: "file",
-        sensorId: sensor.id,
-        level: "sensor",
-      }));
+          "Unknown Sensor";
+
+        return {
+          id: `sensor-${sensor.id}`,
+          label,
+          type: "file",
+          sensorId: sensor.id,
+          level: "sensor",
+        };
+      });
 
       machineItems.push({
         id: `machine-${areaName}-${machineName}`,
@@ -151,10 +172,10 @@ const FolderTree: React.FC<{
   }, [tempSelectedIds]);
 
   // --- Data Fetching ---
-  const fetchAll = useCallback(async () => {
+  const fetchAll = useCallback(async (force = false) => {
     try {
       setLoading(true);
-      const data = await fetchRealSensors(true);
+      const data = await fetchRealSensors(true, force);
       setSensors(data);
     } catch (e) {
       console.error("Fetch error:", e);
@@ -168,7 +189,7 @@ const FolderTree: React.FC<{
   }, [fetchAll]);
 
   useEffect(() => {
-    const handleRefresh = () => fetchAll();
+    const handleRefresh = () => fetchAll(true);
     window.addEventListener("REFRESH_SENSORS", handleRefresh);
     return () => window.removeEventListener("REFRESH_SENSORS", handleRefresh);
   }, [fetchAll]);
@@ -284,7 +305,10 @@ const FolderTree: React.FC<{
       // All ancestors must be expanded
       return node.path
         .slice(0, -1)
-        .every((ancestorId) => ancestorId === "organization" || expandedIds.has(ancestorId));
+        .every(
+          (ancestorId) =>
+            ancestorId === "organization" || expandedIds.has(ancestorId)
+        );
     });
   }, [flatNodes, expandedIds, collapsed]);
 
@@ -303,10 +327,13 @@ const FolderTree: React.FC<{
         // Fallback to organization if unchecked
         newSelected.add("organization");
       }
-      
+
       setTempSelectedIds(newSelected);
       setSelectedIds(newSelected);
-      localStorage.setItem("folder_tree_selected_ids", JSON.stringify(Array.from(newSelected)));
+      localStorage.setItem(
+        "folder_tree_selected_ids",
+        JSON.stringify(Array.from(newSelected))
+      );
     },
     [nodeMap]
   );
@@ -350,7 +377,10 @@ const FolderTree: React.FC<{
       const newSet = new Set([id]);
       setTempSelectedIds(newSet);
       setSelectedIds(newSet);
-      localStorage.setItem("folder_tree_selected_ids", JSON.stringify(Array.from(newSet)));
+      localStorage.setItem(
+        "folder_tree_selected_ids",
+        JSON.stringify(Array.from(newSet))
+      );
       if (pathname !== "/") router.push("/");
       if (sensorId) setCollapsed(true);
     },
@@ -495,7 +525,7 @@ const FolderTree: React.FC<{
       {/* Content */}
       <div className="flex-1 overflow-hidden">
         <Virtuoso
-          style={{ height: '100%', width: '100%' }}
+          style={{ height: "100%", width: "100%" }}
           data={visibleNodes}
           className="no-scrollbar py-2"
           itemContent={(index, node) => {
@@ -566,8 +596,6 @@ const FolderTree: React.FC<{
           }}
         />
       </div>
-
-
 
       {/* Summary Popover */}
       {popover.id && (

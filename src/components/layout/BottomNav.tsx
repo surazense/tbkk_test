@@ -32,6 +32,7 @@ export default function BottomNav() {
           alt="Dashboard"
           width={22}
           height={22}
+          priority
           style={{ filter: "invert(1) brightness(2)" }}
         />
       ),
@@ -50,6 +51,7 @@ export default function BottomNav() {
           alt="Admin"
           width={22}
           height={22}
+          priority
           style={{ filter: "invert(1) brightness(2)" }}
         />
       ),
@@ -63,6 +65,7 @@ export default function BottomNav() {
           alt="Settings"
           width={22}
           height={22}
+          priority
           style={{ filter: "invert(1) brightness(2)" }}
         />
       ),
@@ -76,7 +79,8 @@ export default function BottomNav() {
           alt="Notification"
           width={22}
           height={22}
-          style={{ filter: "invert(1) brightness(2)", height: "auto" }}
+          priority
+          style={{ filter: "invert(1) brightness(2)" }}
         />
       ),
     },
@@ -114,10 +118,11 @@ export default function BottomNav() {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${isActive
+                className={`flex-1 flex flex-col items-center justify-center gap-1 transition-colors ${
+                  isActive
                     ? "text-blue-400 bg-blue-900/30"
                     : "text-gray-400 hover:text-white hover:bg-white/5"
-                  }`}
+                }`}
               >
                 <div className="w-6 h-6 flex items-center justify-center">
                   {typeof item.icon === "function"
@@ -144,10 +149,11 @@ export default function BottomNav() {
               <Link
                 key={item.name}
                 href={item.href}
-                className={`${colWidthClass} flex flex-col items-center justify-center gap-1 transition-colors ${isActive
+                className={`${colWidthClass} flex flex-col items-center justify-center gap-1 transition-colors ${
+                  isActive
                     ? "text-blue-400 bg-blue-900/30"
                     : "text-gray-400 hover:text-white hover:bg-white/5"
-                  }`}
+                }`}
               >
                 <div className="w-6 h-6 flex items-center justify-center">
                   {typeof item.icon === "function"
@@ -167,12 +173,19 @@ export default function BottomNav() {
             className={`${colWidthClass} flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-white hover:bg-white/5 transition-colors`}
           >
             <LogOut size={22} className="text-red-400" />
-            <span className="text-[10px] font-medium leading-none text-red-400">Logout</span>
+            <span className="text-[10px] font-medium leading-none text-red-400">
+              Logout
+            </span>
           </button>
 
           {/* Symmetrical Spacers to keep items aligned properly to the left */}
-          {Array.from({ length: Math.max(0, page1Items.length - 1 - page2Items.length) }).map((_, idx) => (
-            <div key={`spacer-${idx}`} className={`${colWidthClass} flex-shrink-0`} />
+          {Array.from({
+            length: Math.max(0, page1Items.length - 1 - page2Items.length),
+          }).map((_, idx) => (
+            <div
+              key={`spacer-${idx}`}
+              className={`${colWidthClass} flex-shrink-0`}
+            />
           ))}
         </div>
       </nav>

@@ -2,7 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { usePathname } from "next/navigation";
-import { Bell, LogOut, Settings, ChevronDown, Filter, BookOpen } from "lucide-react";
+import {
+  Bell,
+  LogOut,
+  Settings,
+  ChevronDown,
+  Filter,
+  BookOpen,
+} from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
 import { Badge } from "@/components/ui/badge";
@@ -158,7 +165,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
           // Add to display list
           const datetime = sensor.last_data?.datetime
-            ? formatToThailandTime(sensor.last_data.datetime, { second: undefined }).replace(",", "")
+            ? formatToThailandTime(sensor.last_data.datetime, {
+                second: undefined,
+              }).replace(",", "")
             : "-";
 
           let statusClass = "";
@@ -379,7 +388,9 @@ export default function Header({ onMenuClick }: HeaderProps) {
               aria-label="Open filter"
             >
               <Filter size={15} className="text-blue-400" />
-              <span className="text-xs text-blue-400 font-semibold select-none">Filter</span>
+              <span className="text-xs text-blue-400 font-semibold select-none">
+                Filter
+              </span>
             </button>
           )}
 

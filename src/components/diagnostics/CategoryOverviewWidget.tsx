@@ -9,7 +9,9 @@ interface CategoryOverviewWidgetProps {
   categories: CategoryScore[];
 }
 
-export default function CategoryOverviewWidget({ categories }: CategoryOverviewWidgetProps) {
+export default function CategoryOverviewWidget({
+  categories,
+}: CategoryOverviewWidgetProps) {
   // Safe sort of categories by score
   const sortedCategories = [...categories].sort((a, b) => b.score - a.score);
 
@@ -35,8 +37,10 @@ export default function CategoryOverviewWidget({ categories }: CategoryOverviewW
   };
 
   const getSeverityBadgeClass = (score: number) => {
-    if (score >= 70) return "text-[#EB2502] bg-[#EB2502]/10 border-[#EB2502]/30";
-    if (score >= 40) return "text-[#FF9900] bg-[#FF9900]/10 border-[#FF9900]/30";
+    if (score >= 70)
+      return "text-[#EB2502] bg-[#EB2502]/10 border-[#EB2502]/30";
+    if (score >= 40)
+      return "text-[#FF9900] bg-[#FF9900]/10 border-[#FF9900]/30";
     if (score > 15) return "text-blue-400 bg-blue-500/10 border-blue-500/30";
     return "text-gray-400 bg-gray-800/30 border-gray-700/30";
   };
@@ -48,7 +52,9 @@ export default function CategoryOverviewWidget({ categories }: CategoryOverviewW
           <Activity className="h-5 w-5 text-blue-500" />
           Health Category Overview
         </h3>
-        <p className="text-xs text-gray-400 mt-0.5">Aggregated severity score for each mechanical category.</p>
+        <p className="text-xs text-gray-400 mt-0.5">
+          Aggregated severity score for each mechanical category.
+        </p>
       </div>
 
       <div className="flex flex-col gap-3 overflow-y-auto max-h-[350px] pr-1 custom-scrollbar">
@@ -67,7 +73,9 @@ export default function CategoryOverviewWidget({ categories }: CategoryOverviewW
             >
               <div className="flex items-center justify-between gap-3">
                 <div className="flex flex-col">
-                  <span className="text-sm font-extrabold text-white">{cat.category}</span>
+                  <span className="text-sm font-extrabold text-white">
+                    {cat.category}
+                  </span>
                   {cat.dominant_fault && (
                     <span className="text-[10px] text-gray-400 truncate max-w-[200px] mt-0.5">
                       Dominant: {cat.dominant_fault}
@@ -76,17 +84,27 @@ export default function CategoryOverviewWidget({ categories }: CategoryOverviewW
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className={cn("text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider", badgeClass)}>
+                  <span
+                    className={cn(
+                      "text-[10px] px-2 py-0.5 rounded-full border font-bold uppercase tracking-wider",
+                      badgeClass
+                    )}
+                  >
                     {getSeverityLabel(cat.score)}
                   </span>
-                  <span className="text-sm font-extrabold text-white w-8 text-right">{cat.score}%</span>
+                  <span className="text-sm font-extrabold text-white w-8 text-right">
+                    {cat.score}%
+                  </span>
                 </div>
               </div>
 
               {/* Progress Bar */}
               <div className="w-full bg-gray-800/60 rounded-full h-1.5 overflow-hidden">
                 <div
-                  className={cn("h-full rounded-full transition-all duration-500", barColor)}
+                  className={cn(
+                    "h-full rounded-full transition-all duration-500",
+                    barColor
+                  )}
                   style={{ width: `${cat.score}%` }}
                 />
               </div>

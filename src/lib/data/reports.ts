@@ -75,7 +75,7 @@ export async function fetchTransmissionReport(
   // 3. Network Fetch
   const token = getToken();
   let url = `/api/reports/transmissions?start_date=${startDate}&end_date=${endDate}`;
-  
+
   if (machineId) {
     url += `&machine_id=${machineId}`;
   }
@@ -89,7 +89,10 @@ export async function fetchTransmissionReport(
     });
 
     if (!response.ok) {
-      console.error("Failed to fetch transmission report:", response.statusText);
+      console.error(
+        "Failed to fetch transmission report:",
+        response.statusText
+      );
       return [];
     }
 

@@ -31,6 +31,7 @@ import { AutocompleteInput } from "./AutocompleteInput";
 import {
   getAllMachineClasses,
   getThresholdsForMachineClass,
+  getMachineClassId,
 } from "@/lib/iso10816-3";
 import Image from "next/image";
 import { useEffect } from "react";
@@ -112,23 +113,23 @@ export function SensorFormContent({
   const watchedNamePlaceEnabled = form.watch(
     `sensors.${index}.namePlaceEnabled`
   );
-  
+
   const watchedTimeInterval = form.watch(`sensors.${index}.timeInterval`);
-  
+
   // Ensure the current time interval value is in the options list so it displays correctly
   const timeIntervalOptions = [...defaultTimeIntervalOptions];
   if (
-    watchedTimeInterval && 
-    !defaultTimeIntervalOptions.some(opt => opt.value === watchedTimeInterval)
+    watchedTimeInterval &&
+    !defaultTimeIntervalOptions.some((opt) => opt.value === watchedTimeInterval)
   ) {
     timeIntervalOptions.push({
       label: `${watchedTimeInterval} min (Custom)`,
-      value: watchedTimeInterval
+      value: watchedTimeInterval,
     });
   }
 
   const watchedGScale = form.watch(`sensors.${index}.gScale`);
-  
+
   // Ensure the current G-Scale value is in the options list so it displays correctly
   const gScaleOptions = [...defaultGScaleOptions];
   if (watchedGScale && !defaultGScaleOptions.includes(watchedGScale)) {
@@ -567,17 +568,35 @@ export function SensorFormContent({
                 </FormLabel>
                 <Select
                   onValueChange={field.onChange}
-                  value={field.value}
+                  value={
+                    field.value ? getMachineClassId(field.value) : undefined
+                  }
                 >
                   <FormControl>
                     <SelectTrigger className="bg-[#080808] border-[1px] border-[#4B5563] text-white">
                       <SelectValue placeholder="Select machine class" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent>
+                  <SelectContent className="bg-[#0B1121] border-[#374151] text-white max-w-[calc(100vw-2rem)] sm:min-w-[540px]">
                     {machineClassOptions.map((option) => (
-                      <SelectItem key={option.id} value={option.id}>
-                        {option.name}
+                      <SelectItem
+                        key={option.id}
+                        value={option.id}
+                        className="py-2 cursor-pointer focus:bg-[#1f2937] focus:text-white"
+                      >
+                        <span className="flex items-center w-full text-xs sm:text-sm text-white">
+                          <span className="w-[280px] sm:w-[320px] shrink-0 text-left font-medium text-white flex items-center pr-2">
+                            <span className="text-white mr-2 shrink-0 select-none">
+                              •
+                            </span>
+                            <span className="truncate">
+                              {option.baseName || option.name}
+                            </span>
+                          </span>
+                          <span className="text-white font-mono text-xs sm:text-sm text-left shrink-0 whitespace-nowrap">
+                            {option.powerRange}
+                          </span>
+                        </span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -748,10 +767,7 @@ export function SensorFormContent({
                       </Tooltip>
                     </TooltipProvider>
                   </FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    value={field.value}
-                  >
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="bg-[#080808] border-[1px] border-[#4B5563] text-white">
                         <SelectValue placeholder="Select motor type" />
@@ -884,10 +900,11 @@ export function SensorFormContent({
       {/* Additional Settings */}
       {/* Row 1: Columns depend on Name Place being enabled */}
       <div
-        className={`grid grid-cols-1 gap-4 ${watchedNamePlaceEnabled
+        className={`grid grid-cols-1 gap-4 ${
+          watchedNamePlaceEnabled
             ? "md:grid-cols-2 2xl:grid-cols-2"
             : "md:grid-cols-3 2xl:grid-cols-3"
-          }`}
+        }`}
       >
         <FormField
           control={form.control}

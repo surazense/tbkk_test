@@ -10,7 +10,10 @@ interface ActionRecommendationCardProps {
   overallScore: number;
 }
 
-export default function ActionRecommendationCard({ dominantFault, overallScore }: ActionRecommendationCardProps) {
+export default function ActionRecommendationCard({
+  dominantFault,
+  overallScore,
+}: ActionRecommendationCardProps) {
   const isHealthy = !dominantFault || dominantFault.score < 40;
 
   return (
@@ -26,7 +29,9 @@ export default function ActionRecommendationCard({ dominantFault, overallScore }
         <div
           className={cn(
             "p-3 rounded-xl shrink-0 mt-0.5",
-            isHealthy ? "bg-[#00E200]/10 text-[#00E200]" : "bg-[#EB2502]/10 text-[#EB2502]"
+            isHealthy
+              ? "bg-[#00E200]/10 text-[#00E200]"
+              : "bg-[#EB2502]/10 text-[#EB2502]"
           )}
         >
           {isHealthy ? (
@@ -44,7 +49,9 @@ export default function ActionRecommendationCard({ dominantFault, overallScore }
             <span
               className={cn(
                 "text-xs px-2 py-0.5 rounded-full font-bold",
-                isHealthy ? "bg-green-900/40 text-green-300 border border-green-800/40" : "bg-red-900/40 text-red-300 border border-red-800/40"
+                isHealthy
+                  ? "bg-green-900/40 text-green-300 border border-green-800/40"
+                  : "bg-red-900/40 text-red-300 border border-red-800/40"
               )}
             >
               Health Score: {overallScore}%
@@ -52,29 +59,40 @@ export default function ActionRecommendationCard({ dominantFault, overallScore }
           </div>
 
           <h3 className="text-lg font-bold text-white mb-2">
-            {isHealthy ? "Machine operates in a stable condition" : `Action Required: ${dominantFault.fault_name}`}
+            {isHealthy
+              ? "Machine operates in a stable condition"
+              : `Action Required: ${dominantFault.fault_name}`}
           </h3>
 
           <div className="flex flex-col gap-2.5 text-sm text-gray-300">
             {isHealthy ? (
-              <p>The diagnostic engine indicates that the machine parameters are within normal limits. Continue routine monitoring.</p>
+              <p>
+                The diagnostic engine indicates that the machine parameters are
+                within normal limits. Continue routine monitoring.
+              </p>
             ) : (
               <>
                 <div className="flex flex-col gap-1.5 leading-relaxed bg-[#161E28]/40 border border-gray-800/30 rounded-xl p-3.5">
-                  <div className="text-xs font-semibold text-gray-400">RECOMMENDED ACTION (EN):</div>
-                  <p className="text-white font-medium">{dominantFault.recommendation_en}</p>
+                  <div className="text-xs font-semibold text-gray-400">
+                    RECOMMENDED ACTION (EN):
+                  </div>
+                  <p className="text-white font-medium">
+                    {dominantFault.recommendation_en}
+                  </p>
                 </div>
                 <div className="flex flex-col gap-1.5 leading-relaxed bg-[#161E28]/40 border border-gray-800/30 rounded-xl p-3.5">
-                  <div className="text-xs font-semibold text-gray-400">ข้อเสนอแนะในการดำเนินการ (TH):</div>
-                  <p className="text-white font-medium">{dominantFault.recommendation_th}</p>
+                  <div className="text-xs font-semibold text-gray-400">
+                    ข้อเสนอแนะในการดำเนินการ (TH):
+                  </div>
+                  <p className="text-white font-medium">
+                    {dominantFault.recommendation_th}
+                  </p>
                 </div>
               </>
             )}
           </div>
         </div>
       </div>
-
-
     </div>
   );
 }
