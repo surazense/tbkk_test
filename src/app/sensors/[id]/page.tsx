@@ -502,6 +502,8 @@ export default function SensorDetailPage() {
         <SensorStatsCards
           safeTemp={safeTemp}
           configData={configData}
+          sensor={sensor}
+          sensorLastData={sensorLastData}
           xStats={xStats}
           yStats={yStats}
           zStats={zStats}

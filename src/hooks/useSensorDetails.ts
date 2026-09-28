@@ -149,9 +149,10 @@ export function useSensorDetails({
             alarm_ths: data.alarm_ths || 5.0,
             thresholdMin: data.threshold_min || prev.thresholdMin,
             thresholdMedium: data.threshold_medium || prev.thresholdMedium,
-            thresholdMax: data.threshold_max || prev.thresholdMax,
-            temperature_threshold_min: data.temperature_threshold_min,
-            temperature_threshold_max: data.temperature_threshold_max,
+            temperature_threshold_min:
+              data.temperature_threshold_min ?? prev.temperature_threshold_min,
+            temperature_threshold_max:
+              data.temperature_threshold_max ?? prev.temperature_threshold_max,
             notes: data.note || prev.notes,
             image_url: data.image_url || prev.image_url,
             mac_address: data.mac_address || prev.mac_address,
@@ -387,8 +388,10 @@ export function useSensorDetails({
           notes: data.note || prev.notes,
           aAxisEnabled: data.a_axis_enabled !== false,
           image_url: data.image_url || prev.image_url,
-          temperature_threshold_min: data.temperature_threshold_min,
-          temperature_threshold_max: data.temperature_threshold_max,
+          temperature_threshold_min:
+            data.temperature_threshold_min ?? prev.temperature_threshold_min,
+          temperature_threshold_max:
+            data.temperature_threshold_max ?? prev.temperature_threshold_max,
           mac_address: data.mac_address || prev.mac_address,
         }));
         return data;
@@ -412,6 +415,20 @@ export function useSensorDetails({
 
       if (lastData) {
         setSensorLastData(lastData);
+        if (
+          lastData.temperature_threshold_max !== undefined ||
+          lastData.temperature_threshold_min !== undefined
+        ) {
+          setConfigData((prev) => ({
+            ...prev,
+            temperature_threshold_max:
+              lastData.temperature_threshold_max ??
+              prev.temperature_threshold_max,
+            temperature_threshold_min:
+              lastData.temperature_threshold_min ??
+              prev.temperature_threshold_min,
+          }));
+        }
       }
 
       if (histData) {

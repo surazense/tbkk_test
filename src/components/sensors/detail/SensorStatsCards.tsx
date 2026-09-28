@@ -1,11 +1,18 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { SensorPageConfig, AxisStats } from "@/lib/types/sensor-data";
+import {
+  SensorPageConfig,
+  AxisStats,
+  Sensor,
+  SensorLastData,
+} from "@/lib/types/sensor-data";
 import { getCardBackgroundColor } from "@/lib/utils/vibrationUtils";
 
 interface SensorStatsCardsProps {
   safeTemp: number;
   configData: SensorPageConfig;
+  sensor?: Sensor | null;
+  sensorLastData?: SensorLastData | null;
   xStats: AxisStats;
   yStats: AxisStats;
   zStats: AxisStats;
@@ -14,6 +21,8 @@ interface SensorStatsCardsProps {
 export const SensorStatsCards: React.FC<SensorStatsCardsProps> = ({
   safeTemp,
   configData,
+  sensor,
+  sensorLastData,
   xStats,
   yStats,
   zStats,
@@ -36,9 +45,20 @@ export const SensorStatsCards: React.FC<SensorStatsCardsProps> = ({
       "detail"
     );
 
-  const tempThresholdMin = configData?.temperature_threshold_min || 35;
-  const tempThresholdMax = configData?.temperature_threshold_max || 45;
-  const isTempWarning = safeTemp > tempThresholdMin;
+  // Use temperature threshold max from sensor config
+  const rawMax =
+    sensor?.temperature_threshold_max ??
+    sensorLastData?.temperature_threshold_max ??
+    configData?.temperature_threshold_max;
+
+  const hasConfiguredMax =
+    rawMax !== undefined &&
+    rawMax !== null &&
+    !isNaN(Number(rawMax)) &&
+    Number(rawMax) > 0;
+
+  const tempThresholdMax = hasConfiguredMax ? Number(rawMax) : 45;
+  const isTempCritical = safeTemp > tempThresholdMax;
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 2xl:gap-6">
@@ -46,43 +66,27 @@ export const SensorStatsCards: React.FC<SensorStatsCardsProps> = ({
       <Card
         className="border-[1.35px] border-[#374151] overflow-hidden"
         style={{
-          backgroundColor: isTempWarning
-            ? "#fae739" // custom yellow
-            : "#14532d", // green-900
+          backgroundColor: isTempCritical
+            ? "#7f1d1d" // red-900 (exceeds max)
+            : "#14532d", // green-900 (normal)
         }}
       >
         <CardContent className="p-3 md:p-4 2xl:p-6 flex flex-col justify-between h-full">
           <div className="flex flex-col w-full h-full">
-            <h3
-              className={`mb-1 font-extrabold text-sm sm:text-lg md:text-xl 2xl:text-3xl ${
-                isTempWarning ? "text-gray-900" : "text-white"
-              }`}
-            >
+            <h3 className="mb-1 font-extrabold text-sm sm:text-lg md:text-xl 2xl:text-3xl text-white">
               Temperature
             </h3>
 
             <div className="flex justify-between items-center mb-1">
-              <div
-                className={`text-xl sm:text-2xl md:text-3xl 2xl:text-5xl font-extrabold ${
-                  isTempWarning ? "text-gray-900" : "text-white"
-                }`}
-              >
+              <div className="text-xl sm:text-2xl md:text-3xl 2xl:text-5xl font-extrabold text-white">
                 {safeTemp.toFixed(0)}°C
               </div>
-              <div
-                className={`text-sm sm:text-lg 2xl:text-3xl font-bold ${
-                  isTempWarning ? "text-gray-900" : "text-white"
-                }`}
-              >
-                {isTempWarning ? "Warning" : "Normal"}
+              <div className="text-sm sm:text-lg 2xl:text-3xl font-bold text-white">
+                {isTempCritical ? "Critical" : "Normal"}
               </div>
             </div>
 
-            <div
-              className={`mt-auto text-xs sm:text-sm 2xl:text-xl font-medium ${
-                isTempWarning ? "text-gray-700" : "text-gray-300"
-              }`}
-            >
+            <div className="mt-auto text-xs sm:text-sm 2xl:text-xl font-medium text-gray-300">
               Threshold max: {tempThresholdMax.toFixed(0)} °C
             </div>
           </div>
