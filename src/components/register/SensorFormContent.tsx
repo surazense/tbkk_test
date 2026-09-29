@@ -105,8 +105,6 @@ export function SensorFormContent({
     { label: "24 Hr", value: "1440" },
   ];
 
-  // Watch machine class to auto-update thresholds
-  const watchedMachineClass = form.watch(`sensors.${index}.machineClass`);
   const watchedMachineClassEnabled = form.watch(
     `sensors.${index}.machineClassEnabled`
   );
@@ -136,27 +134,31 @@ export function SensorFormContent({
     gScaleOptions.push(watchedGScale);
   }
 
-  // Auto-update thresholds when machine class changes
-  useEffect(() => {
-    if (watchedMachineClass && watchedMachineClassEnabled) {
-      const thresholds = getThresholdsForMachineClass(watchedMachineClass);
+  // Auto-fill thresholds only when the user picks a machine class. Doing this in
+  // an effect would also fire when the edit page loads a saved class and
+  // overwrite thresholds that were customised after registration.
+  const handleMachineClassChange = (machineClass: string) => {
+    form.setValue(`sensors.${index}.machineClass`, machineClass, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
 
-      if (thresholds) {
-        form.setValue(
-          `sensors.${index}.warningThreshold`,
-          thresholds.warning.toString()
-        );
-        form.setValue(
-          `sensors.${index}.concernThreshold`,
-          thresholds.concern.toString()
-        );
-        form.setValue(
-          `sensors.${index}.damageThreshold`,
-          thresholds.critical.toString()
-        );
-      }
+    const thresholds = getThresholdsForMachineClass(machineClass);
+    if (thresholds) {
+      form.setValue(
+        `sensors.${index}.warningThreshold`,
+        thresholds.warning.toString()
+      );
+      form.setValue(
+        `sensors.${index}.concernThreshold`,
+        thresholds.concern.toString()
+      );
+      form.setValue(
+        `sensors.${index}.damageThreshold`,
+        thresholds.critical.toString()
+      );
     }
-  }, [watchedMachineClass, watchedMachineClassEnabled, form, index]);
+  };
 
   // Watch temperature threshold max to update min
   const watchedTempMax = form.watch(`sensors.${index}.temperatureThresholdMax`);
@@ -567,7 +569,7 @@ export function SensorFormContent({
                   </TooltipProvider>
                 </FormLabel>
                 <Select
-                  onValueChange={field.onChange}
+                  onValueChange={handleMachineClassChange}
                   value={
                     field.value ? getMachineClassId(field.value) : undefined
                   }
@@ -1199,6 +1201,44 @@ export function SensorFormContent({
           )}
         />
       </div>
+
+      {/* Motor speed: used to convert the spectrum X axis to CPM / Order */}
+      <FormField
+        control={form.control}
+        name={`sensors.${index}.motorRpm`}
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
+              Motor Speed (RPM)
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="bg-[#3B82F6] text-white border-none max-w-xs">
+                    <p>
+                      Running speed of the motor in RPM. Required to show the
+                      spectrum in Order (multiples of running speed). Optional.
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </FormLabel>
+            <FormControl>
+              <Input
+                type="number"
+                step="any"
+                min={0}
+                placeholder="e.g. 1485"
+                className="bg-[#080808] border-[1px] border-[#4B5563] text-white h-9 sm:h-12 text-sm sm:text-lg 2xl:text-xl"
+                {...field}
+                value={field.value ?? ""}
+              />
+            </FormControl>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
       {/* Note Section */}
       <FormField

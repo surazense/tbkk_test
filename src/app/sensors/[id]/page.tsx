@@ -77,7 +77,6 @@ export default function SensorDetailPage() {
     sensorImage,
     history,
     datetimes,
-    sortedDatetimes,
     selectedDatetime,
     setSelectedDatetime,
     configData,
@@ -519,11 +518,10 @@ export default function SensorDetailPage() {
           currentData={currentData}
           safeBattery={safeBattery}
           sensorLastData={sensorLastData}
-          sortedDatetimes={sortedDatetimes}
           selectedDatetime={selectedDatetime}
           setSelectedDatetime={setSelectedDatetime}
-          fetchSensorLastData={async (id, dt) => {
-            const res = await fetchSensorLastData(id, dt);
+          fetchSensorLastData={async (id, selector) => {
+            const res = await fetchSensorLastData(id, selector);
             if (res) setSensorLastData(res);
             return res;
           }}

@@ -31,7 +31,12 @@ import {
   SensorConfig,
   getVibrationLevelFromConfig,
 } from "@/lib/utils/vibrationUtils";
-import { formatDateTimeDayFirst } from "@/lib/utils/sensor-charts";
+import {
+  SensorRecordSelector,
+  formatRecordLabel,
+  getRecordKey,
+  getRecordThaiDate,
+} from "@/lib/utils/sensorRecords";
 import { getMachineClassName } from "@/lib/iso10816-3";
 import {
   SensorLastData,
@@ -49,10 +54,12 @@ interface SensorInfoSectionProps {
   currentData: any;
   safeBattery: number;
   sensorLastData: SensorLastData | null;
-  sortedDatetimes: string[];
   selectedDatetime: string | null;
   setSelectedDatetime: (datetime: string) => void;
-  fetchSensorLastData: (sensorId: string, datetime?: string) => Promise<any>;
+  fetchSensorLastData: (
+    sensorId: string,
+    selector?: SensorRecordSelector
+  ) => Promise<any>;
   setSensorLastData: (data: any) => void;
   setError: (error: string | null) => void;
   history: any[];
@@ -109,7 +116,6 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
   currentData,
   safeBattery,
   sensorLastData,
-  sortedDatetimes,
   selectedDatetime,
   setSelectedDatetime,
   fetchSensorLastData,
@@ -123,6 +129,9 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
   const [selectedCalendarDate, setSelectedCalendarDate] =
     React.useState<string>("");
   const [showOnlyAlarm, setShowOnlyAlarm] = React.useState<boolean>(false);
+  const [selectedRecordKey, setSelectedRecordKey] = React.useState<
+    string | null
+  >(null);
   const isSuperAdmin = user?.role?.toLowerCase() === "superadmin";
 
   const [dominantFault, setDominantFault] = React.useState<any>(null);
@@ -171,7 +180,31 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
     }
   }, [sensor?.id, selectedDatetime, sensorLastData, isSuperAdmin]);
 
-  const alarmDatetimes = React.useMemo(() => {
+  // One entry per stored reading, newest first (the API returns them ordered).
+  // Keyed by created_at because `datetime` is a time bucket that several
+  // readings can share, which used to collapse them into one list row.
+  const records = React.useMemo(() => {
+    const seen = new Set<string>();
+    const list: {
+      key: string;
+      datetime: string;
+      created_at?: string | null;
+    }[] = [];
+    history.forEach((item) => {
+      if (!item.datetime) return;
+      const key = getRecordKey(item);
+      if (seen.has(key)) return;
+      seen.add(key);
+      list.push({
+        key,
+        datetime: item.datetime,
+        created_at: item.created_at,
+      });
+    });
+    return list;
+  }, [history]);
+
+  const alarmKeys = React.useMemo(() => {
     return new Set(
       history
         .filter(
@@ -181,21 +214,26 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
             item.level_vibration === "critical" ||
             item.level_vibration === "concern"
         )
-        .map((item) => item.datetime)
+        .map((item) => getRecordKey(item))
     );
   }, [history]);
 
-  // Safely filter datetimes based on calendar selection and ALARM toggle
-  const filteredDatetimes = React.useMemo(() => {
-    let result = sortedDatetimes;
+  // Safely filter readings based on calendar selection and ALARM toggle
+  const filteredRecords = React.useMemo(() => {
+    let result = records;
 
     if (showOnlyAlarm) {
-      result = result.filter((dt) => alarmDatetimes.has(dt));
+      result = result.filter((rec) => alarmKeys.has(rec.key));
     }
 
     if (!selectedCalendarDate) return result;
 
-    return result.filter((dt) => {
+    return result.filter((rec) => {
+      // created_at is a real instant: compare on the Thailand calendar date
+      const thaiDate = getRecordThaiDate(rec);
+      if (thaiDate) return thaiDate === selectedCalendarDate;
+
+      const dt = rec.datetime;
       let dtObj;
       if (dt.includes(",")) {
         dtObj = parseCustomDate(dt);
@@ -212,15 +250,15 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
 
       return dtStr === selectedCalendarDate;
     });
-  }, [sortedDatetimes, selectedCalendarDate, showOnlyAlarm, alarmDatetimes]);
+  }, [records, selectedCalendarDate, showOnlyAlarm, alarmKeys]);
 
-  const visibleDatetimes = filteredDatetimes.slice(0, visibleCount);
+  const visibleRecords = filteredRecords.slice(0, visibleCount);
 
-  // Map dates to RMS and RSSI values for quick lookup
+  // Map readings to RMS and RSSI values for quick lookup
   const rssiLookup = React.useMemo(() => {
     const lookup: Record<string, string> = {};
     history.forEach((item) => {
-      lookup[item.datetime] =
+      lookup[getRecordKey(item)] =
         item.rssi !== undefined && item.rssi !== null
           ? `${item.rssi} dBm`
           : "-";
@@ -228,10 +266,12 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
     return lookup;
   }, [history]);
 
+  const selectedAxisLabel =
+    selectedAxis === "H-axis" ? "H" : selectedAxis === "V-axis" ? "V" : "A";
+
   const rmsLookup = React.useMemo(() => {
     const lookup: Record<string, string> = {};
-    const axisKey =
-      selectedAxis === "H-axis" ? "h" : selectedAxis === "V-axis" ? "v" : "a";
+    const axisKey = selectedAxisLabel.toLowerCase();
 
     history.forEach((item) => {
       let valString = "";
@@ -242,10 +282,10 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
       } else {
         valString = (item[`velo_rms_${axisKey}`] || 0).toFixed(2) + " mm/s";
       }
-      lookup[item.datetime] = valString;
+      lookup[getRecordKey(item)] = valString;
     });
     return lookup;
-  }, [history, selectedAxis, selectedUnit]);
+  }, [history, selectedAxisLabel, selectedUnit]);
 
   // Reset visible count when sensor changes
   React.useEffect(() => {
@@ -840,8 +880,9 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                 <span className="text-xs md:text-sm 2xl:text-lg font-semibold text-white min-w-[50px] md:min-w-[70px] text-right">
                   RSSI
                 </span>
-                <span className="text-xs md:text-sm 2xl:text-lg font-semibold text-white min-w-[70px] md:min-w-[80px] text-right">
-                  RMS Overall
+                <span className="text-xs md:text-sm 2xl:text-lg font-semibold text-white min-w-[70px] md:min-w-[80px] text-right whitespace-nowrap">
+                  RMS Overall{" "}
+                  <span className="text-blue-400">({selectedAxisLabel})</span>
                 </span>
               </div>
             </div>
@@ -854,26 +895,28 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                 if (scrollHeight - scrollTop <= clientHeight + 10) {
                   // Load next 20 items
                   setVisibleCount((prev) =>
-                    Math.min(prev + 20, filteredDatetimes.length)
+                    Math.min(prev + 20, filteredRecords.length)
                   );
                 }
               }}
             >
-              {sortedDatetimes.length > 0 ? (
+              {records.length > 0 ? (
                 <ul className="space-y-1 text-base 2xl:text-xl pl-0">
-                  {visibleDatetimes.map((datetime, index) => (
-                    <li key={`${datetime}-${index}`}>
+                  {visibleRecords.map((rec) => (
+                    <li key={rec.key}>
                       <button
                         className={cn(
                           "w-full flex items-center justify-between gap-2 md:gap-3 text-left py-1.5 rounded hover:bg-[#374151]/50 text-white pl-0 overflow-hidden",
-                          selectedDatetime === datetime ? "bg-blue-600" : ""
+                          selectedRecordKey === rec.key ? "bg-blue-600" : ""
                         )}
                         onClick={async () => {
-                          setSelectedDatetime(datetime);
+                          setSelectedRecordKey(rec.key);
+                          // Diagnostics are stored per datetime bucket
+                          setSelectedDatetime(rec.datetime);
                           try {
                             const data = await fetchSensorLastData(
                               params.id,
-                              datetime
+                              rec
                             );
                             if (data) {
                               setSensorLastData(data);
@@ -887,28 +930,28 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                         }}
                       >
                         <span className="shrink-0 flex items-center gap-1.5 md:gap-2 text-xs md:text-base truncate">
-                          {alarmDatetimes.has(datetime) && (
+                          {alarmKeys.has(rec.key) && (
                             <span
                               className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-red-500 shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.6)]"
                               title="ALARM status"
                             ></span>
                           )}
                           <span className="truncate">
-                            {formatDateTimeDayFirst(datetime)}
+                            {formatRecordLabel(rec)}
                           </span>
                         </span>
                         <div className="flex items-center gap-2 md:gap-6 2xl:gap-8 mr-1 shrink-0">
                           <span className="text-gray-400 text-xs md:text-sm 2xl:text-lg min-w-[50px] md:min-w-[70px] text-right">
-                            {rssiLookup[datetime] || "-"}
+                            {rssiLookup[rec.key] || "-"}
                           </span>
                           <span className="text-white text-right truncate min-w-[70px] md:min-w-[80px] text-xs md:text-base">
-                            {rmsLookup[datetime] || ""}
+                            {rmsLookup[rec.key] || ""}
                           </span>
                         </div>
                       </button>
                     </li>
                   ))}
-                  {visibleCount < filteredDatetimes.length && (
+                  {visibleCount < filteredRecords.length && (
                     <li className="text-center py-2 text-gray-500 text-sm">
                       Loading more...
                     </li>

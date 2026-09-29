@@ -43,6 +43,7 @@ const DEFAULT_SENSOR_VALUES: SingleSensorValues = {
   temperatureThresholdMax: "",
   highPass: "",
   motorType: "",
+  motorRpm: "",
   namePlaceWarningThreshold: "",
   namePlaceConcernThreshold: "",
   namePlaceDamageThreshold: "",
@@ -166,6 +167,7 @@ export function useRegisterSensorForm() {
             data.installed_point || data.installation_point || "",
           machineClassEnabled: true,
           namePlaceEnabled: false,
+          // Backend stores the numeric class code; the selector uses class ids.
           machineClass: getMachineClassId(data.machine_class),
           namePlace: "",
           warningThreshold: data.threshold_min?.toString() || "",
@@ -184,6 +186,7 @@ export function useRegisterSensorForm() {
             data.temperature_threshold_max?.toString() || "",
           highPass: data.high_pass?.toString() || "8",
           motorType: "",
+          motorRpm: data.motor_rpm ? String(data.motor_rpm) : "",
           notes: data.note || "",
           name: data.sensor_name || data.name || "",
           sensorType: data.sensor_type || "Master",
@@ -330,6 +333,8 @@ export function useRegisterSensorForm() {
                 sensorData.temperatureThresholdMax || "0"
               ),
               high_pass: parseFloat(sensorData.highPass || "0"),
+              // 0 tells the backend to clear the stored motor speed
+              motor_rpm: sensorData.motorRpm ? Number(sensorData.motorRpm) : 0,
               note: sensorData.notes,
               motor_start_time: sensorData.motorStartTime
                 ? formatMotorStartTime(sensorData.motorStartTime)
@@ -441,6 +446,7 @@ export function useRegisterSensorForm() {
             ? Number(sensorData.timeInterval)
             : null,
           high_pass: sensorData.highPass ? Number(sensorData.highPass) : null,
+          motor_rpm: sensorData.motorRpm ? Number(sensorData.motorRpm) : null,
           g_scale: sensorData.gScale ? Number(sensorData.gScale) : null,
           lor: sensorData.lor ? Number(sensorData.lor) : null,
           max_frequency: sensorData.frequencyMax

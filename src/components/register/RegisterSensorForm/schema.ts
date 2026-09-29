@@ -25,6 +25,7 @@ export const singleSensorSchema = z
     temperatureThresholdMax: z.string().optional(),
     highPass: z.string().optional(),
     motorType: z.string().optional(),
+    motorRpm: z.string().optional(),
     notes: z.string().optional(),
     name: z.string().optional(),
     namePlaceWarningThreshold: z.string().optional(),
@@ -127,6 +128,17 @@ export const singleSensorSchema = z
             code: z.ZodIssueCode.custom,
             message: "Alarm Threshold must be between 0.1 and 16",
             path: ["alarmThreshold"],
+          });
+        }
+      }
+      // Motor speed is optional, but when given it must be a sensible RPM
+      if (data.motorRpm && data.motorRpm.trim() !== "") {
+        const rpm = Number(data.motorRpm);
+        if (!Number.isFinite(rpm) || rpm <= 0 || rpm > 100000) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Motor Speed must be between 1 and 100000 RPM",
+            path: ["motorRpm"],
           });
         }
       }

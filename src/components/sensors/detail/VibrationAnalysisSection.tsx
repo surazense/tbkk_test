@@ -3,6 +3,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatDateTimeDayFirst } from "@/lib/utils/sensor-charts";
 import { SensorPageConfig } from "@/lib/types/sensor-data";
+import {
+  FREQUENCY_UNITS,
+  FrequencyUnit,
+  formatFrequencyValue,
+  getFrequencyAxisTitle,
+  getFrequencyUnitSuffix,
+  getValidMotorRpm,
+  resolveFrequencyUnit,
+} from "@/lib/utils/frequencyUnits";
 import dynamic from "next/dynamic";
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
 
@@ -34,6 +43,15 @@ export const VibrationAnalysisSection: React.FC<
   const vFreqChartRef = useRef<any>(null);
   const aFreqChartRef = useRef<any>(null);
 
+  // Spectrum X-axis unit. Order needs the motor speed, otherwise use Hz.
+  const [selectedFreqUnit, setSelectedFreqUnit] =
+    useState<FrequencyUnit>("Hz");
+  const motorRpm = getValidMotorRpm(configData.motor_rpm);
+  const freqUnit = resolveFrequencyUnit(selectedFreqUnit, motorRpm);
+  const freqSuffix = getFrequencyUnitSuffix(freqUnit);
+  const formatFreq = (hz: number | string) =>
+    formatFrequencyValue(Number(hz), freqUnit, motorRpm);
+
   const getTop10Peaks = (dataObj: any) => {
     if (!dataObj?.hasData || !dataObj.freqData?.datasets?.[0]?.data) return [];
 
@@ -53,7 +71,7 @@ export const VibrationAnalysisSection: React.FC<
       .sort((a, b) => b.value - a.value)
       .slice(0, 10)
       .map((p) => ({
-        name: `${labels[p.index]} Hz`,
+        name: `${formatFreq(labels[p.index])} ${freqSuffix}`,
         coord: [p.index, p.value],
         value: p.value,
         freq: labels[p.index],
@@ -240,7 +258,7 @@ export const VibrationAnalysisSection: React.FC<
                           </span>
                         </div>
                         <div className="text-lg font-medium text-white text-right">
-                          {row.frequency} Hz
+                          {formatFreq(row.frequency)} {freqSuffix}
                         </div>
                       </div>
                     ))
@@ -434,6 +452,39 @@ export const VibrationAnalysisSection: React.FC<
                       mm/s
                     </span>
                   </label>
+
+                  {/* X-axis unit: Hz / CPM / Order */}
+                  <div className="flex items-center gap-2 pl-3 md:pl-4 border-l border-[#374151]">
+                    <span className="text-sm font-semibold text-gray-400 uppercase tracking-wider">
+                      X-Axis:
+                    </span>
+                    {FREQUENCY_UNITS.map((unit) => {
+                      const disabled = unit === "Order" && !motorRpm;
+                      return (
+                        <button
+                          key={unit}
+                          type="button"
+                          disabled={disabled}
+                          onClick={() => setSelectedFreqUnit(unit)}
+                          title={
+                            disabled
+                              ? "Set Motor Speed (RPM) in Edit Sensor to enable Order"
+                              : undefined
+                          }
+                          className={cn(
+                            "px-2.5 py-1 rounded-md border text-sm sm:text-base font-bold transition-colors",
+                            freqUnit === unit
+                              ? "border-yellow-500 bg-yellow-500/10 text-yellow-500"
+                              : "border-[#374151] text-white hover:text-yellow-400",
+                            disabled &&
+                              "opacity-40 cursor-not-allowed hover:text-white"
+                          )}
+                        >
+                          {unit}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -463,6 +514,11 @@ export const VibrationAnalysisSection: React.FC<
                   .map((axis) => {
                     const axisData = allChartData[axis.key]?.[selectedUnit];
                     const axisHasData = axisData?.hasData;
+                    // Chart labels are Hz; convert to the selected X-axis unit.
+                    // Only the labels change, so peaks/zoom indexes are unaffected.
+                    const xLabels: string[] = (
+                      axisData?.freqData?.labels || []
+                    ).map((label: string) => formatFreq(label));
 
                     return (
                       <div key={axis.key}>
@@ -514,15 +570,15 @@ export const VibrationAnalysisSection: React.FC<
                                     if (params && params.length > 0) {
                                       const freq = params[0].axisValue;
                                       const value = params[0].value;
-                                      return `F(Hz): ${freq} Hz<br/>Magnitude: ${Number(value).toFixed(2)}`;
+                                      return `F(${freqSuffix}): ${freq} ${freqSuffix}<br/>Magnitude: ${Number(value).toFixed(2)}`;
                                     }
                                     return "";
                                   },
                                 },
                                 xAxis: {
                                   type: "category",
-                                  data: axisData.freqData.labels || [],
-                                  name: "Frequency (Hz)",
+                                  data: xLabels,
+                                  name: getFrequencyAxisTitle(freqUnit),
                                   nameLocation: "end",
                                   nameGap: 10,
                                   nameTextStyle: {
@@ -533,7 +589,9 @@ export const VibrationAnalysisSection: React.FC<
                                     color: "#ffffff",
                                     fontSize: 10,
                                     formatter: (value: string) =>
-                                      parseFloat(value).toFixed(2),
+                                      parseFloat(value).toFixed(
+                                        freqUnit === "CPM" ? 1 : 2
+                                      ),
                                   },
                                   axisLine: {
                                     lineStyle: { color: "#ffffff", width: 1.5 },

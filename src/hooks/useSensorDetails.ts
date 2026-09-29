@@ -8,6 +8,10 @@ import {
 } from "@/lib/types/sensor-data";
 import { prepareChartData } from "@/lib/utils/sensor-charts";
 import {
+  SensorRecordSelector,
+  buildRecordQuery,
+} from "@/lib/utils/sensorRecords";
+import {
   accelerationGToMmPerSecSquared,
   calculateVelocityFromFrequency,
   calculateFFT,
@@ -153,6 +157,7 @@ export function useSensorDetails({
               data.temperature_threshold_min ?? prev.temperature_threshold_min,
             temperature_threshold_max:
               data.temperature_threshold_max ?? prev.temperature_threshold_max,
+            motor_rpm: data.motor_rpm ?? null,
             notes: data.note || prev.notes,
             image_url: data.image_url || prev.image_url,
             mac_address: data.mac_address || prev.mac_address,
@@ -166,13 +171,16 @@ export function useSensorDetails({
     });
   }, []);
 
+  // `selector` picks one stored reading. Prefer created_at: several readings can
+  // share the same datetime bucket, which made the backend return a random one.
   const fetchSensorLastData = useCallback(
-    async (id: string, datetime?: string) => {
-      const cacheKey = datetime ? `${id}-${datetime}` : id;
+    async (id: string, selector?: SensorRecordSelector) => {
+      const query = selector ? buildRecordQuery(selector) : "";
+      const cacheKey = query ? `${id}-${query}` : id;
       return withDedupe(lastDataInflight, cacheKey, async () => {
         try {
-          const url = datetime
-            ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/sensors/${id}/last-data?datetime=${encodeURIComponent(datetime)}`
+          const url = query
+            ? `${process.env.NEXT_PUBLIC_API_BASE_URL}/sensors/${id}/last-data?${query}`
             : `${process.env.NEXT_PUBLIC_API_BASE_URL}/sensors/${id}/last-data`;
 
           const token = localStorage.getItem("auth_token");

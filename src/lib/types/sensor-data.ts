@@ -223,6 +223,7 @@ export interface SensorPageConfig {
   thresholdMax: string | number;
   temperature_threshold_min?: number;
   temperature_threshold_max?: number;
+  motor_rpm?: number | null; // Motor running speed (RPM), used for the Order axis
   notes: string;
   image_url: string;
   mac_address?: string;
