@@ -25,16 +25,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Info, Plus } from "lucide-react";
+import { Info } from "lucide-react";
 import { MUIDateTimePicker } from "@/components/ui/mui-date-time-picker";
 import { AutocompleteInput } from "./AutocompleteInput";
+import { FieldLabel, FormSection, FIELD_GRID, INPUT_CLASS } from "./FormSection";
 import {
   getAllMachineClasses,
   getThresholdsForMachineClass,
   getMachineClassId,
 } from "@/lib/iso10816-3";
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   storeArea,
   storeInstallationPoint,
@@ -54,7 +55,22 @@ interface SensorFormContentProps {
   sensorNameSuggestions: string[];
   imagePreview: string | null;
   onImageChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  /** Editing an existing sensor: the serial number (MAC) is locked. */
+  isEditMode?: boolean;
 }
+
+// Fields inside the collapsible "Measurement" section. If one of them fails
+// validation the section opens by itself so the error is never hidden.
+const MEASUREMENT_FIELDS = [
+  "timeInterval",
+  "gScale",
+  "highPass",
+  "lor",
+  "frequencyMax",
+  "axisH",
+  "axisV",
+  "axisA",
+] as const;
 
 export function SensorFormContent({
   form,
@@ -66,6 +82,7 @@ export function SensorFormContent({
   sensorNameSuggestions,
   imagePreview,
   onImageChange,
+  isEditMode = false,
 }: SensorFormContentProps) {
   const machineClassOptions = getAllMachineClasses();
 
@@ -177,291 +194,344 @@ export function SensorFormContent({
     }
   }, [watchedTempMax, form, index]);
 
+  // Measurement section: collapsed by default, opens itself on validation errors
+  const [measurementOpen, setMeasurementOpen] = useState(false);
+  const sensorErrors = (
+    form.formState.errors.sensors as
+      | Record<number, Record<string, unknown> | undefined>
+      | undefined
+  )?.[index];
+  const hasMeasurementError = MEASUREMENT_FIELDS.some(
+    (name) => !!sensorErrors?.[name]
+  );
+  useEffect(() => {
+    if (hasMeasurementError) setMeasurementOpen(true);
+  }, [hasMeasurementError]);
+
+  const watchedLor = form.watch(`sensors.${index}.lor`);
+  const watchedFmax = form.watch(`sensors.${index}.frequencyMax`);
+  const watchedAxisH = form.watch(`sensors.${index}.axisH`);
+  const watchedAxisV = form.watch(`sensors.${index}.axisV`);
+  const watchedAxisA = form.watch(`sensors.${index}.axisA`);
+  const intervalLabel = timeIntervalOptions.find(
+    (option) => option.value === watchedTimeInterval
+  )?.label;
+  const measurementSummary = [
+    intervalLabel && `Every ${intervalLabel}`,
+    watchedGScale && `${watchedGScale} G`,
+    watchedLor && `LOR ${watchedLor}`,
+    watchedFmax && `${watchedFmax} Hz`,
+    watchedAxisH &&
+      watchedAxisV &&
+      watchedAxisA &&
+      `H=${watchedAxisH}, V=${watchedAxisV}, A=${watchedAxisA}`,
+  ].filter(Boolean) as string[];
+
   return (
-    <div className="space-y-6 py-4">
-      {/* All Fields - 2 Columns */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-        <FormField
-          control={form.control}
-          name={`sensors.${index}.area`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2 text-sm sm:text-lg 2xl:text-xl font-bold">
-                Area
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#3B82F6] text-white border-none">
-                      <p>Enter the area where the sensor is installed</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </FormLabel>
-              <FormControl>
-                <AutocompleteInput
-                  value={field.value}
-                  onChange={(value) => {
-                    field.onChange(value);
-                    if (value) {
-                      storeArea(value);
-                    }
-                  }}
-                  suggestions={areaSuggestions}
-                  placeholder="Enter area"
-                  onStoreValue={storeArea}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name={`sensors.${index}.name`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2 text-sm sm:text-lg 2xl:text-xl font-bold">
-                Sensor Name
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#3B82F6] text-white border-none">
-                      <p>Enter the sensor name</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </FormLabel>
-              <FormControl>
-                <AutocompleteInput
-                  value={field.value}
-                  onChange={(value) => {
-                    field.onChange(value);
-                    if (value) {
-                      storeSensorName(value);
-                    }
-                  }}
-                  suggestions={sensorNameSuggestions}
-                  placeholder="Enter sensor name"
-                  onStoreValue={storeSensorName}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name={`sensors.${index}.serialNumber`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
-                Serial Number
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#3B82F6] text-white border-none">
-                      <p>Enter the serial number of the sensor</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="Enter serial number"
-                  className="bg-[#080808] border-[1px] border-[#4B5563] text-white"
-                  {...field}
-                  onChange={(e) => {
-                    field.onChange(e);
-                    if (
-                      form.getFieldState(`sensors.${index}.serialNumber`)
-                        .invalid
-                    ) {
-                      form.clearErrors(`sensors.${index}.serialNumber`);
-                    }
-                  }}
-                  onBlur={async (e) => {
-                    field.onBlur();
-                    const value = e.target.value;
-                    if (!value) return;
-
-                    try {
-                      const { getSensors } = await import("@/lib/data/sensors");
-                      const { sensors } = await getSensors({ search: value });
-                      const exists = sensors.some(
-                        (s) =>
-                          s.serialNumber.toLowerCase() === value.toLowerCase()
-                      );
-                      if (exists) {
-                        form.setError(`sensors.${index}.serialNumber`, {
-                          type: "manual",
-                          message: "Serial Number นี้มีอยู่ในฐานข้อมูลอยู่แล้ว",
-                        });
+    <div className="py-2">
+      <FormSection
+        first
+        title="Sensor"
+        description="Which device this is and where it is mounted."
+      >
+        <div className={FIELD_GRID}>
+          <FormField
+            control={form.control}
+            name={`sensors.${index}.serialNumber`}
+            render={({ field }) => (
+              <FormItem>
+                <FieldLabel required={!isEditMode && index === 0}>
+                  Serial number (MAC)
+                </FieldLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter serial number"
+                    className={`${INPUT_CLASS} ${isEditMode ? "cursor-not-allowed opacity-60" : ""}`}
+                    readOnly={isEditMode}
+                    {...field}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      if (
+                        form.getFieldState(`sensors.${index}.serialNumber`)
+                          .invalid
+                      ) {
+                        form.clearErrors(`sensors.${index}.serialNumber`);
                       }
-                    } catch (err) {
-                      console.error("Error validating serial number:", err);
-                    }
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                    }}
+                    onBlur={async (e) => {
+                      field.onBlur();
+                      // The serial number of the sensor being edited always
+                      // exists, so there is nothing to check.
+                      if (isEditMode) return;
+                      const value = e.target.value;
+                      if (!value) return;
 
-        <FormField
-          control={form.control}
-          name={`sensors.${index}.machine`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
-                Machine
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#3B82F6] text-white border-none">
-                      <p>Enter the machine name</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </FormLabel>
-              <FormControl>
-                <AutocompleteInput
-                  value={field.value}
-                  onChange={(value) => {
-                    field.onChange(value);
-                    if (value) {
-                      storeMachineName(value);
-                    }
-                  }}
-                  suggestions={machineNameSuggestions}
-                  placeholder="Enter machine name"
-                  onStoreValue={storeMachineName}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+                      try {
+                        const { getSensors } = await import(
+                          "@/lib/data/sensors"
+                        );
+                        const { sensors } = await getSensors({ search: value });
+                        const exists = sensors.some(
+                          (s) =>
+                            s.serialNumber.toLowerCase() === value.toLowerCase()
+                        );
+                        if (exists) {
+                          form.setError(`sensors.${index}.serialNumber`, {
+                            type: "manual",
+                            message: "Serial Number นี้มีอยู่ในฐานข้อมูลอยู่แล้ว",
+                          });
+                        }
+                      } catch (err) {
+                        console.error("Error validating serial number:", err);
+                      }
+                    }}
+                  />
+                </FormControl>
+                {isEditMode ? (
+                  <FormDescription>Can&apos;t be changed.</FormDescription>
+                ) : index > 0 ? (
+                  <FormDescription>
+                    Leave empty to skip this satellite.
+                  </FormDescription>
+                ) : null}
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name={`sensors.${index}.machineNo`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
-                Machine Number
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#3B82F6] text-white border-none">
-                      <p>Enter the machine number</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </FormLabel>
-              <FormControl>
-                <AutocompleteInput
-                  value={field.value}
-                  onChange={(value) => {
-                    field.onChange(value);
-                    if (value) {
-                      storeMachineNo(value);
-                    }
-                  }}
-                  suggestions={machineNoSuggestions}
-                  placeholder="Enter machine number"
-                  onStoreValue={storeMachineNo}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name={`sensors.${index}.name`}
+            render={({ field }) => (
+              <FormItem>
+                <FieldLabel>Sensor name</FieldLabel>
+                <FormControl>
+                  <AutocompleteInput
+                    value={field.value}
+                    onChange={(value) => {
+                      field.onChange(value);
+                      if (value) {
+                        storeSensorName(value);
+                      }
+                    }}
+                    suggestions={sensorNameSuggestions}
+                    placeholder="Enter sensor name"
+                    onStoreValue={storeSensorName}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        <FormField
-          control={form.control}
-          name={`sensors.${index}.motorStartTime`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
-                Motor Start Time
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#3B82F6] text-white border-none">
-                      <p>Select the motor start date and time</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </FormLabel>
-              <FormControl>
-                <MUIDateTimePicker
-                  value={field.value}
-                  onChange={(date) => {
-                    field.onChange(date);
-                  }}
-                  label=""
-                  className="bg-[#080808] border-[1px] border-[#4B5563] text-white"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <FormField
+            control={form.control}
+            name={`sensors.${index}.installationPoint`}
+            render={({ field }) => (
+              <FormItem>
+                <FieldLabel>Installation point</FieldLabel>
+                <FormControl>
+                  <AutocompleteInput
+                    value={field.value}
+                    onChange={(value) => {
+                      field.onChange(value);
+                      if (value) {
+                        storeInstallationPoint(value);
+                      }
+                    }}
+                    suggestions={installationPointSuggestions}
+                    placeholder="Enter installation point"
+                    onStoreValue={storeInstallationPoint}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
-        {/* Installation Point */}
-        <FormField
-          control={form.control}
-          name={`sensors.${index}.installationPoint`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
-                Installation Point
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#3B82F6] text-white border-none">
-                      <p>Enter the installation point</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </FormLabel>
-              <FormControl>
-                <AutocompleteInput
-                  value={field.value}
-                  onChange={(value) => {
-                    field.onChange(value);
-                    if (value) {
-                      storeInstallationPoint(value);
-                    }
-                  }}
-                  suggestions={installationPointSuggestions}
-                  placeholder="Enter installation point"
-                  onStoreValue={storeInstallationPoint}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
+          <FormField
+            control={form.control}
+            name={`sensors.${index}.notes`}
+            render={({ field }) => (
+              <FormItem className="sm:col-span-2">
+                <FieldLabel>Note</FieldLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Enter any additional notes..."
+                    className="box-border bg-[#080808] border-[1px] border-[#4B5563] text-white text-sm"
+                    {...field}
+                    rows={3}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
 
+          {/* Image Upload */}
+          <div className="space-y-2">
+            <FormLabel className="text-xs font-medium text-gray-200 sm:text-sm">
+              Sensor image (optional)
+            </FormLabel>
+            <div className="flex items-center gap-3">
+              <label
+                htmlFor={`sensor-image-${index}`}
+                className="flex h-9 cursor-pointer items-center rounded-md border bg-white px-4 text-sm font-semibold text-black hover:bg-gray-100"
+              >
+                {imagePreview ? "Change image" : "Add image"}
+              </label>
+              <input
+                id={`sensor-image-${index}`}
+                type="file"
+                accept="image/*"
+                onChange={onImageChange}
+                className="hidden"
+              />
+              {imagePreview && (
+                <div className="relative h-16 w-16 overflow-hidden rounded-md border">
+                  <Image
+                    src={imagePreview}
+                    alt="Sensor preview"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </FormSection>
+
+      <FormSection
+        title="Machine and motor"
+        description="Motor speed is optional. It enables the Order (X) axis on the spectrum."
+      >
+        <div className={FIELD_GRID}>
+          <FormField
+            control={form.control}
+            name={`sensors.${index}.area`}
+            render={({ field }) => (
+              <FormItem>
+                <FieldLabel>Area</FieldLabel>
+                <FormControl>
+                  <AutocompleteInput
+                    value={field.value}
+                    onChange={(value) => {
+                      field.onChange(value);
+                      if (value) {
+                        storeArea(value);
+                      }
+                    }}
+                    suggestions={areaSuggestions}
+                    placeholder="Enter area"
+                    onStoreValue={storeArea}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name={`sensors.${index}.machine`}
+            render={({ field }) => (
+              <FormItem>
+                <FieldLabel>Machine</FieldLabel>
+                <FormControl>
+                  <AutocompleteInput
+                    value={field.value}
+                    onChange={(value) => {
+                      field.onChange(value);
+                      if (value) {
+                        storeMachineName(value);
+                      }
+                    }}
+                    suggestions={machineNameSuggestions}
+                    placeholder="Enter machine name"
+                    onStoreValue={storeMachineName}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name={`sensors.${index}.machineNo`}
+            render={({ field }) => (
+              <FormItem>
+                <FieldLabel>Machine number</FieldLabel>
+                <FormControl>
+                  <AutocompleteInput
+                    value={field.value}
+                    onChange={(value) => {
+                      field.onChange(value);
+                      if (value) {
+                        storeMachineNo(value);
+                      }
+                    }}
+                    suggestions={machineNoSuggestions}
+                    placeholder="Enter machine number"
+                    onStoreValue={storeMachineNo}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name={`sensors.${index}.motorStartTime`}
+            render={({ field }) => (
+              <FormItem>
+                <FieldLabel required>Motor start time</FieldLabel>
+                <FormControl>
+                  <MUIDateTimePicker
+                    value={field.value}
+                    onChange={(date) => {
+                      field.onChange(date);
+                    }}
+                    label=""
+                    className="bg-[#080808] border-[1px] border-[#4B5563] text-white"
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Motor speed: used to convert the spectrum X axis to CPM / Order */}
+          <FormField
+            control={form.control}
+            name={`sensors.${index}.motorRpm`}
+            render={({ field }) => (
+              <FormItem>
+                <FieldLabel>Motor speed (RPM)</FieldLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="any"
+                    min={0}
+                    placeholder="e.g. 1485"
+                    className={INPUT_CLASS}
+                    {...field}
+                    value={field.value ?? ""}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+      </FormSection>
+
+      <FormSection
+        title="Alarm thresholds"
+        description="Use a machine class, or enter values from the motor name plate."
+      >
       {/* Options - Machine Class and Name Place */}
       <div className="flex items-center gap-6">
         <FormField
@@ -899,66 +969,13 @@ export function SensorFormContent({
         </div>
       )}
 
-      {/* Additional Settings */}
-      {/* Row 1: Columns depend on Name Place being enabled */}
-      <div
-        className={`grid grid-cols-1 gap-4 ${
-          watchedNamePlaceEnabled
-            ? "md:grid-cols-2 2xl:grid-cols-2"
-            : "md:grid-cols-3 2xl:grid-cols-3"
-        }`}
-      >
-        <FormField
-          control={form.control}
-          name={`sensors.${index}.highPass`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
-                High Pass Filter (Hz)
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#3B82F6] text-white border-none">
-                      <p>High pass filter value in Hz</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  step="0.1"
-                  placeholder="10"
-                  className="bg-[#080808] border-[1px] border-[#4B5563] text-white"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {!watchedNamePlaceEnabled && (
+        <div className={FIELD_GRID}>
           <FormField
             control={form.control}
             name={`sensors.${index}.alarmThreshold`}
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
-                  Alarm Threshold
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                      </TooltipTrigger>
-                      <TooltipContent className="bg-[#3B82F6] text-white border-none">
-                        <p>Minimum G-force that activates the sensor.</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                </FormLabel>
+                <FieldLabel required>Alarm threshold (g)</FieldLabel>
                 <FormControl>
                   <Input
                     type="number"
@@ -966,7 +983,30 @@ export function SensorFormContent({
                     min={0.1}
                     max={16}
                     placeholder="0.0"
-                    className="bg-[#080808] border-[1px] border-[#4B5563] text-white"
+                    className={INPUT_CLASS}
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Minimum G-force that activates the sensor.
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name={`sensors.${index}.temperatureThresholdMax`}
+            render={({ field }) => (
+              <FormItem>
+                <FieldLabel>Temperature max (°C)</FieldLabel>
+                <FormControl>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    placeholder="0.0"
+                    className={INPUT_CLASS}
                     {...field}
                   />
                 </FormControl>
@@ -974,395 +1014,239 @@ export function SensorFormContent({
               </FormItem>
             )}
           />
-        )}
 
-        <FormField
-          control={form.control}
-          name={`sensors.${index}.timeInterval`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
-                Time Interval
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#3B82F6] text-white border-none">
-                      <p>Time interval between readings in minutes</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+          <FormField
+            control={form.control}
+            name={`sensors.${index}.temperatureThresholdMin`}
+            render={({ field }) => (
+              <FormItem>
+                <FieldLabel>Temperature min (°C)</FieldLabel>
                 <FormControl>
-                  <SelectTrigger className="bg-[#080808] border-[1px] border-[#4B5563] text-white">
-                    <SelectValue placeholder="Select interval" />
-                  </SelectTrigger>
+                  <Input
+                    type="number"
+                    step="0.1"
+                    placeholder="0.0"
+                    className={`${INPUT_CLASS} opacity-70`}
+                    readOnly
+                    {...field}
+                  />
                 </FormControl>
-                <SelectContent className="bg-[#0B1121] border-[#374151] text-white">
-                  {timeIntervalOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      {/* Row 2: Three columns */}
-      <div className="grid grid-cols-1 md:grid-cols-3 2xl:grid-cols-3 gap-4">
-        <FormField
-          control={form.control}
-          name={`sensors.${index}.gScale`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
-                G-Scale
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#3B82F6] text-white border-none">
-                      <p>
-                        Acceleration range in G units. Determines the maximum
-                        measurable acceleration.
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger className="bg-[#080808] border-[1px] border-[#4B5563] text-white h-9 sm:h-12 text-sm sm:text-lg 2xl:text-xl">
-                    <SelectValue placeholder="Select G-scale" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {gScaleOptions.map((scale) => (
-                    <SelectItem key={scale} value={scale}>
-                      {scale} G
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name={`sensors.${index}.lor`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
-                LOR
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#3B82F6] text-white border-none">
-                      <p>
-                        Lines of Resolution - Determines frequency resolution in
-                        FFT analysis
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger className="bg-[#080808] border-[1px] border-[#4B5563] text-white h-9 sm:h-12 text-sm sm:text-lg 2xl:text-xl">
-                    <SelectValue placeholder="Select LOR" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {lorOptions.map((lor) => (
-                    <SelectItem key={lor} value={lor}>
-                      {lor}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name={`sensors.${index}.frequencyMax`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
-                Frequency Max (Hz)
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#3B82F6] text-white border-none">
-                      <p>Maximum frequency in Hz</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
-                <FormControl>
-                  <SelectTrigger className="bg-[#080808] border-[1px] border-[#4B5563] text-white h-9 sm:h-12 text-sm sm:text-lg 2xl:text-xl">
-                    <SelectValue placeholder="Select frequency" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {frequencyMaxOptions.map((freq) => (
-                    <SelectItem key={freq} value={freq}>
-                      {freq} Hz
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      {/* Row 3: Two columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormField
-          control={form.control}
-          name={`sensors.${index}.temperatureThresholdMin`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
-                Temperature Threshold (min)
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#3B82F6] text-white border-none">
-                      <p>Minimum temperature threshold</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  step="0.1"
-                  placeholder="0.0"
-                  className="bg-[#080808] border-[1px] border-[#4B5563] text-white opacity-70 h-9 sm:h-12 text-sm sm:text-lg 2xl:text-xl"
-                  readOnly
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name={`sensors.${index}.temperatureThresholdMax`}
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
-                Temperature Threshold (max)
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                    </TooltipTrigger>
-                    <TooltipContent className="bg-[#3B82F6] text-white border-none">
-                      <p>Maximum temperature threshold</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              </FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  step="0.1"
-                  placeholder="0.0"
-                  className="bg-[#080808] border-[1px] border-[#4B5563] text-white h-9 sm:h-12 text-sm sm:text-lg 2xl:text-xl"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      </div>
-
-      {/* Motor speed: used to convert the spectrum X axis to CPM / Order */}
-      <FormField
-        control={form.control}
-        name={`sensors.${index}.motorRpm`}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
-              Motor Speed (RPM)
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-[#3B82F6] text-white border-none max-w-xs">
-                    <p>
-                      Running speed of the motor in RPM. Required to show the
-                      spectrum in Order (multiples of running speed). Optional.
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </FormLabel>
-            <FormControl>
-              <Input
-                type="number"
-                step="any"
-                min={0}
-                placeholder="e.g. 1485"
-                className="bg-[#080808] border-[1px] border-[#4B5563] text-white h-9 sm:h-12 text-sm sm:text-lg 2xl:text-xl"
-                {...field}
-                value={field.value ?? ""}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      {/* Axis mapping: which physical axis (X/Y/Z) feeds each of H / V / A */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
-          Axis Mapping
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-              </TooltipTrigger>
-              <TooltipContent className="bg-[#3B82F6] text-white border-none max-w-xs">
-                <p>
-                  Which physical sensor axis (X, Y or Z) is reported as H
-                  (Horizontal), V (Vertical) and A (Axial). Each axis can be
-                  used by only one channel. The sensor reads this setting from
-                  the server.
-                </p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {(
-            [
-              ["axisH", "H (Horizontal)"],
-              ["axisV", "V (Vertical)"],
-              ["axisA", "A (Axial)"],
-            ] as const
-          ).map(([fieldName, label]) => (
-            <FormField
-              key={fieldName}
-              control={form.control}
-              name={`sensors.${index}.${fieldName}`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-xs sm:text-base 2xl:text-lg font-semibold">
-                    {label}
-                  </FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger className="bg-[#080808] border-[1px] border-[#4B5563] text-white h-9 sm:h-12 text-sm sm:text-lg 2xl:text-xl">
-                        <SelectValue placeholder="Select axis" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {["X", "Y", "Z"].map((axis) => (
-                        <SelectItem key={axis} value={axis}>
-                          {axis} axis
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          ))}
-        </div>
-      </div>
-
-      {/* Note Section */}
-      <FormField
-        control={form.control}
-        name={`sensors.${index}.notes`}
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
-              Note
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Info className="h-4 w-4 text-muted-foreground cursor-help" />
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-[#3B82F6] text-white border-none">
-                    <p>Add any additional notes or comments</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </FormLabel>
-            <FormControl>
-              <Textarea
-                placeholder="Enter any additional notes..."
-                className="bg-[#080808] border-[1px] border-[#4B5563] text-white text-sm sm:text-lg 2xl:text-xl"
-                {...field}
-                rows={4}
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      {/* Image Upload */}
-      <div className="space-y-2">
-        <FormLabel className="text-xs sm:text-lg 2xl:text-xl font-bold">
-          Sensor Image (Optional)
-        </FormLabel>
-        <div className="flex items-center gap-4">
-          <label
-            htmlFor={`sensor-image-${index}`}
-            className="flex items-center gap-2 px-6 py-3 border rounded-md cursor-pointer bg-white text-black hover:bg-gray-100 text-sm sm:text-lg font-bold"
-          >
-            <Plus className="h-5 w-5" />
-            <span>Image</span>
-          </label>
-          <input
-            id={`sensor-image-${index}`}
-            type="file"
-            accept="image/*"
-            onChange={onImageChange}
-            className="hidden"
+                <FormDescription>Set automatically: max minus 2.</FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
           />
-          {imagePreview && (
-            <div className="relative w-20 h-20 border rounded-md overflow-hidden">
-              <Image
-                src={imagePreview}
-                alt="Sensor preview"
-                fill
-                className="object-cover"
+        </div>
+      </FormSection>
+
+      <FormSection title="Measurement" description="Defaults suit most sensors.">
+        <details
+          open={measurementOpen}
+          onToggle={(e) => setMeasurementOpen(e.currentTarget.open)}
+        >
+          <summary className="flex cursor-pointer list-none items-center gap-3 [&::-webkit-details-marker]:hidden">
+            <div className="flex flex-wrap gap-1.5">
+              {measurementSummary.map((text) => (
+                <span
+                  key={text}
+                  className="rounded-md bg-[#1f2937] px-2.5 py-1 text-xs text-gray-300"
+                >
+                  {text}
+                </span>
+              ))}
+            </div>
+            <span className="ml-auto shrink-0 text-xs text-blue-400">
+              {measurementOpen ? "Hide" : "Show"}
+            </span>
+          </summary>
+
+          <div className="mt-4 space-y-4">
+            <div className={FIELD_GRID}>
+              <FormField
+                control={form.control}
+                name={`sensors.${index}.timeInterval`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FieldLabel required>Time interval</FieldLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className={INPUT_CLASS}>
+                          <SelectValue placeholder="Select interval" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent className="bg-[#0B1121] border-[#374151] text-white">
+                        {timeIntervalOptions.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Time between readings.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name={`sensors.${index}.gScale`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FieldLabel>G-scale</FieldLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className={INPUT_CLASS}>
+                          <SelectValue placeholder="Select G-scale" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {gScaleOptions.map((scale) => (
+                          <SelectItem key={scale} value={scale}>
+                            {scale} G
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Maximum measurable acceleration.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name={`sensors.${index}.highPass`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FieldLabel>High pass filter (Hz)</FieldLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        placeholder="10"
+                        className={INPUT_CLASS}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name={`sensors.${index}.lor`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FieldLabel required>LOR</FieldLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className={INPUT_CLASS}>
+                          <SelectValue placeholder="Select LOR" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {lorOptions.map((lor) => (
+                          <SelectItem key={lor} value={lor}>
+                            {lor}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormDescription>
+                      Lines of resolution of the FFT.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name={`sensors.${index}.frequencyMax`}
+                render={({ field }) => (
+                  <FormItem>
+                    <FieldLabel required>Frequency max (Hz)</FieldLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger className={INPUT_CLASS}>
+                          <SelectValue placeholder="Select frequency" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {frequencyMaxOptions.map((freq) => (
+                          <SelectItem key={freq} value={freq}>
+                            {freq} Hz
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-          )}
-        </div>
-      </div>
+
+            {/* Axis mapping: which physical axis (X/Y/Z) feeds each of H / V / A */}
+            <div className="space-y-2 border-t border-[#1f2937] pt-4">
+              <p className="text-xs text-gray-400 sm:text-sm">
+                Axis mapping: which sensor axis (X, Y or Z) is reported as each
+                channel. Each axis can be used once.
+              </p>
+              <div className={FIELD_GRID}>
+                {(
+                  [
+                    ["axisH", "H (horizontal) axis"],
+                    ["axisV", "V (vertical) axis"],
+                    ["axisA", "A (axial) axis"],
+                  ] as const
+                ).map(([fieldName, label]) => (
+                  <FormField
+                    key={fieldName}
+                    control={form.control}
+                    name={`sensors.${index}.${fieldName}`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FieldLabel>{label}</FieldLabel>
+                        <Select
+                          onValueChange={field.onChange}
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger className={INPUT_CLASS}>
+                              <SelectValue placeholder="Select axis" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {["X", "Y", "Z"].map((axis) => (
+                              <SelectItem key={axis} value={axis}>
+                                {axis} axis
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {isEditMode && (
+              <p className="border-l-2 border-blue-500 bg-[#0B1121] px-3 py-2 text-xs leading-relaxed text-gray-300">
+                Frequency max and LOR apply to new readings. Older readings keep
+                the settings they were recorded with.
+              </p>
+            )}
+          </div>
+        </details>
+      </FormSection>
     </div>
   );
 }

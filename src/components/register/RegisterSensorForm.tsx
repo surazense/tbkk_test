@@ -98,6 +98,7 @@ export default function RegisterSensorForm() {
                       sensorNameSuggestions={sensorNameSuggestions}
                       imagePreview={imagePreviews[tab.index]}
                       onImageChange={(e) => handleImageChange(tab.index, e)}
+                      isEditMode={!!editId || isEditMode}
                     />
                   </TabsContent>
                 ))}
