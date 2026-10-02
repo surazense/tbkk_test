@@ -22,16 +22,28 @@ import {
   FormValues,
   SENSOR_AXES,
   SensorAxis,
+  SensorAxisValue,
   SingleSensorValues,
 } from "../schema";
 import { parseCustomDate, formatMotorStartTime } from "../utils";
 
-/** API value -> axis, falling back to the factory wiring (H=X, V=Y, A=Z). */
-function toSensorAxis(value: unknown, fallback: SensorAxis): SensorAxis {
+/** API value -> axis. Nothing stored in the database stays "" (no made-up default). */
+function toSensorAxis(value: unknown): SensorAxisValue {
   const upper = typeof value === "string" ? value.trim().toUpperCase() : "";
   return (SENSOR_AXES as readonly string[]).includes(upper)
     ? (upper as SensorAxis)
-    : fallback;
+    : "";
+}
+
+/**
+ * Axis mapping as API fields. The backend takes all three or none, so nothing
+ * is sent unless every channel has an axis.
+ */
+function axisMappingPayload(sensor: SingleSensorValues) {
+  const { axisH, axisV, axisA } = sensor;
+  return axisH && axisV && axisA
+    ? { axis_h: axisH, axis_v: axisV, axis_a: axisA }
+    : {};
 }
 
 const DEFAULT_SENSOR_VALUES: SingleSensorValues = {
@@ -204,9 +216,9 @@ export function useRegisterSensorForm() {
           highPass: data.high_pass?.toString() || "8",
           motorType: "",
           motorRpm: data.motor_rpm ? String(data.motor_rpm) : "",
-          axisH: toSensorAxis(data.axis_h, "X"),
-          axisV: toSensorAxis(data.axis_v, "Y"),
-          axisA: toSensorAxis(data.axis_a, "Z"),
+          axisH: toSensorAxis(data.axis_h),
+          axisV: toSensorAxis(data.axis_v),
+          axisA: toSensorAxis(data.axis_a),
           notes: data.note || "",
           name: data.sensor_name || data.name || "",
           sensorType: data.sensor_type || "Master",
@@ -355,9 +367,7 @@ export function useRegisterSensorForm() {
               high_pass: parseFloat(sensorData.highPass || "0"),
               // 0 tells the backend to clear the stored motor speed
               motor_rpm: sensorData.motorRpm ? Number(sensorData.motorRpm) : 0,
-              axis_h: sensorData.axisH,
-              axis_v: sensorData.axisV,
-              axis_a: sensorData.axisA,
+              ...axisMappingPayload(sensorData),
               note: sensorData.notes,
               motor_start_time: sensorData.motorStartTime
                 ? formatMotorStartTime(sensorData.motorStartTime)
@@ -470,9 +480,7 @@ export function useRegisterSensorForm() {
             : null,
           high_pass: sensorData.highPass ? Number(sensorData.highPass) : null,
           motor_rpm: sensorData.motorRpm ? Number(sensorData.motorRpm) : null,
-          axis_h: sensorData.axisH,
-          axis_v: sensorData.axisV,
-          axis_a: sensorData.axisA,
+          ...axisMappingPayload(sensorData),
           g_scale: sensorData.gScale ? Number(sensorData.gScale) : null,
           lor: sensorData.lor ? Number(sensorData.lor) : null,
           max_frequency: sensorData.frequencyMax

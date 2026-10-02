@@ -72,6 +72,13 @@ const MEASUREMENT_FIELDS = [
   "axisA",
 ] as const;
 
+// Axis mapping channels: form field, channel letter, label
+const AXIS_CHANNELS = [
+  ["axisH", "H", "H (horizontal) axis"],
+  ["axisV", "V", "V (vertical) axis"],
+  ["axisA", "A", "A (axial) axis"],
+] as const;
+
 export function SensorFormContent({
   form,
   index,
@@ -216,6 +223,36 @@ export function SensorFormContent({
   const intervalLabel = timeIntervalOptions.find(
     (option) => option.value === watchedTimeInterval
   )?.label;
+  // Axes already taken by a channel; the other channels may not pick them
+  const chosenAxes: Record<(typeof AXIS_CHANNELS)[number][0], string> = {
+    axisH: watchedAxisH ?? "",
+    axisV: watchedAxisV ?? "",
+    axisA: watchedAxisA ?? "",
+  };
+  const hasAxisChoice = Object.values(chosenAxes).some(Boolean);
+  // Picking an axis another channel already uses swaps the two, so an axis is
+  // never used twice (H=X, V=Y: set H to Y and V becomes X).
+  const handleAxisChange = (
+    fieldName: (typeof AXIS_CHANNELS)[number][0],
+    axis: string
+  ) => {
+    const previous = chosenAxes[fieldName];
+    const holder = AXIS_CHANNELS.find(
+      ([name]) => name !== fieldName && chosenAxes[name] === axis
+    );
+    const options = { shouldDirty: true, shouldValidate: true };
+    form.setValue(`sensors.${index}.${fieldName}`, axis, options);
+    if (holder) {
+      form.setValue(`sensors.${index}.${holder[0]}`, previous, options);
+    }
+  };
+  const clearAxes = () =>
+    AXIS_CHANNELS.forEach(([name]) =>
+      form.setValue(`sensors.${index}.${name}`, "", {
+        shouldDirty: true,
+        shouldValidate: true,
+      })
+    );
   const measurementSummary = [
     intervalLabel && `Every ${intervalLabel}`,
     watchedGScale && `${watchedGScale} G`,
@@ -1194,18 +1231,25 @@ export function SensorFormContent({
 
             {/* Axis mapping: which physical axis (X/Y/Z) feeds each of H / V / A */}
             <div className="space-y-2 border-t border-[#1f2937] pt-4">
-              <p className="text-xs text-gray-400 sm:text-sm">
-                Axis mapping: which sensor axis (X, Y or Z) is reported as each
-                channel. Each axis can be used once.
-              </p>
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-xs text-gray-400 sm:text-sm">
+                  Axis mapping: which sensor axis (X, Y or Z) is reported as
+                  each channel. Set all three or leave them empty. An axis can
+                  be used once: picking one that another channel has swaps the
+                  two.
+                </p>
+                {hasAxisChoice && (
+                  <button
+                    type="button"
+                    onClick={clearAxes}
+                    className="shrink-0 text-xs text-blue-400 hover:text-blue-300"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
               <div className={FIELD_GRID}>
-                {(
-                  [
-                    ["axisH", "H (horizontal) axis"],
-                    ["axisV", "V (vertical) axis"],
-                    ["axisA", "A (axial) axis"],
-                  ] as const
-                ).map(([fieldName, label]) => (
+                {AXIS_CHANNELS.map(([fieldName, , label]) => (
                   <FormField
                     key={fieldName}
                     control={form.control}
@@ -1214,12 +1258,22 @@ export function SensorFormContent({
                       <FormItem>
                         <FieldLabel>{label}</FieldLabel>
                         <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
+                          onValueChange={(axis) =>
+                            handleAxisChange(fieldName, axis)
+                          }
+                          value={field.value ?? ""}
                         >
                           <FormControl>
-                            <SelectTrigger className={INPUT_CLASS}>
-                              <SelectValue placeholder="Select axis" />
+                            <SelectTrigger
+                              className={`${INPUT_CLASS} data-[placeholder]:text-gray-500`}
+                            >
+                              <SelectValue
+                                placeholder={
+                                  isEditMode
+                                    ? "No data in the database"
+                                    : "Select axis"
+                                }
+                              />
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
