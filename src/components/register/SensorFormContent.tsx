@@ -1240,6 +1240,65 @@ export function SensorFormContent({
         )}
       />
 
+      {/* Axis mapping: which physical axis (X/Y/Z) feeds each of H / V / A */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2 text-xs sm:text-lg 2xl:text-xl font-bold">
+          Axis Mapping
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Info className="h-4 w-4 text-muted-foreground cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent className="bg-[#3B82F6] text-white border-none max-w-xs">
+                <p>
+                  Which physical sensor axis (X, Y or Z) is reported as H
+                  (Horizontal), V (Vertical) and A (Axial). Each axis can be
+                  used by only one channel. The sensor reads this setting from
+                  the server.
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {(
+            [
+              ["axisH", "H (Horizontal)"],
+              ["axisV", "V (Vertical)"],
+              ["axisA", "A (Axial)"],
+            ] as const
+          ).map(([fieldName, label]) => (
+            <FormField
+              key={fieldName}
+              control={form.control}
+              name={`sensors.${index}.${fieldName}`}
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-xs sm:text-base 2xl:text-lg font-semibold">
+                    {label}
+                  </FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger className="bg-[#080808] border-[1px] border-[#4B5563] text-white h-9 sm:h-12 text-sm sm:text-lg 2xl:text-xl">
+                        <SelectValue placeholder="Select axis" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {["X", "Y", "Z"].map((axis) => (
+                        <SelectItem key={axis} value={axis}>
+                          {axis} axis
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          ))}
+        </div>
+      </div>
+
       {/* Note Section */}
       <FormField
         control={form.control}

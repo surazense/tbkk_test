@@ -1,5 +1,9 @@
 import * as z from "zod";
 
+/** Physical accelerometer axes a logical H / V / A channel can be wired to. */
+export const SENSOR_AXES = ["X", "Y", "Z"] as const;
+export type SensorAxis = (typeof SENSOR_AXES)[number];
+
 export const singleSensorSchema = z
   .object({
     serialNumber: z.string().optional(),
@@ -26,6 +30,10 @@ export const singleSensorSchema = z
     highPass: z.string().optional(),
     motorType: z.string().optional(),
     motorRpm: z.string().optional(),
+    // Axis mapping: which physical axis (X/Y/Z) each of H / V / A reads from
+    axisH: z.enum(SENSOR_AXES),
+    axisV: z.enum(SENSOR_AXES),
+    axisA: z.enum(SENSOR_AXES),
     notes: z.string().optional(),
     name: z.string().optional(),
     namePlaceWarningThreshold: z.string().optional(),
@@ -142,6 +150,21 @@ export const singleSensorSchema = z
           });
         }
       }
+      // Each physical axis can feed only one of H / V / A
+      const axisChoices: Array<["axisH" | "axisV" | "axisA", SensorAxis]> = [
+        ["axisH", data.axisH],
+        ["axisV", data.axisV],
+        ["axisA", data.axisA],
+      ];
+      axisChoices.forEach(([path, axis], i) => {
+        if (axisChoices.findIndex(([, other]) => other === axis) !== i) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `Axis ${axis} is already used by another channel`,
+            path: [path],
+          });
+        }
+      });
       if (!data.timeInterval) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,

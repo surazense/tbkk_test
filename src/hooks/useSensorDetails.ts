@@ -11,6 +11,7 @@ import {
   SensorRecordSelector,
   buildRecordQuery,
 } from "@/lib/utils/sensorRecords";
+import { resolveSpectrumConfig } from "@/lib/utils/spectrumConfig";
 import {
   accelerationGToMmPerSecSquared,
   calculateVelocityFromFrequency,
@@ -582,7 +583,20 @@ export function useSensorDetails({
       freqAData = Array.from({ length: magLen || 0 }, (_, i) => i + 1);
     }
 
-    const totalTime = configData.lor / configData.fmax;
+    // fmax/lor to draw THIS reading with (see spectrumConfig.ts for why this is
+    // not simply the sensor's current config).
+    const spectrumConfig = resolveSpectrumConfig({
+      rowFmax: sensorLastData.data?.fmax ?? sensorLastData.fmax,
+      rowLor: sensorLastData.data?.lor ?? sensorLastData.lor,
+      currentFmax: configData.fmax,
+      currentLor: configData.lor,
+      freqIndexes: [data.freq_h, data.freq_v, data.freq_a],
+      fPointsHz: [data.f_point_h, data.f_point_v, data.f_point_a],
+    });
+    const effectiveFmax = spectrumConfig?.fmax ?? configData.fmax;
+    const effectiveLor = spectrumConfig?.lor ?? configData.lor;
+
+    const totalTime = effectiveLor / effectiveFmax;
     const timeInterval =
       accHData.length > 1 ? totalTime / (accHData.length - 1) : 0;
 
@@ -667,16 +681,8 @@ export function useSensorDetails({
       "Velocity (mm/s)",
     ];
     const chartConfig: ChartConfigData = {
-      lor:
-        sensorLastData.data?.lor ||
-        configData.lor ||
-        sensorLastData.lor ||
-        6400,
-      fmax:
-        sensorLastData.data?.fmax ||
-        configData.fmax ||
-        sensorLastData.fmax ||
-        10000,
+      lor: effectiveLor || 6400,
+      fmax: effectiveFmax || 10000,
       g_scale:
         sensorLastData.data?.g_scale ||
         sensorLastData.g_scale ||
@@ -768,7 +774,16 @@ export function useSensorDetails({
     result.hasData = anyAxisHasData;
 
     return result;
-  }, [sensorLastData, configData, selectedUnit]);
+    // Depend on the primitives actually read, not the whole configData object:
+    // configData gets a new identity on every setConfigData (3+ times while the
+    // page loads), which re-ran the whole reconstruction + FFT for nothing.
+  }, [
+    sensorLastData,
+    configData.lor,
+    configData.fmax,
+    configData.g_scale,
+    selectedUnit,
+  ]);
 
   const xStats = useMemo(() => {
     if (loading || !sensorLastData?.data)

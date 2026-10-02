@@ -17,8 +17,22 @@ import {
 } from "@/lib/registerStorage";
 import { getMachineClassCode, getMachineClassId } from "@/lib/iso10816-3";
 import { uploadSensorImage } from "@/lib/utils";
-import { formSchema, FormValues, SingleSensorValues } from "../schema";
+import {
+  formSchema,
+  FormValues,
+  SENSOR_AXES,
+  SensorAxis,
+  SingleSensorValues,
+} from "../schema";
 import { parseCustomDate, formatMotorStartTime } from "../utils";
+
+/** API value -> axis, falling back to the factory wiring (H=X, V=Y, A=Z). */
+function toSensorAxis(value: unknown, fallback: SensorAxis): SensorAxis {
+  const upper = typeof value === "string" ? value.trim().toUpperCase() : "";
+  return (SENSOR_AXES as readonly string[]).includes(upper)
+    ? (upper as SensorAxis)
+    : fallback;
+}
 
 const DEFAULT_SENSOR_VALUES: SingleSensorValues = {
   serialNumber: "",
@@ -44,6 +58,9 @@ const DEFAULT_SENSOR_VALUES: SingleSensorValues = {
   highPass: "",
   motorType: "",
   motorRpm: "",
+  axisH: "X",
+  axisV: "Y",
+  axisA: "Z",
   namePlaceWarningThreshold: "",
   namePlaceConcernThreshold: "",
   namePlaceDamageThreshold: "",
@@ -187,6 +204,9 @@ export function useRegisterSensorForm() {
           highPass: data.high_pass?.toString() || "8",
           motorType: "",
           motorRpm: data.motor_rpm ? String(data.motor_rpm) : "",
+          axisH: toSensorAxis(data.axis_h, "X"),
+          axisV: toSensorAxis(data.axis_v, "Y"),
+          axisA: toSensorAxis(data.axis_a, "Z"),
           notes: data.note || "",
           name: data.sensor_name || data.name || "",
           sensorType: data.sensor_type || "Master",
@@ -335,6 +355,9 @@ export function useRegisterSensorForm() {
               high_pass: parseFloat(sensorData.highPass || "0"),
               // 0 tells the backend to clear the stored motor speed
               motor_rpm: sensorData.motorRpm ? Number(sensorData.motorRpm) : 0,
+              axis_h: sensorData.axisH,
+              axis_v: sensorData.axisV,
+              axis_a: sensorData.axisA,
               note: sensorData.notes,
               motor_start_time: sensorData.motorStartTime
                 ? formatMotorStartTime(sensorData.motorStartTime)
@@ -447,6 +470,9 @@ export function useRegisterSensorForm() {
             : null,
           high_pass: sensorData.highPass ? Number(sensorData.highPass) : null,
           motor_rpm: sensorData.motorRpm ? Number(sensorData.motorRpm) : null,
+          axis_h: sensorData.axisH,
+          axis_v: sensorData.axisV,
+          axis_a: sensorData.axisA,
           g_scale: sensorData.gScale ? Number(sensorData.gScale) : null,
           lor: sensorData.lor ? Number(sensorData.lor) : null,
           max_frequency: sensorData.frequencyMax

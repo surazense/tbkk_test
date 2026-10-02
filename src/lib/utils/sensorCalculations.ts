@@ -992,21 +992,14 @@ export function reconstructTimeDomainFromAPI(
     throw new Error("Invalid API input");
   }
 
-  // DEBUG: Log reconstruction inputs
-  console.log("=== reconstructTimeDomainFromAPI DEBUG ===");
-  console.log("LOR:", LOR, "Fmax:", Fmax);
-  console.log("Acc length:", Acc.length, "FreqPoint length:", FreqPoint.length);
-  console.log("First 10 Acc values:", Acc.slice(0, 10));
-  console.log("First 10 FreqPoint values:", FreqPoint.slice(0, 10));
-  console.log("Are Frequencies In Hz:", areFrequenciesInHz);
-  console.log("==========================================");
-
   // -----------------------------
   // Derived parameters (1:1)
   // -----------------------------
   const SCALE = 2.56;
 
-  const LOR_new = LOR * SCALE; // 2048
+  // Number of time samples. Rounded because LOR * 2.56 is not always an exact
+  // integer in floating point (it would make `new Array(...)` throw).
+  const LOR_new = Math.round(LOR * SCALE); // 2048
   const Fmax_new = Fmax * SCALE; // 1024 Hz
 
   const step = Fmax_new / LOR_new; // 0.5 Hz
@@ -1029,23 +1022,36 @@ export function reconstructTimeDomainFromAPI(
   // -----------------------------
   // Time Domain Reconstruction
   // -----------------------------
-  const time: number[] = new Array(LOR_new);
-  const signal: number[] = new Array(LOR_new);
+  // signal[n] = sum_i Acc[i] * sin(2*pi*freqHz[i]*n*time_step)
+  //
+  // Calling Math.sin for every (sample, point) pair costs LOR_new * points
+  // trig calls, so going from 10 to 50 points made this 5x slower (it runs for
+  // every axis/unit on each recompute). Instead each point is a phasor rotated
+  // by a fixed angle per sample (angle-addition recurrence): only one sin/cos
+  // per point, then a few multiply-adds per sample. The accumulated rounding
+  // error stays around 1e-12 for the sample counts used here.
+  const signalBuf = new Float64Array(LOR_new);
 
-  let t = 0;
+  for (let index = 0; index < Acc.length; index++) {
+    const amplitude = Acc[index];
+    const w = 2 * Math.PI * freqHz[index] * time_step; // radians per sample
+    const c = Math.cos(w);
+    const s = Math.sin(w);
+    let sn = 0; // sin(w * n)
+    let cs = 1; // cos(w * n)
 
-  for (let sample = 0; sample < LOR_new; sample++) {
-    let G = 0;
-
-    for (let index = 0; index < Acc.length; index++) {
-      G += Acc[index] * Math.sin(2 * Math.PI * freqHz[index] * t);
+    for (let sample = 0; sample < LOR_new; sample++) {
+      signalBuf[sample] += amplitude * sn;
+      const nextSn = sn * c + cs * s;
+      cs = cs * c - sn * s;
+      sn = nextSn;
     }
-
-    time[sample] = t;
-    signal[sample] = G;
-
-    t += time_step;
   }
 
-  return { time, signal };
+  const time: number[] = new Array(LOR_new);
+  for (let sample = 0; sample < LOR_new; sample++) {
+    time[sample] = sample * time_step;
+  }
+
+  return { time, signal: Array.from(signalBuf) };
 }
