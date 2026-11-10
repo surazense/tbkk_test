@@ -26,6 +26,8 @@ import {
   getSignalStrength,
   getSignalStrengthLabel,
   parseThailandTime,
+  formatToThailandTime,
+  getThailandDateString,
 } from "@/lib/utils";
 import {
   SensorConfig,
@@ -105,6 +107,33 @@ function parseCustomDate(dateStr: string): Date {
     return new Date();
   }
 }
+
+// Motor start / installation date as a real instant. Custom strings
+// ("18-Dec-2025,09:30:00") are Thailand wall-clock time.
+function parseMotorStart(dateVal: string | number): number {
+  if (typeof dateVal === "number") return dateVal;
+  if (dateVal.includes(",")) {
+    const d = parseCustomDate(dateVal);
+    return (
+      Date.UTC(
+        d.getFullYear(),
+        d.getMonth(),
+        d.getDate(),
+        d.getHours(),
+        d.getMinutes(),
+        d.getSeconds()
+      ) -
+      7 * 60 * 60 * 1000
+    );
+  }
+  return parseThailandTime(dateVal);
+}
+
+const DATE_ONLY: Intl.DateTimeFormatOptions = {
+  hour: undefined,
+  minute: undefined,
+  second: undefined,
+};
 
 export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
   sensor,
@@ -234,13 +263,14 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
       if (thaiDate) return thaiDate === selectedCalendarDate;
 
       const dt = rec.datetime;
-      let dtObj;
-      if (dt.includes(",")) {
-        dtObj = parseCustomDate(dt);
-      } else {
-        dtObj = new Date(parseThailandTime(dt));
+      if (!dt.includes(",")) {
+        const ts = parseThailandTime(dt);
+        if (isNaN(ts)) return true;
+        return getThailandDateString(ts) === selectedCalendarDate;
       }
 
+      // Custom strings are already Thailand wall-clock fields
+      const dtObj = parseCustomDate(dt);
       if (isNaN(dtObj.getTime())) return true;
 
       const y = dtObj.getFullYear();
@@ -441,11 +471,10 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                     sensor?.motor_start_time || sensor?.installationDate;
                   if (!dateVal) return "Not Set";
                   try {
-                    const dateObj =
-                      typeof dateVal === "string"
-                        ? parseCustomDate(dateVal)
-                        : new Date(dateVal);
-                    return formatDate(dateObj.toISOString());
+                    return formatToThailandTime(
+                      parseMotorStart(dateVal),
+                      DATE_ONLY
+                    );
                   } catch (e) {
                     return "Not Set";
                   }
@@ -459,12 +488,9 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
                     sensor?.motor_start_time || sensor?.installationDate;
                   if (!dateVal) return "Unknown";
                   try {
-                    const start =
-                      typeof dateVal === "string"
-                        ? parseCustomDate(dateVal)
-                        : new Date(dateVal);
-                    const now = new Date();
-                    const diffTime = Math.abs(now.getTime() - start.getTime());
+                    const diffTime = Math.abs(
+                      Date.now() - parseMotorStart(dateVal)
+                    );
                     const diffDays = Math.floor(
                       diffTime / (1000 * 60 * 60 * 24)
                     );
@@ -637,7 +663,7 @@ export const SensorInfoSection: React.FC<SensorInfoSectionProps> = ({
               <span className="text-gray-400">Sensor Installation Date</span>
               <span className="text-sm md:text-lg 2xl:text-xl text-white truncate break-words whitespace-normal">
                 {sensor?.installationDate
-                  ? formatDate(new Date(sensor.installationDate).toISOString())
+                  ? formatToThailandTime(sensor.installationDate, DATE_ONLY)
                   : formatDate("2025-04-26")}
               </span>
 

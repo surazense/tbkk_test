@@ -28,6 +28,7 @@ import {
   getSignalStrengthLabel,
   parseThailandTime,
   formatToThailandTime,
+  toThailandNaiveISO,
 } from "@/lib/utils";
 
 interface SensorCardProps {
@@ -74,7 +75,7 @@ export default function SensorCard({ sensor, onClick }: SensorCardProps) {
       sensor.status === "warning"
     ) {
       import("@/lib/api/diagnostics").then(({ diagnosticsApi }) => {
-        const isoDate = new Date(sensor.lastUpdated).toISOString();
+        const isoDate = toThailandNaiveISO(sensor.lastUpdated);
         diagnosticsApi
           .getDiagnosticHistory(sensor.id, isoDate)
           .then((res) => {

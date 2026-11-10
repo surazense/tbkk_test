@@ -11,6 +11,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import type { SensorReading } from "@/lib/types";
+import { formatToThailandTime } from "@/lib/utils";
 
 interface SensorLineChartProps {
   data: SensorReading[];
@@ -26,8 +27,12 @@ export function SensorLineChart({
   color = "#2563eb",
 }: SensorLineChartProps) {
   const formatDate = (timestamp: number) => {
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    return formatToThailandTime(timestamp, {
+      day: undefined,
+      month: undefined,
+      year: undefined,
+      second: undefined,
+    });
   };
 
   const formatTooltipValue = (value: number) => {
@@ -92,7 +97,7 @@ export function SensorLineChart({
         />
         <Tooltip
           formatter={formatTooltipValue}
-          labelFormatter={(label) => new Date(label).toLocaleString()}
+          labelFormatter={(label) => formatToThailandTime(label)}
         />
         <Legend />
         {renderLines()}

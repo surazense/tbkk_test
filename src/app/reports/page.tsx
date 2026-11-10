@@ -28,6 +28,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import { getThailandNow } from "@/lib/utils";
 
 export default function ReportsPage() {
   const [viewLevel, setViewLevel] = useState<"area" | "machine" | "sensor">(
@@ -36,12 +37,12 @@ export default function ReportsPage() {
   const [selectedArea, setSelectedArea] = useState<string | null>(null);
   const [selectedMachine, setSelectedMachine] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
-    from: subDays(new Date(), 7),
-    to: subDays(new Date(), 1),
+    from: subDays(getThailandNow(), 7),
+    to: subDays(getThailandNow(), 1),
   });
   const [tempDateRange, setTempDateRange] = useState<{ from: Date; to: Date }>({
-    from: subDays(new Date(), 7),
-    to: subDays(new Date(), 1),
+    from: subDays(getThailandNow(), 7),
+    to: subDays(getThailandNow(), 1),
   });
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
 
@@ -50,43 +51,43 @@ export default function ReportsPage() {
   }, [dateRange]);
 
   const timePresets = [
-    { label: "Today", getValue: () => ({ from: new Date(), to: new Date() }) },
+    { label: "Today", getValue: () => ({ from: getThailandNow(), to: getThailandNow() }) },
     {
       label: "Yesterday",
       getValue: () => ({
-        from: subDays(new Date(), 1),
-        to: subDays(new Date(), 1),
+        from: subDays(getThailandNow(), 1),
+        to: subDays(getThailandNow(), 1),
       }),
     },
     {
       label: "This week",
-      getValue: () => ({ from: subDays(new Date(), 7), to: new Date() }),
+      getValue: () => ({ from: subDays(getThailandNow(), 7), to: getThailandNow() }),
     },
     {
       label: "Last week",
       getValue: () => ({
-        from: subDays(new Date(), 14),
-        to: subDays(new Date(), 7),
+        from: subDays(getThailandNow(), 14),
+        to: subDays(getThailandNow(), 7),
       }),
     },
     {
       label: "This month",
-      getValue: () => ({ from: subMonths(new Date(), 1), to: new Date() }),
+      getValue: () => ({ from: subMonths(getThailandNow(), 1), to: getThailandNow() }),
     },
     {
       label: "Last month",
       getValue: () => ({
-        from: subMonths(new Date(), 2),
-        to: subMonths(new Date(), 1),
+        from: subMonths(getThailandNow(), 2),
+        to: subMonths(getThailandNow(), 1),
       }),
     },
     {
       label: "This year",
-      getValue: () => ({ from: subYears(new Date(), 1), to: new Date() }),
+      getValue: () => ({ from: subYears(getThailandNow(), 1), to: getThailandNow() }),
     },
     {
       label: "All time",
-      getValue: () => ({ from: subYears(new Date(), 10), to: new Date() }),
+      getValue: () => ({ from: subYears(getThailandNow(), 10), to: getThailandNow() }),
     },
   ];
 

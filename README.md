@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# tbkk-frontend
 
-## Getting Started
+Next.js (App Router, Turbopack) dashboard for the Surazense vibration-sensor system.
+It talks to the Rust backend in the separate `be-suratech-sensor` repo.
 
-First, run the development server:
+## Run locally
+
+Needs Node.js 20+ and the backend running (default `http://localhost:3000`).
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local     # points the app at http://localhost:3000
+npm run dev                    # http://localhost:1223
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+How the backend URL is used:
+- Browser requests go to `/api/*` on this app; `next.config.ts` rewrites them to `SERVER_API_URL`
+  (falls back to `NEXT_PUBLIC_API_BASE_URL`).
+- Some hooks call `NEXT_PUBLIC_API_BASE_URL` directly, so keep both variables equal for local work.
+- `.env.local` is git-ignored. Restart `npm run dev` after changing it.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Scripts
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | dev server on port 1223 |
+| `npm run build` / `npm start` | production build and run |
+| `npm run lint` | ESLint |
+| `npm run format` | Prettier |
 
-## Learn More
+## Pages worth knowing
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`/machines` (machine health), `/settings/thresholds` (bulk threshold manager), `/sensors/[id]`,
+`/history`, `/reports`, `/settings`. The machine pages need a backend that has the `/machines/health`
+endpoints (the one in `be-suratech-sensor`) and its `20261030_add_health_state_events.sql` migration applied.

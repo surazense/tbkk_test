@@ -850,6 +850,36 @@ export function findTopPeaks(
 }
 
 /**
+ * Top peaks of a list that already IS a list of peaks (what the sensor sends:
+ * one amplitude and one frequency per peak), strongest first.
+ *
+ * findTopPeaks() keeps only local maxima, which is right for a full spectrum
+ * but wrong here: a peak that sits next to a stronger one in the list is not a
+ * "local maximum", so it was skipped and a weaker peak took its place in the
+ * table (e.g. 0.029 shown as 5th while the stored 5th was 0.053).
+ */
+export function findTopPeaksFromPeakList(
+  magnitudes: number[],
+  freqLabels: string[],
+  maxPeaks: number = 5
+): { topPeaks: { peak: number; rms: string; frequency: string }[] } {
+  const order = magnitudes
+    .map((peak, index) => ({ peak, index }))
+    .filter(({ peak }) => Number.isFinite(peak))
+    // strongest first; equal amplitudes keep their frequency order
+    .sort((a, b) => b.peak - a.peak || a.index - b.index)
+    .slice(0, maxPeaks);
+
+  return {
+    topPeaks: order.map(({ peak, index }) => ({
+      peak,
+      rms: peak.toFixed(2),
+      frequency: String(freqLabels[index]),
+    })),
+  };
+}
+
+/**
  * Enhanced peak finding with additional analysis
  * @param freqMagnitude - Frequency magnitude array
  * @param freqLabels - Frequency labels array

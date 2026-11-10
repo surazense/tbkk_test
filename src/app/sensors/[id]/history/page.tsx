@@ -14,7 +14,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getSignalStrengthLabel, getSignalStrength, cn } from "@/lib/utils";
+import {
+  getSignalStrengthLabel,
+  getSignalStrength,
+  getThailandDateString,
+  cn,
+} from "@/lib/utils";
 import { useAuth } from "@/components/auth/AuthProvider";
 
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
@@ -69,14 +74,8 @@ export default function SensorHistoryPage() {
   const [selectedAxis, setSelectedAxis] = useState<"all" | "h" | "v" | "a">(
     "all"
   );
-  // Helper to get local date string YYYY-MM-DD
-  const getTodayString = () => {
-    const d = new Date();
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
+  // Today's date in Thailand (YYYY-MM-DD), whatever the browser's timezone
+  const getTodayString = () => getThailandDateString();
 
   const [selectedUnit, setSelectedUnit] = useState("Velocity RMS (mm/s)");
   const [dateStart, setDateStart] = useState(getTodayString());

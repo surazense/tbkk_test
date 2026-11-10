@@ -13,6 +13,7 @@ import {
   SensorConfig,
 } from "@/lib/utils/vibrationUtils";
 import { useAuth } from "@/components/auth/AuthProvider";
+import { toThailandNaiveISO } from "@/lib/utils";
 
 interface SensorDotNodeProps {
   sensor: Sensor;
@@ -47,7 +48,7 @@ export default function SensorDotNode({
     ) {
       import("@/lib/api/diagnostics").then(({ diagnosticsApi }) => {
         // Use empty string to get latest, or ISO string if required
-        const isoDate = new Date(sensor.lastUpdated).toISOString();
+        const isoDate = toThailandNaiveISO(sensor.lastUpdated);
         diagnosticsApi
           .getDiagnosticHistory(sensor.id, isoDate)
           .then((res) => {

@@ -119,6 +119,56 @@ export function formatToThailandTime(
   }
 }
 
+const THAILAND_TZ = "Asia/Bangkok";
+
+function getThailandParts(
+  input: Date | number
+): Record<string, string> & { hour: string } {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: THAILAND_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(input);
+  const out: Record<string, string> = {};
+  for (const p of parts) out[p.type] = p.value;
+  return out as Record<string, string> & { hour: string };
+}
+
+/**
+ * "Now" as Thailand wall-clock time. The returned Date's LOCAL fields
+ * (getHours, getDate, date-fns format, ...) read the time in Thailand, so
+ * calendar and range logic gives the same result wherever the browser is.
+ * Use it only for calendar math, never as a real instant.
+ */
+export function getThailandNow(): Date {
+  const p = getThailandParts(Date.now());
+  return new Date(
+    Number(p.year),
+    Number(p.month) - 1,
+    Number(p.day),
+    Number(p.hour),
+    Number(p.minute),
+    Number(p.second)
+  );
+}
+
+/** Today's date in Thailand as YYYY-MM-DD. */
+export function getThailandDateString(input: Date | number = Date.now()): string {
+  const p = getThailandParts(input);
+  return `${p.year}-${p.month}-${p.day}`;
+}
+
+/** An instant as a Thailand wall-clock string "YYYY-MM-DDTHH:mm:ss" (no zone). */
+export function toThailandNaiveISO(input: Date | number): string {
+  const p = getThailandParts(input);
+  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}`;
+}
+
 // Generate a random ID
 export function generateId(): string {
   return Math.random().toString(36).substring(2, 15);

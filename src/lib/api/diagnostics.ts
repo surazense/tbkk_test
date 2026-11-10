@@ -5,6 +5,7 @@ import {
   DiagnosticCategory,
 } from "../types/diagnostic";
 import { getToken } from "../auth";
+import { parseThailandTime } from "../utils";
 import { LOCAL_DIAGNOSTIC_RULES } from "../data/diagnosticRules";
 
 export const diagnosticsApi = {
@@ -33,9 +34,11 @@ export const diagnosticsApi = {
       if (dataArray.length === 0) return null;
 
       // Find the one matching the datetime (allow 2 seconds tolerance for DB precision differences)
-      const targetTime = new Date(datetime).getTime();
+      // Sensor datetimes are Thailand wall-clock; parse both sides the same
+      // way so the match does not depend on the browser's timezone.
+      const targetTime = parseThailandTime(datetime);
       let apiResult = dataArray.find((d: any) => {
-        const dTime = new Date(d.datetime).getTime();
+        const dTime = parseThailandTime(d.datetime);
         return Math.abs(dTime - targetTime) < 2000;
       });
 

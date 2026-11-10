@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { formatDateTimeDayFirst } from "@/lib/utils/sensor-charts";
@@ -14,6 +14,51 @@ import {
 } from "@/lib/utils/frequencyUnits";
 import dynamic from "next/dynamic";
 const ReactECharts = dynamic(() => import("echarts-for-react"), { ssr: false });
+
+/** How many of the strongest spectrum peaks get a clickable marker on the chart. */
+export const PEAK_MARKER_LIMIT = 50;
+
+interface PeakMarker {
+  name: string;
+  coord: [number, number];
+  value: number;
+  freq: string;
+  coordIndex: number;
+}
+
+/**
+ * The strongest local maxima of one axis' spectrum, strongest first.
+ * Only the local maxima are sorted (a few thousand at most), so the limit
+ * barely changes the cost.
+ */
+export function findPeakMarkers(
+  dataObj: any,
+  limit: number,
+  formatLabel: (hz: string | number) => string
+): PeakMarker[] {
+  if (!dataObj?.hasData || !dataObj.freqData?.datasets?.[0]?.data) return [];
+
+  const data: number[] = dataObj.freqData.datasets[0].data;
+  const labels: string[] = dataObj.freqData.labels;
+
+  const peaks: { index: number; value: number }[] = [];
+  for (let i = 1; i < data.length - 1; i++) {
+    if (data[i] > data[i - 1] && data[i] > data[i + 1]) {
+      peaks.push({ index: i, value: data[i] });
+    }
+  }
+
+  return peaks
+    .sort((a, b) => b.value - a.value)
+    .slice(0, limit)
+    .map((p) => ({
+      name: formatLabel(labels[p.index]),
+      coord: [p.index, p.value] as [number, number],
+      value: p.value,
+      freq: labels[p.index],
+      coordIndex: p.index,
+    }));
+}
 
 interface VibrationAnalysisSectionProps {
   configData: SensorPageConfig;
@@ -44,40 +89,36 @@ export const VibrationAnalysisSection: React.FC<
   const aFreqChartRef = useRef<any>(null);
 
   // Spectrum X-axis unit. Order needs the motor speed, otherwise use Hz.
-  const [selectedFreqUnit, setSelectedFreqUnit] =
-    useState<FrequencyUnit>("Hz");
+  const [selectedFreqUnit, setSelectedFreqUnit] = useState<FrequencyUnit>("Hz");
   const motorRpm = getValidMotorRpm(configData.motor_rpm);
   const freqUnit = resolveFrequencyUnit(selectedFreqUnit, motorRpm);
   const freqSuffix = getFrequencyUnitSuffix(freqUnit);
   const formatFreq = (hz: number | string) =>
     formatFrequencyValue(Number(hz), freqUnit, motorRpm);
 
-  const getTop10Peaks = (dataObj: any) => {
-    if (!dataObj?.hasData || !dataObj.freqData?.datasets?.[0]?.data) return [];
-
-    const data = dataObj.freqData.datasets[0].data;
-    const labels = dataObj.freqData.labels;
-
-    // Find all local maxima
-    const peaks: { index: number; value: number }[] = [];
-    for (let i = 1; i < data.length - 1; i++) {
-      if (data[i] > data[i - 1] && data[i] > data[i + 1]) {
-        peaks.push({ index: i, value: data[i] });
-      }
-    }
-
-    // Sort by value and take top 10
-    return peaks
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 10)
-      .map((p) => ({
-        name: `${formatFreq(labels[p.index])} ${freqSuffix}`,
-        coord: [p.index, p.value],
-        value: p.value,
-        freq: labels[p.index],
-        coordIndex: p.index,
-      }));
-  };
+  // Peak markers for the three axes. Cached: this used to be recomputed (scan +
+  // sort of the whole spectrum) for every axis on every render.
+  const peakMarkers = useMemo(() => {
+    const label = (hz: string | number) =>
+      `${formatFrequencyValue(Number(hz), freqUnit, motorRpm)} ${freqSuffix}`;
+    return {
+      h: findPeakMarkers(
+        allChartData?.h?.[selectedUnit],
+        PEAK_MARKER_LIMIT,
+        label
+      ),
+      v: findPeakMarkers(
+        allChartData?.v?.[selectedUnit],
+        PEAK_MARKER_LIMIT,
+        label
+      ),
+      a: findPeakMarkers(
+        allChartData?.a?.[selectedUnit],
+        PEAK_MARKER_LIMIT,
+        label
+      ),
+    } as Record<string, PeakMarker[]>;
+  }, [allChartData, selectedUnit, freqUnit, motorRpm, freqSuffix]);
 
   return (
     <Card className="bg-transparent border-none shadow-none">
@@ -698,7 +739,7 @@ export const VibrationAnalysisSection: React.FC<
                                           borderWidth: 2,
                                         },
                                       },
-                                      data: getTop10Peaks(axisData),
+                                      data: peakMarkers[axis.key] ?? [],
                                     },
                                   },
                                 ],

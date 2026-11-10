@@ -21,7 +21,12 @@ import {
   Battery,
   BatteryWarning,
 } from "lucide-react";
-import { cn, getDistinctColor } from "@/lib/utils";
+import {
+  cn,
+  getDistinctColor,
+  formatToThailandTime,
+  getThailandDateString,
+} from "@/lib/utils";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
@@ -237,7 +242,7 @@ export default function ReportDataTable({
       </head>
       <body>
         <div class="header-title">${title}</div>
-        <div class="header-date">Generated on: ${new Date().toLocaleString()} | Period: ${dateStr}</div>
+        <div class="header-date">Generated on: ${formatToThailandTime(Date.now())} | Period: ${dateStr}</div>
         <table>
           <thead>
             <tr>
@@ -331,7 +336,7 @@ export default function ReportDataTable({
     const machineName = selectedMachine
       ? `_${selectedMachine.replace(/\s+/g, "_")}`
       : "";
-    link.download = `Transmission_Report_${scopeName}${machineName}_${new Date().toISOString().split("T")[0]}.xls`;
+    link.download = `Transmission_Report_${scopeName}${machineName}_${getThailandDateString()}.xls`;
 
     document.body.appendChild(link);
     link.click();

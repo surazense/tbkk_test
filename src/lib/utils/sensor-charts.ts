@@ -3,6 +3,7 @@ import {
   TimeReconstructionRequest,
   calculateFFT,
   findTopPeaks,
+  findTopPeaksFromPeakList,
 } from "./sensorCalculations";
 import {
   ChartTimeData,
@@ -240,13 +241,12 @@ export function prepareChartData(
   freqLabels = calculatedLabels;
 
   if (freqMagnitude.length > 0) {
-    // Find peaks using the peak source (Sensor data)
-    const { topPeaks: processedPeaks } = findTopPeaks(
-      peakSourceMag,
-      peakSourceLabels,
-      configData.lor,
-      5
-    );
+    // Find peaks using the peak source. Sensor data is already a list of peaks,
+    // so take the strongest directly; a calculated spectrum needs local maxima.
+    const peaksComeFromSensor = !!(freqData && freqData.length > 0);
+    const { topPeaks: processedPeaks } = peaksComeFromSensor
+      ? findTopPeaksFromPeakList(peakSourceMag, peakSourceLabels, 5)
+      : findTopPeaks(peakSourceMag, peakSourceLabels, configData.lor, 5);
 
     // Create colored dots for the chart based on the selected peaks
     // We need to match the peak frequencies (from sensor) to the labels in our calculated FFT graph

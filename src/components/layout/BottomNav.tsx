@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, LogOut } from "lucide-react";
+import { BarChart3, Cog, LogOut } from "lucide-react";
 import Image from "next/image";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
@@ -36,6 +36,11 @@ export default function BottomNav() {
           style={{ filter: "invert(1) brightness(2)" }}
         />
       ),
+    },
+    {
+      name: "Machines",
+      href: "/machines",
+      icon: () => <Cog size={22} />,
     },
     {
       name: "Reports",

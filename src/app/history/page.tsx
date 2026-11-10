@@ -7,6 +7,7 @@ import {
 } from "@/components/history/NotificationHistoryTable";
 import { getNotificationLogs } from "@/lib/data/notifications";
 import type { NotificationLog } from "@/lib/types";
+import { formatToThailandTime } from "@/lib/utils";
 import {
   getVibrationLevelFromConfig,
   VibrationLevel,
@@ -35,16 +36,9 @@ export default function NotificationHistoryPage() {
       const finalStatus = statusMap[apiStatus] || "Normal";
 
       const dateObj = new Date(log.created_at);
-      const datetime = dateObj
-        .toLocaleString("en-GB", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        })
-        .replace(",", " |");
+      const datetime = formatToThailandTime(dateObj, {
+        second: undefined,
+      }).replace(",", " |");
 
       return {
         id: log.id,

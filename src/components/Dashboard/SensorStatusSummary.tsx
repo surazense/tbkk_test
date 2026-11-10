@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { cn } from "@/lib/utils";
+import { cn, formatToThailandTime } from "@/lib/utils";
 import { useFolderTreeFilter } from "@/components/auth/AuthWrapper";
 
 export type SensorStatusType =
@@ -28,6 +28,14 @@ interface SensorStatusSummaryProps {
   selectedStatuses?: SensorStatusType[];
   onStatusFilterChange?: (selectedStatuses: SensorStatusType[]) => void;
   hideStatusGrid?: boolean;
+  /** what is being counted, shown in the titles (default "Sensor") */
+  noun?: string;
+  /** replaces the default "Select All" action (selecting the whole organization) */
+  onSelectAll?: () => void;
+  /** drop the Standby box, for things that cannot be on standby (e.g. machines) */
+  hideStandby?: boolean;
+  /** show every label in Thai (the home page keeps its English labels) */
+  thai?: boolean;
 }
 
 const statusConfig: Record<
@@ -74,12 +82,19 @@ const SensorStatusSummary: React.FC<SensorStatusSummaryProps> = ({
   data,
   selectedStatuses = [],
   onStatusFilterChange,
+  noun = "Sensor",
+  onSelectAll,
+  hideStandby = false,
+  thai = false,
 }) => {
   const [internalSelectedStatuses, setInternalSelectedStatuses] =
     useState<SensorStatusType[]>(selectedStatuses);
   const { selectedIds } = useFolderTreeFilter();
 
-  const isOrganizationSelected = selectedIds.includes("organization");
+  // with a custom "Select All" it reads as selected while no status filter is active
+  const isOrganizationSelected = onSelectAll
+    ? selectedStatuses.length === 0
+    : selectedIds.includes("organization");
 
   const activeSelectedStatuses =
     onStatusFilterChange !== undefined
@@ -112,7 +127,47 @@ const SensorStatusSummary: React.FC<SensorStatusSummaryProps> = ({
   }
 
   const { status, lastUpdate } = data;
-  const lastUpdatedText = new Date(lastUpdate).toLocaleString();
+  const lastUpdatedText = formatToThailandTime(new Date(lastUpdate));
+
+  const T = thai
+    ? {
+        total: "ทั้งหมด",
+        updated: "อัปเดต",
+        selectAll: "ทั้งหมด",
+        clear: "ล้างตัวกรอง",
+        clearShort: "ล้าง",
+        connected: `${noun}ที่ส่งข้อมูล`,
+        connectedSub: `สถานะล่าสุดของ${noun}ทั้งหมด (อัปเดตเมื่อ ${lastUpdatedText})`,
+        disconnected: `${noun}ที่ไม่ได้ส่งข้อมูล`,
+        placeholder: "-",
+        label: {
+          normal: "ปกติ",
+          warning: "เฝ้าระวัง",
+          concern: "เตือน",
+          critical: "วิกฤต",
+          standby: "สแตนด์บาย",
+          lost: "ขาดข้อมูล",
+        } as Record<SensorStatusType, string>,
+      }
+    : {
+        total: "Total",
+        updated: "Updated",
+        selectAll: "Select All",
+        clear: "Clear filters",
+        clearShort: "Clear",
+        connected: `Connected ${noun} Total`,
+        connectedSub: `Latest status of all ${noun.toLowerCase()}s (Updated at ${lastUpdatedText})`,
+        disconnected: `Disconnected ${noun} Total`,
+        placeholder: "Placeholder for alignment",
+        label: {
+          normal: "normal",
+          warning: "warning",
+          concern: "concern",
+          critical: "critical",
+          standby: "standby",
+          lost: "lost",
+        } as Record<SensorStatusType, string>,
+      };
 
   const connectedTotal =
     status.normal + status.warning + status.concern + status.critical;
@@ -137,19 +192,25 @@ const SensorStatusSummary: React.FC<SensorStatusSummaryProps> = ({
         <div className="flex items-center justify-between mb-2 px-0.5">
           <div>
             <span className="text-xs font-bold text-white">
-              Total: {data.total}
+              {T.total}: {data.total}
             </span>
             <span className="text-[10px] text-gray-400 ml-2">
-              Updated{" "}
-              {new Date(lastUpdate).toLocaleTimeString("en-GB", {
-                hour: "2-digit",
-                minute: "2-digit",
+              {T.updated}{" "}
+              {formatToThailandTime(new Date(lastUpdate), {
+                day: undefined,
+                month: undefined,
+                year: undefined,
+                second: undefined,
               })}
             </span>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
+                if (onSelectAll) {
+                  onSelectAll();
+                  return;
+                }
                 window.dispatchEvent(new CustomEvent("SELECT_ORGANIZATION"));
               }}
               className={cn(
@@ -159,14 +220,14 @@ const SensorStatusSummary: React.FC<SensorStatusSummaryProps> = ({
                   : "bg-transparent text-white border-white/40 hover:border-white"
               )}
             >
-              Select All
+              {T.selectAll}
             </button>
             {activeSelectedStatuses.length > 0 && (
               <button
                 onClick={clearFilters}
                 className="h-7 px-2 text-[10px] text-gray-400 hover:text-white underline"
               >
-                Clear ({activeSelectedStatuses.length})
+                {T.clearShort} ({activeSelectedStatuses.length})
               </button>
             )}
           </div>
@@ -174,7 +235,9 @@ const SensorStatusSummary: React.FC<SensorStatusSummaryProps> = ({
 
         {/* 3x2 Rectangle Grid */}
         <div className="grid grid-cols-3 gap-1.5">
-          {allStatuses.map((key) => {
+          {allStatuses
+            .filter((k) => !(hideStandby && k === "standby"))
+            .map((key) => {
             const value = status[key];
             const config = statusConfig[key];
             const isSelected = activeSelectedStatuses.includes(key);
@@ -202,7 +265,7 @@ const SensorStatusSummary: React.FC<SensorStatusSummaryProps> = ({
                     config.textColor
                   )}
                 >
-                  {key}
+                  {T.label[key]}
                 </span>
                 <span
                   className={cn(
@@ -228,15 +291,19 @@ const SensorStatusSummary: React.FC<SensorStatusSummaryProps> = ({
             <div className="flex flex-col sm:flex-row items-start justify-between sm:items-center gap-2">
               <div className="min-h-[44px] sm:min-h-[60px] flex flex-col justify-center">
                 <div className="text-base sm:text-xl md:text-2xl font-bold text-white">
-                  Connected Sensor Total: {connectedTotal}
+                  {T.connected}: {connectedTotal}
                 </div>
                 <div className="text-[10px] sm:text-xs text-white opacity-80 mt-0.5">
-                  Latest status of all sensors (Updated at {lastUpdatedText})
+                  {T.connectedSub}
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
+                    if (onSelectAll) {
+                      onSelectAll();
+                      return;
+                    }
                     window.dispatchEvent(
                       new CustomEvent("SELECT_ORGANIZATION")
                     );
@@ -248,14 +315,14 @@ const SensorStatusSummary: React.FC<SensorStatusSummaryProps> = ({
                       : "bg-black hover:bg-gray-900 text-white"
                   )}
                 >
-                  Select All
+                  {T.selectAll}
                 </button>
                 {activeSelectedStatuses.length > 0 && (
                   <button
                     onClick={clearFilters}
                     className="h-[32px] px-3 text-xs text-muted-foreground hover:text-foreground underline whitespace-nowrap"
                   >
-                    Clear filters ({activeSelectedStatuses.length})
+                    {T.clear} ({activeSelectedStatuses.length})
                   </button>
                 )}
               </div>
@@ -296,7 +363,7 @@ const SensorStatusSummary: React.FC<SensorStatusSummaryProps> = ({
                         config.textColor
                       )}
                     >
-                      {key}
+                      {T.label[key]}
                     </span>
                   </div>
                   <span
@@ -319,16 +386,23 @@ const SensorStatusSummary: React.FC<SensorStatusSummaryProps> = ({
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <div className="min-h-[44px] sm:min-h-[60px] flex flex-col justify-center">
                 <div className="text-base sm:text-xl md:text-2xl font-bold text-white">
-                  Disconnected Sensor Total: {disconnectedTotal}
+                  {T.disconnected}: {disconnectedTotal}
                 </div>
                 <div className="text-[10px] sm:text-xs text-transparent select-none mt-0.5">
-                  Placeholder for alignment
+                  {T.placeholder}
                 </div>
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-2 text-center flex-1">
-            {(["standby", "lost"] as SensorStatusType[]).map((key) => {
+          <div
+            className={cn(
+              "grid gap-2 text-center flex-1",
+              hideStandby ? "grid-cols-1" : "grid-cols-2"
+            )}
+          >
+            {(["standby", "lost"] as SensorStatusType[])
+              .filter((k) => !(hideStandby && k === "standby"))
+              .map((key) => {
               const value = status[key];
               const config = statusConfig[key];
               const isSelected = activeSelectedStatuses.includes(key);
@@ -359,7 +433,7 @@ const SensorStatusSummary: React.FC<SensorStatusSummaryProps> = ({
                         config.textColor
                       )}
                     >
-                      {key}
+                      {T.label[key]}
                     </span>
                   </div>
                   <span

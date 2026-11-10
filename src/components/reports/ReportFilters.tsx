@@ -34,7 +34,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
+import { cn, getThailandNow } from "@/lib/utils";
 
 interface ReportFiltersProps {
   viewLevel: "area" | "machine" | "sensor";
@@ -49,43 +49,43 @@ interface ReportFiltersProps {
 }
 
 const timePresets = [
-  { label: "Today", getValue: () => ({ from: new Date(), to: new Date() }) },
+  { label: "Today", getValue: () => ({ from: getThailandNow(), to: getThailandNow() }) },
   {
     label: "Yesterday",
     getValue: () => ({
-      from: subDays(new Date(), 1),
-      to: subDays(new Date(), 1),
+      from: subDays(getThailandNow(), 1),
+      to: subDays(getThailandNow(), 1),
     }),
   },
   {
     label: "This week",
-    getValue: () => ({ from: subDays(new Date(), 7), to: new Date() }),
+    getValue: () => ({ from: subDays(getThailandNow(), 7), to: getThailandNow() }),
   },
   {
     label: "Last week",
     getValue: () => ({
-      from: subDays(new Date(), 14),
-      to: subDays(new Date(), 7),
+      from: subDays(getThailandNow(), 14),
+      to: subDays(getThailandNow(), 7),
     }),
   },
   {
     label: "This month",
-    getValue: () => ({ from: subMonths(new Date(), 1), to: new Date() }),
+    getValue: () => ({ from: subMonths(getThailandNow(), 1), to: getThailandNow() }),
   },
   {
     label: "Last month",
     getValue: () => ({
-      from: subMonths(new Date(), 2),
-      to: subMonths(new Date(), 1),
+      from: subMonths(getThailandNow(), 2),
+      to: subMonths(getThailandNow(), 1),
     }),
   },
   {
     label: "This year",
-    getValue: () => ({ from: subYears(new Date(), 1), to: new Date() }),
+    getValue: () => ({ from: subYears(getThailandNow(), 1), to: getThailandNow() }),
   },
   {
     label: "All time",
-    getValue: () => ({ from: subYears(new Date(), 10), to: new Date() }),
+    getValue: () => ({ from: subYears(getThailandNow(), 10), to: getThailandNow() }),
   },
 ];
 

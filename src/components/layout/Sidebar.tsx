@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, LogOut, BarChart3, BookOpen } from "lucide-react";
+import { Menu, LogOut, BarChart3, BookOpen, Cog } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -35,6 +35,11 @@ export default function Sidebar() {
           style={{ filter: "invert(1) brightness(2)" }}
         />
       ),
+    },
+    {
+      name: "Machines",
+      href: "/machines",
+      icon: () => <Cog size={20} />,
     },
     {
       name: "Reports",
