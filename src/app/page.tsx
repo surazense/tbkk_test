@@ -204,12 +204,17 @@ export default function SensorsPage() {
   const filteredSensors = useMemo(() => {
     let result: Sensor[] = [];
 
-    if (selectedIds && selectedIds.length > 0) {
+    // Show all sensors when "organization" (root) is selected or nothing is selected
+    const isShowingAll =
+      !selectedIds ||
+      selectedIds.length === 0 ||
+      selectedIds.includes("organization");
+
+    if (isShowingAll) {
+      result = [...sensors];
+    } else {
       const selectedSensorIds = new Set(selectedSensors.map((s) => s.id));
       result = sensors.filter((s) => selectedSensorIds.has(s.id));
-    } else if (selectedStatuses.length > 0) {
-      // If no folder selected but status filter is active, show all matching sensors
-      result = [...sensors];
     }
 
     // Filter by search query using the debounced value

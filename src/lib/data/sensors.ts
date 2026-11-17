@@ -63,7 +63,7 @@ let lastFetchTime = 0;
 let inflightRawDataPromise: Promise<SensorApiData[]> | null = null;
 
 // Mock data flag: when true, all existing sensors report healthy "normal" (green) status
-export const MOCK_SENSORS_NORMAL = true;
+export const MOCK_SENSORS_NORMAL = false;
 
 const DEFAULT_MOCK_SENSORS: SensorApiData[] = [
   {
@@ -392,22 +392,18 @@ export async function fetchRealSensors(
             ? parseThailandTime(apiSensor.updated_at)
             : Date.now();
 
-        // Check for "Lost" status based on time timeout (same logic as full path)
-        const timeInterval = apiSensor.time_interval || 0; // minutes
-        const timeoutThresholdMs = (timeInterval + 5) * 60 * 1000;
-        const isLost = now - lastUpdated > timeoutThresholdMs;
-        const operationalStatus = apiSensor.last_data ? "running" : "standby";
-
-        if (isLost && operationalStatus !== "standby") {
-          status = "lost";
-          // Trigger notification for Lost status (async, don't await to not block rendering)
-          if (typeof window !== "undefined") {
-            sendLostNotification(apiSensor);
-          }
-        } else if (maxRms >= tMax && maxRms > 0) status = "critical";
-        else if (maxRms >= tMed && maxRms > 0) status = "concern";
-        else if (maxRms >= tMin && maxRms > 0) status = "warning";
-        else if (!apiSensor.last_data) status = "standby";
+        // Show color by latest data — only mark standby if no last_data exists
+        // Never force "lost" just because timestamp is old when we have real data to show
+        if (!apiSensor.last_data) {
+          status = "standby";
+        } else if (maxRms >= tMax && maxRms > 0) {
+          status = "critical";
+        } else if (maxRms >= tMed && maxRms > 0) {
+          status = "concern";
+        } else if (maxRms >= tMin && maxRms > 0) {
+          status = "warning";
+        }
+        // else stays "ok" (normal/green)
       }
 
       const lastUpdated = MOCK_SENSORS_NORMAL
@@ -723,19 +719,9 @@ export async function fetchRealSensors(
       connectivity = "online";
       operationalStatus = "running";
     } else {
-      // 1. Check for "Lost" status based on time timeout
-      const timeInterval = apiSensor.time_interval || 0; // minutes
-      const timeoutThresholdMs = (timeInterval + 5) * 60 * 1000;
-      const isLost = now - lastUpdated > timeoutThresholdMs;
-
-      if (isLost && operationalStatus !== "standby") {
-        status = "lost";
-        // Trigger notification for Lost status (async, don't await to not block rendering)
-        if (typeof window !== "undefined") {
-          sendLostNotification(apiSensor);
-        }
-      } else {
-        // Calculate status from Vibration RMS
+      // Show color by latest data — only mark standby if no last_data exists
+      // Never force "lost" just because timestamp is old when we have real data to show
+      {
         const maxRms = Math.max(veloRmsH, veloRmsV, veloRmsA);
         const tMin =
           apiSensor.threshold_min !== undefined && apiSensor.threshold_min > 0
@@ -751,14 +737,14 @@ export async function fetchRealSensors(
             ? apiSensor.threshold_max
             : 9.0;
 
-        if (maxRms >= tMax && maxRms > 0) {
+        if (!apiSensor.last_data) {
+          status = "standby";
+        } else if (maxRms >= tMax && maxRms > 0) {
           status = "critical";
         } else if (maxRms >= tMed && maxRms > 0) {
           status = "concern";
         } else if (maxRms >= tMin && maxRms > 0) {
           status = "warning";
-        } else if (operationalStatus === "standby") {
-          status = "standby";
         } else {
           status = "ok";
         }
