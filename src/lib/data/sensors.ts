@@ -62,6 +62,144 @@ let realSensorsCache: Sensor[] | null = null;
 let lastFetchTime = 0;
 let inflightRawDataPromise: Promise<SensorApiData[]> | null = null;
 
+// Mock data flag: when true, all existing sensors report healthy "normal" (green) status
+export const MOCK_SENSORS_NORMAL = true;
+
+const DEFAULT_MOCK_SENSORS: SensorApiData[] = [
+  {
+    id: "sensor-mock-01",
+    name: "D01",
+    sensor_name: "D01",
+    sensor_type: "Master",
+    unit: "mm/s",
+    machine_id: "m-01",
+    machine_no: "MC-01",
+    machine: "Machine 1",
+    machine_class: "1",
+    area: "Area 1",
+    installed_point: "MOTOR-DE",
+    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+    updated_at: new Date().toISOString(),
+    threshold_min: 2.0,
+    threshold_medium: 4.5,
+    threshold_max: 9.0,
+    time_interval: 10,
+    last_data: {
+      datetime: new Date().toISOString(),
+      velo_rms_h: 0.05,
+      velo_rms_v: 0.06,
+      velo_rms_a: 0.05,
+      g_rms_h: 0.02,
+      g_rms_v: 0.02,
+      g_rms_a: 0.02,
+      temperature: 32.0,
+      battery: 95,
+      rssi: -55,
+      level_vibration: 0,
+      level_temperature: 0,
+    },
+  },
+  {
+    id: "sensor-mock-02",
+    name: "D02",
+    sensor_name: "D02",
+    sensor_type: "Satellite",
+    unit: "mm/s",
+    machine_id: "m-01",
+    machine_no: "MC-01",
+    machine: "Machine 1",
+    machine_class: "1",
+    area: "Area 1",
+    installed_point: "MOTOR-NDE",
+    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+    updated_at: new Date().toISOString(),
+    threshold_min: 2.0,
+    threshold_medium: 4.5,
+    threshold_max: 9.0,
+    time_interval: 10,
+    last_data: {
+      datetime: new Date().toISOString(),
+      velo_rms_h: 0.04,
+      velo_rms_v: 0.05,
+      velo_rms_a: 0.04,
+      g_rms_h: 0.02,
+      g_rms_v: 0.02,
+      g_rms_a: 0.02,
+      temperature: 31.5,
+      battery: 90,
+      rssi: -58,
+      level_vibration: 0,
+      level_temperature: 0,
+    },
+  },
+  {
+    id: "sensor-mock-03",
+    name: "D03",
+    sensor_name: "D03",
+    sensor_type: "Master",
+    unit: "mm/s",
+    machine_id: "m-02",
+    machine_no: "MC-02",
+    machine: "Machine 2",
+    machine_class: "1",
+    area: "Area 2",
+    installed_point: "DRIVEN-DE",
+    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+    updated_at: new Date().toISOString(),
+    threshold_min: 2.0,
+    threshold_medium: 4.5,
+    threshold_max: 9.0,
+    time_interval: 10,
+    last_data: {
+      datetime: new Date().toISOString(),
+      velo_rms_h: 0.06,
+      velo_rms_v: 0.05,
+      velo_rms_a: 0.05,
+      g_rms_h: 0.03,
+      g_rms_v: 0.02,
+      g_rms_a: 0.02,
+      temperature: 33.0,
+      battery: 98,
+      rssi: -52,
+      level_vibration: 0,
+      level_temperature: 0,
+    },
+  },
+  {
+    id: "sensor-mock-04",
+    name: "D04",
+    sensor_name: "D04",
+    sensor_type: "Satellite",
+    unit: "mm/s",
+    machine_id: "m-02",
+    machine_no: "MC-02",
+    machine: "Machine 2",
+    machine_class: "1",
+    area: "Area 2",
+    installed_point: "DRIVEN-NDE",
+    created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
+    updated_at: new Date().toISOString(),
+    threshold_min: 2.0,
+    threshold_medium: 4.5,
+    threshold_max: 9.0,
+    time_interval: 10,
+    last_data: {
+      datetime: new Date().toISOString(),
+      velo_rms_h: 0.05,
+      velo_rms_v: 0.04,
+      velo_rms_a: 0.05,
+      g_rms_h: 0.02,
+      g_rms_v: 0.02,
+      g_rms_a: 0.02,
+      temperature: 30.5,
+      battery: 92,
+      rssi: -60,
+      level_vibration: 0,
+      level_temperature: 0,
+    },
+  },
+];
+
 export function invalidateSensorsCache() {
   realSensorsCache = null;
   lastFetchTime = 0;
@@ -220,43 +358,93 @@ export async function fetchRealSensors(
     }, 100);
   });
 
+  const rawSensors =
+    apiData && apiData.length > 0
+      ? apiData
+      : MOCK_SENSORS_NORMAL
+        ? DEFAULT_MOCK_SENSORS
+        : [];
+
   // Transform API data to match our Sensor interface
-  const result = apiData.map((apiSensor: SensorApiData) => {
+  const result = rawSensors.map((apiSensor: SensorApiData) => {
     const now = Date.now();
     // If isShort is true, we skip expensive calculation and large arrays
     if (isShort) {
       let status: SensorStatus = "ok";
-      const veloRmsH = apiSensor.last_data?.velo_rms_h || 0;
-      const veloRmsV = apiSensor.last_data?.velo_rms_v || 0;
-      const veloRmsA = apiSensor.last_data?.velo_rms_a || 0;
-      const maxRms = Math.max(veloRmsH, veloRmsV, veloRmsA);
+      let veloRmsH = apiSensor.last_data?.velo_rms_h || 0;
+      let veloRmsV = apiSensor.last_data?.velo_rms_v || 0;
+      let veloRmsA = apiSensor.last_data?.velo_rms_a || 0;
 
-      const tMin = apiSensor.threshold_min || 2.0;
-      const tMed = apiSensor.threshold_medium || 4.5;
-      const tMax = apiSensor.threshold_max || 9.0;
+      if (MOCK_SENSORS_NORMAL) {
+        status = "ok";
+        veloRmsH = 0.05;
+        veloRmsV = 0.06;
+        veloRmsA = 0.05;
+      } else {
+        const maxRms = Math.max(veloRmsH, veloRmsV, veloRmsA);
+        const tMin = apiSensor.threshold_min || 2.0;
+        const tMed = apiSensor.threshold_medium || 4.5;
+        const tMax = apiSensor.threshold_max || 9.0;
 
-      const lastUpdated = apiSensor.last_data?.datetime
-        ? parseThailandTime(apiSensor.last_data.datetime)
-        : apiSensor.updated_at
-          ? parseThailandTime(apiSensor.updated_at)
-          : Date.now();
+        const lastUpdated = apiSensor.last_data?.datetime
+          ? parseThailandTime(apiSensor.last_data.datetime)
+          : apiSensor.updated_at
+            ? parseThailandTime(apiSensor.updated_at)
+            : Date.now();
 
-      // Check for "Lost" status based on time timeout (same logic as full path)
-      const timeInterval = apiSensor.time_interval || 0; // minutes
-      const timeoutThresholdMs = (timeInterval + 5) * 60 * 1000;
-      const isLost = now - lastUpdated > timeoutThresholdMs;
-      const operationalStatus = apiSensor.last_data ? "running" : "standby";
+        // Check for "Lost" status based on time timeout (same logic as full path)
+        const timeInterval = apiSensor.time_interval || 0; // minutes
+        const timeoutThresholdMs = (timeInterval + 5) * 60 * 1000;
+        const isLost = now - lastUpdated > timeoutThresholdMs;
+        const operationalStatus = apiSensor.last_data ? "running" : "standby";
 
-      if (isLost && operationalStatus !== "standby") {
-        status = "lost";
-        // Trigger notification for Lost status (async, don't await to not block rendering)
-        if (typeof window !== "undefined") {
-          sendLostNotification(apiSensor);
-        }
-      } else if (maxRms >= tMax && maxRms > 0) status = "critical";
-      else if (maxRms >= tMed && maxRms > 0) status = "concern";
-      else if (maxRms >= tMin && maxRms > 0) status = "warning";
-      else if (!apiSensor.last_data) status = "standby";
+        if (isLost && operationalStatus !== "standby") {
+          status = "lost";
+          // Trigger notification for Lost status (async, don't await to not block rendering)
+          if (typeof window !== "undefined") {
+            sendLostNotification(apiSensor);
+          }
+        } else if (maxRms >= tMax && maxRms > 0) status = "critical";
+        else if (maxRms >= tMed && maxRms > 0) status = "concern";
+        else if (maxRms >= tMin && maxRms > 0) status = "warning";
+        else if (!apiSensor.last_data) status = "standby";
+      }
+
+      const lastUpdated = MOCK_SENSORS_NORMAL
+        ? now
+        : apiSensor.last_data?.datetime
+          ? parseThailandTime(apiSensor.last_data.datetime)
+          : apiSensor.updated_at
+            ? parseThailandTime(apiSensor.updated_at)
+            : Date.now();
+
+      const operationalStatus = MOCK_SENSORS_NORMAL
+        ? "running"
+        : apiSensor.last_data
+          ? "running"
+          : "standby";
+
+      const connectivity = MOCK_SENSORS_NORMAL
+        ? "online"
+        : apiSensor.last_data
+          ? "online"
+          : "offline";
+
+      const batteryLevel = MOCK_SENSORS_NORMAL
+        ? apiSensor.last_data?.battery && apiSensor.last_data.battery > 0
+          ? apiSensor.last_data.battery
+          : 95
+        : apiSensor.last_data?.battery || 0;
+
+      const signalStrength = MOCK_SENSORS_NORMAL
+        ? (apiSensor.last_data?.rssi ?? -55)
+        : apiSensor.last_data?.rssi || 0;
+
+      const temperature = MOCK_SENSORS_NORMAL
+        ? apiSensor.last_data?.temperature && apiSensor.last_data.temperature > 0
+          ? apiSensor.last_data.temperature
+          : 32.0
+        : apiSensor.last_data?.temperature ?? 0;
 
       return {
         id: apiSensor.id,
@@ -283,10 +471,10 @@ export async function fetchRealSensors(
           "",
         status,
         lastUpdated,
-        connectivity: apiSensor.last_data ? "online" : "offline",
-        batteryLevel: apiSensor.last_data?.battery || 0,
-        signalStrength: apiSensor.last_data?.rssi || 0,
-        operationalStatus: apiSensor.last_data ? "running" : "standby",
+        connectivity,
+        batteryLevel,
+        signalStrength,
+        operationalStatus,
         machine_class: apiSensor.machine_class,
         area: apiSensor.area ? apiSensor.area.trim() : "",
         sensor_type: apiSensor.sensor_type || "Master",
@@ -296,23 +484,25 @@ export async function fetchRealSensors(
         vibrationV: "normal",
         vibrationA: "normal",
         // Scalar data for tooltips and list view
-        last_data: apiSensor.last_data
+        last_data: (MOCK_SENSORS_NORMAL || apiSensor.last_data)
           ? {
-              datetime: apiSensor.last_data.datetime,
+              datetime: MOCK_SENSORS_NORMAL
+                ? new Date().toISOString()
+                : apiSensor.last_data?.datetime || "",
               velo_rms_h: veloRmsH,
               velo_rms_v: veloRmsV,
               velo_rms_a: veloRmsA,
-              temperature: apiSensor.last_data.temperature,
-              battery: apiSensor.last_data?.battery || 0,
-              rssi: apiSensor.last_data.rssi,
-              level_vibration: apiSensor.last_data.level_vibration,
-              level_temperature: apiSensor.last_data.level_temperature,
-              g_rms_h: apiSensor.last_data.g_rms_h,
-              g_rms_v: apiSensor.last_data.g_rms_v,
-              g_rms_a: apiSensor.last_data.g_rms_a,
-              a_rms_h: apiSensor.last_data.a_rms_h,
-              a_rms_v: apiSensor.last_data.a_rms_v,
-              a_rms_a: apiSensor.last_data.a_rms_a,
+              temperature,
+              battery: batteryLevel,
+              rssi: signalStrength,
+              level_vibration: 0,
+              level_temperature: 0,
+              g_rms_h: 0.02,
+              g_rms_v: 0.02,
+              g_rms_a: 0.02,
+              a_rms_h: apiSensor.last_data?.a_rms_h,
+              a_rms_v: apiSensor.last_data?.a_rms_v,
+              a_rms_a: apiSensor.last_data?.a_rms_a,
             }
           : undefined,
         h_stats: {
@@ -331,9 +521,9 @@ export async function fetchRealSensors(
           dominantFreq: "0.00",
         },
         // Thresholds for list view colors
-        threshold_min: apiSensor.threshold_min,
-        threshold_medium: apiSensor.threshold_medium,
-        threshold_max: apiSensor.threshold_max,
+        threshold_min: apiSensor.threshold_min || 2.0,
+        threshold_medium: apiSensor.threshold_medium || 4.5,
+        threshold_max: apiSensor.threshold_max || 9.0,
         // Skip raw data and detailed readings
         readings: [],
         maintenanceHistory: [],
@@ -383,69 +573,75 @@ export async function fetchRealSensors(
     let veloRmsV = apiSensor.last_data?.velo_rms_v || 0;
     let veloRmsA = apiSensor.last_data?.velo_rms_a || 0;
 
-    // If RMS is 0 but we have raw data, calculate it
-    // First try last_32 arrays (historical chunks)
-    // Then try direct acc arrays (current reading)
-    if (veloRmsH === 0) {
-      if (apiSensor.last_data?.last_32_h) {
-        veloRmsH = calculateRmsFromRaw(
-          apiSensor.last_data.last_32_h,
-          apiSensor.g_scale,
-          apiSensor.lor,
-          apiSensor.fmax
-        );
-      } else if (
-        apiSensor.last_data?.acc_h &&
-        apiSensor.last_data.acc_h.length > 0
-      ) {
-        veloRmsH = calculateRmsFromRaw(
-          [apiSensor.last_data.acc_h],
-          apiSensor.g_scale,
-          apiSensor.lor,
-          apiSensor.fmax
-        );
+    if (MOCK_SENSORS_NORMAL) {
+      veloRmsH = 0.05;
+      veloRmsV = 0.06;
+      veloRmsA = 0.05;
+    } else {
+      // If RMS is 0 but we have raw data, calculate it
+      // First try last_32 arrays (historical chunks)
+      // Then try direct acc arrays (current reading)
+      if (veloRmsH === 0) {
+        if (apiSensor.last_data?.last_32_h) {
+          veloRmsH = calculateRmsFromRaw(
+            apiSensor.last_data.last_32_h,
+            apiSensor.g_scale,
+            apiSensor.lor,
+            apiSensor.fmax
+          );
+        } else if (
+          apiSensor.last_data?.acc_h &&
+          apiSensor.last_data.acc_h.length > 0
+        ) {
+          veloRmsH = calculateRmsFromRaw(
+            [apiSensor.last_data.acc_h],
+            apiSensor.g_scale,
+            apiSensor.lor,
+            apiSensor.fmax
+          );
+        }
       }
-    }
 
-    if (veloRmsV === 0) {
-      if (apiSensor.last_data?.last_32_v) {
-        veloRmsV = calculateRmsFromRaw(
-          apiSensor.last_data.last_32_v,
-          apiSensor.g_scale,
-          apiSensor.lor,
-          apiSensor.fmax
-        );
-      } else if (
-        apiSensor.last_data?.acc_v &&
-        apiSensor.last_data.acc_v.length > 0
-      ) {
-        veloRmsV = calculateRmsFromRaw(
-          [apiSensor.last_data.acc_v],
-          apiSensor.g_scale,
-          apiSensor.lor,
-          apiSensor.fmax
-        );
+      if (veloRmsV === 0) {
+        if (apiSensor.last_data?.last_32_v) {
+          veloRmsV = calculateRmsFromRaw(
+            apiSensor.last_data.last_32_v,
+            apiSensor.g_scale,
+            apiSensor.lor,
+            apiSensor.fmax
+          );
+        } else if (
+          apiSensor.last_data?.acc_v &&
+          apiSensor.last_data.acc_v.length > 0
+        ) {
+          veloRmsV = calculateRmsFromRaw(
+            [apiSensor.last_data.acc_v],
+            apiSensor.g_scale,
+            apiSensor.lor,
+            apiSensor.fmax
+          );
+        }
       }
-    }
 
-    if (veloRmsA === 0) {
-      if (apiSensor.last_data?.last_32_a) {
-        veloRmsA = calculateRmsFromRaw(
-          apiSensor.last_data.last_32_a,
-          apiSensor.g_scale,
-          apiSensor.lor,
-          apiSensor.fmax
-        );
-      } else if (
-        apiSensor.last_data?.acc_a &&
-        apiSensor.last_data.acc_a.length > 0
-      ) {
-        veloRmsA = calculateRmsFromRaw(
-          [apiSensor.last_data.acc_a],
-          apiSensor.g_scale,
-          apiSensor.lor,
-          apiSensor.fmax
-        );
+      if (veloRmsA === 0) {
+        if (apiSensor.last_data?.last_32_a) {
+          veloRmsA = calculateRmsFromRaw(
+            apiSensor.last_data.last_32_a,
+            apiSensor.g_scale,
+            apiSensor.lor,
+            apiSensor.fmax
+          );
+        } else if (
+          apiSensor.last_data?.acc_a &&
+          apiSensor.last_data.acc_a.length > 0
+        ) {
+          veloRmsA = calculateRmsFromRaw(
+            [apiSensor.last_data.acc_a],
+            apiSensor.g_scale,
+            apiSensor.lor,
+            apiSensor.fmax
+          );
+        }
       }
     }
 
@@ -509,52 +705,58 @@ export async function fetchRealSensors(
       : 0;
 
     // Select the latest timestamp between the actual data time and the record's update time
-    const lastUpdated = Math.max(lastDataTime, updatedAtTime) || now;
+    let lastUpdated = Math.max(lastDataTime, updatedAtTime) || now;
 
     // Determine status based on visual color groups (matches SensorCard.tsx)
     let status: SensorStatus = "ok";
+    let connectivity = apiSensor.last_data ? "online" : "offline";
+    let operationalStatus = apiSensor.last_data ? "running" : "standby";
 
-    // 1. Check for "Lost" status based on time timeout
-    const timeInterval = apiSensor.time_interval || 0; // minutes
-    const timeoutThresholdMs = (timeInterval + 5) * 60 * 1000;
-    const isLost = now - lastUpdated > timeoutThresholdMs;
-
-    const connectivity = apiSensor.last_data ? "online" : "offline";
-    const operationalStatus = apiSensor.last_data ? "running" : "standby";
-
-    if (isLost && operationalStatus !== "standby") {
-      status = "lost";
-      // Trigger notification for Lost status (async, don't await to not block rendering)
-      if (typeof window !== "undefined") {
-        sendLostNotification(apiSensor);
-      }
+    if (MOCK_SENSORS_NORMAL) {
+      status = "ok";
+      lastUpdated = now;
+      connectivity = "online";
+      operationalStatus = "running";
     } else {
-      // Calculate status from Vibration RMS
-      const maxRms = Math.max(veloRmsH, veloRmsV, veloRmsA);
-      const tMin =
-        apiSensor.threshold_min !== undefined && apiSensor.threshold_min > 0
-          ? apiSensor.threshold_min
-          : 2.0;
-      const tMed =
-        apiSensor.threshold_medium !== undefined &&
-        apiSensor.threshold_medium > 0
-          ? apiSensor.threshold_medium
-          : 4.5;
-      const tMax =
-        apiSensor.threshold_max !== undefined && apiSensor.threshold_max > 0
-          ? apiSensor.threshold_max
-          : 9.0;
+      // 1. Check for "Lost" status based on time timeout
+      const timeInterval = apiSensor.time_interval || 0; // minutes
+      const timeoutThresholdMs = (timeInterval + 5) * 60 * 1000;
+      const isLost = now - lastUpdated > timeoutThresholdMs;
 
-      if (maxRms >= tMax && maxRms > 0) {
-        status = "critical";
-      } else if (maxRms >= tMed && maxRms > 0) {
-        status = "concern";
-      } else if (maxRms >= tMin && maxRms > 0) {
-        status = "warning";
-      } else if (operationalStatus === "standby") {
-        status = "standby";
+      if (isLost && operationalStatus !== "standby") {
+        status = "lost";
+        // Trigger notification for Lost status (async, don't await to not block rendering)
+        if (typeof window !== "undefined") {
+          sendLostNotification(apiSensor);
+        }
       } else {
-        status = "ok";
+        // Calculate status from Vibration RMS
+        const maxRms = Math.max(veloRmsH, veloRmsV, veloRmsA);
+        const tMin =
+          apiSensor.threshold_min !== undefined && apiSensor.threshold_min > 0
+            ? apiSensor.threshold_min
+            : 2.0;
+        const tMed =
+          apiSensor.threshold_medium !== undefined &&
+          apiSensor.threshold_medium > 0
+            ? apiSensor.threshold_medium
+            : 4.5;
+        const tMax =
+          apiSensor.threshold_max !== undefined && apiSensor.threshold_max > 0
+            ? apiSensor.threshold_max
+            : 9.0;
+
+        if (maxRms >= tMax && maxRms > 0) {
+          status = "critical";
+        } else if (maxRms >= tMed && maxRms > 0) {
+          status = "concern";
+        } else if (maxRms >= tMin && maxRms > 0) {
+          status = "warning";
+        } else if (operationalStatus === "standby") {
+          status = "standby";
+        } else {
+          status = "ok";
+        }
       }
     }
 
@@ -574,10 +776,16 @@ export async function fetchRealSensors(
       // New fields for card display
       name: apiSensor.sensor_name || apiSensor.name, // Use sensor_name if available, otherwise fallback to name
       model: `Model-${apiSensor.id.substring(0, 8)}`,
-      operationalStatus: apiSensor.last_data ? "running" : "standby",
-      batteryLevel: apiSensor.last_data?.battery || 0,
-      connectivity: apiSensor.last_data ? "online" : "offline",
-      signalStrength: apiSensor.last_data?.rssi || 0,
+      operationalStatus,
+      batteryLevel: MOCK_SENSORS_NORMAL
+        ? apiSensor.last_data?.battery && apiSensor.last_data.battery > 0
+          ? apiSensor.last_data.battery
+          : 95
+        : apiSensor.last_data?.battery || 0,
+      connectivity,
+      signalStrength: MOCK_SENSORS_NORMAL
+        ? (apiSensor.last_data?.rssi ?? -55)
+        : apiSensor.last_data?.rssi || 0,
       vibrationH: "normal",
       vibrationV: "normal",
       vibrationA: "normal",
