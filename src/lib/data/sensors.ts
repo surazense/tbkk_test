@@ -418,13 +418,14 @@ export async function fetchRealSensors(
             ? parseThailandTime(apiSensor.updated_at)
             : Date.now();
 
-      const operationalStatus = MOCK_SENSORS_NORMAL
-        ? "running"
-        : apiSensor.last_data
+      const operationalStatus: "standby" | "running" | "alarm" =
+        MOCK_SENSORS_NORMAL
           ? "running"
-          : "standby";
+          : apiSensor.last_data
+            ? "running"
+            : "standby";
 
-      const connectivity = MOCK_SENSORS_NORMAL
+      const connectivity: "online" | "offline" = MOCK_SENSORS_NORMAL
         ? "online"
         : apiSensor.last_data
           ? "online"
@@ -709,8 +710,12 @@ export async function fetchRealSensors(
 
     // Determine status based on visual color groups (matches SensorCard.tsx)
     let status: SensorStatus = "ok";
-    let connectivity = apiSensor.last_data ? "online" : "offline";
-    let operationalStatus = apiSensor.last_data ? "running" : "standby";
+    let connectivity: "online" | "offline" = apiSensor.last_data
+      ? "online"
+      : "offline";
+    let operationalStatus: "standby" | "running" | "alarm" = apiSensor.last_data
+      ? "running"
+      : "standby";
 
     if (MOCK_SENSORS_NORMAL) {
       status = "ok";
