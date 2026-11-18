@@ -9,6 +9,7 @@ import {
   ChevronDown,
   Filter,
   BookOpen,
+  QrCode,
 } from "lucide-react";
 import Link from "next/link";
 import axios from "axios";
@@ -34,6 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/components/auth/AuthProvider";
+import SensorQrDialog from "@/components/qr/SensorQrDialog";
 import { getUserProfile } from "@/api/users/users";
 import { getOrganizationByOrgCode } from "@/api/organizations/organizeapi";
 import { getSensors } from "@/lib/data/sensors";
@@ -83,6 +85,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const pageTitle = getPageTitle(pathname);
   const [avatarUrl, setAvatarUrl] = useState<string>("");
   const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [qrDialogOpen, setQrDialogOpen] = useState(false);
   const [organizationName, setOrganizationName] =
     useState<string>("VIBRATION-SZ");
   const autoRefreshIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -571,6 +574,13 @@ export default function Header({ onMenuClick }: HeaderProps) {
                     Settings
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => setQrDialogOpen(true)}
+                  className="text-gray-200 hover:bg-gray-700 cursor-pointer"
+                >
+                  <QrCode className="mr-2 h-4 w-4" />
+                  Sensor QR
+                </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-gray-700" />
                 <DropdownMenuItem
                   onSelect={(e) => e.preventDefault()}
@@ -610,6 +620,8 @@ export default function Header({ onMenuClick }: HeaderProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <SensorQrDialog open={qrDialogOpen} onOpenChange={setQrDialogOpen} />
     </>
   );
 }
