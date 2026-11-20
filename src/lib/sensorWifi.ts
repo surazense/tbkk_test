@@ -5,11 +5,13 @@
 //   MD5( mac + salt ), every byte as two hex digits, in capitals, first 12.
 //
 // NOT CHECKED against a real sensor yet. Two things are assumptions until the
-// sensor team gives one example (MAC -> password) and their Wi-Fi name rule:
+// sensor team gives one example (MAC -> password) and confirms the Wi-Fi name:
 //   1. The MAC text the firmware hashes is the 12 hex digits in capitals with no
 //      separators (the form kept in the database). If the firmware hashes it
 //      with ":" between the pairs, or in small letters, change normalizeSensorMac.
-//   2. There is no rule for the Wi-Fi name (SSID) here: the person types it.
+//   2. The Wi-Fi name (SSID) of the sensor is that same MAC text. If the sensor
+//      writes it differently (a prefix, ":" between the pairs), change
+//      sensorWifiSsid.
 
 // The "KEY" the sensor team gave. It is also inside every sensor's firmware, but
 // anything written here ends up in the web page, which every visitor can read.
@@ -117,6 +119,11 @@ export function sensorWifiPassword(mac: string): string {
   const digest = md5(new TextEncoder().encode(mac + SENSOR_WIFI_SALT));
   const hex = Array.from(digest, (byte) => byte.toString(16).padStart(2, "0"));
   return hex.join("").toUpperCase().slice(0, 12);
+}
+
+// The name of the sensor's own Wi-Fi: the MAC text itself (assumption 2 above).
+export function sensorWifiSsid(mac: string): string {
+  return mac;
 }
 
 // The characters \ ; , : " have a meaning in the Wi-Fi QR text, so they get a
