@@ -21,11 +21,17 @@ import { Label } from "@/components/ui/label";
 // downloaded picture stays sharp when it is printed or scanned from a screen.
 const QR_PIXELS = 512;
 
-// What the QR carries: the account's e-mail ("u") and password ("p") as JSON.
-// A sensor reads it, asks the backend to check it (POST /sensor/auth/login)
-// and opens its own settings page when the backend says yes.
+// The login page the sensor serves itself, reached when a phone is joined to
+// the sensor's own Wi-Fi.
+const SENSOR_LOGIN_URL = "http://192.168.4.1/login";
+
+// What the QR carries: the address of that page with the account's e-mail ("u")
+// and password ("p") after the "#", percent-encoded, for example
+// http://192.168.4.1/login#u=name%40example.com&p=secret
+// The sensor's page reads them, asks the backend to check them
+// (POST /sensor/auth/login) and opens its settings when the backend says yes.
 function qrPayload(email: string, password: string): string {
-  return JSON.stringify({ u: email, p: password });
+  return `${SENSOR_LOGIN_URL}#u=${encodeURIComponent(email)}&p=${encodeURIComponent(password)}`;
 }
 
 function errorMessage(error: unknown): string {
