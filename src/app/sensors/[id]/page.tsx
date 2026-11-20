@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, MoreVertical, Settings, Wifi } from "lucide-react";
+import { ArrowLeft, MoreVertical, QrCode, Settings } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -424,7 +424,7 @@ export default function SensorDetailPage() {
             aria-label="Sensor Wi-Fi QR"
             title="Sensor Wi-Fi QR"
           >
-            <Wifi className="h-4 w-4" />
+            <QrCode className="h-4 w-4" />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
