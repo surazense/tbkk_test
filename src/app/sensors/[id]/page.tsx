@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { ArrowLeft, MoreVertical, Settings } from "lucide-react";
+import { ArrowLeft, MoreVertical, Settings, Wifi } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -56,6 +56,7 @@ import { SensorInfoSection } from "@/components/sensors/detail/SensorInfoSection
 import { VibrationAnalysisSection } from "@/components/sensors/detail/VibrationAnalysisSection";
 import { useSensorDetails } from "@/hooks/useSensorDetails";
 import DiagnosticDashboard from "@/components/diagnostics/DiagnosticDashboard";
+import SensorWifiQrDialog from "@/components/sensors/SensorWifiQrDialog";
 
 export default function SensorDetailPage() {
   const router = useRouter();
@@ -64,6 +65,7 @@ export default function SensorDetailPage() {
 
   // Client-side only state to prevent SSR hydration issues
   const [mounted, setMounted] = useState(false);
+  const [wifiQrOpen, setWifiQrOpen] = useState(false);
 
   // Use custom hook for sensor details and data management
   const [selectedAxis, setSelectedAxis] = useState("H-axis");
@@ -414,6 +416,16 @@ export default function SensorDetailPage() {
           >
             <span className="hidden xs:inline">View </span>History
           </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="bg-transparent border-[1.35px] border-[#374151] hover:bg-[#374151]/50"
+            onClick={() => setWifiQrOpen(true)}
+            aria-label="Sensor Wi-Fi QR"
+            title="Sensor Wi-Fi QR"
+          >
+            <Wifi className="h-4 w-4" />
+          </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -552,6 +564,12 @@ export default function SensorDetailPage() {
           allChartData={allChartData}
         />
       </div>
+
+      <SensorWifiQrDialog
+        open={wifiQrOpen}
+        onOpenChange={setWifiQrOpen}
+        mac={sensorLastData?.mac_address || configData.mac_address}
+      />
     </div>
   );
 }
